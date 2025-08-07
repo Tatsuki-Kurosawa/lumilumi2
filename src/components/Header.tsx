@@ -90,9 +90,19 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
               ランキング
             </Link>
             <Link
-              to="/requests"
+              to="/contests"
               className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive('/requests')
+                isActive('/contests')
+                  ? 'text-blue-600 bg-blue-50'
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+              }`}
+            >
+              コンテスト
+            </Link>
+            <Link
+              to="/direct-requests"
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                isActive('/direct-requests')
                   ? 'text-blue-600 bg-blue-50'
                   : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
               }`}
@@ -204,7 +214,14 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
                 ランキング
               </Link>
               <Link
-                to="/requests"
+                to="/contests"
+                className="px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                コンテスト
+              </Link>
+              <Link
+                to="/direct-requests"
                 className="px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
                 onClick={() => setIsMenuOpen(false)}
               >

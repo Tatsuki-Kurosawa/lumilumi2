@@ -6,8 +6,9 @@ import WorksPage from './pages/WorksPage';
 import MangaPage from './pages/MangaPage';
 import IllustrationsPage from './pages/IllustrationsPage';
 import RankingPage from './pages/RankingPage';
-import RequestsPage from './pages/RequestsPage';
-import RequestDetailPage from './pages/RequestDetailPage';
+import ContestsPage from './pages/RequestsPage';
+import ContestDetailPage from './pages/RequestDetailPage';
+import DirectRequestsPage from './pages/DirectRequestsPage';
 import MyPage from './pages/MyPage';
 import R18Page from './pages/R18Page';
 import UploadPage from './pages/UploadPage';
@@ -32,8 +33,9 @@ function App() {
               <Route path="/works" element={<WorksPage />} />
               <Route path="/works/:id" element={<WorkDetailPage />} />
               <Route path="/ranking" element={<RankingPage />} />
-              <Route path="/requests" element={<RequestsPage />} />
-              <Route path="/requests/:id" element={<RequestDetailPage />} />
+              <Route path="/contests" element={<ContestsPage />} />
+              <Route path="/contests/:id" element={<ContestDetailPage />} />
+              <Route path="/direct-requests" element={<DirectRequestsPage />} />
               <Route path="/mypage" element={<MyPage />} />
               <Route path="/r18" element={<R18Page />} />
               <Route path="/upload" element={<UploadPage />} />
