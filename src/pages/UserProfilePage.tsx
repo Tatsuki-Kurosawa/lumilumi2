@@ -307,6 +307,7 @@ const UserProfilePage: React.FC = () => {
       creatorName={profileUser.displayName}
       onSubmit={handleRequestSubmit}
     />
+  </>
   );
 };
 
