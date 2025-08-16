@@ -9,7 +9,7 @@ import RankingPage from './pages/RankingPage';
 import ContestsPage from './pages/ContestsPage';
 import ContestDetailPage from './pages/ContestDetailPage';
 import DirectRequestsPage from './pages/DirectRequestsPage';
-import RequestsPage from './pages/RequestsPage';
+//import RequestsPage from './pages/RequestsPage';
 import MyPage from './pages/MyPage';
 import R18Page from './pages/R18Page';
 import UploadPage from './pages/UploadPage';
