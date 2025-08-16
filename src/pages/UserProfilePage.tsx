@@ -83,7 +83,7 @@ const UserProfilePage: React.FC = () => {
     alert('依頼を送信しました！クリエイターからの返答をお待ちください。');
   };
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <><div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* プロフィールヘッダー */}
       <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-8">
         {/* カバー画像エリア */}
