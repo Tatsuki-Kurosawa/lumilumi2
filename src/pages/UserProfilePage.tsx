@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { User, MapPin, Calendar, Heart, Eye } from 'lucide-react';
+import { User, MapPin, Calendar, Heart, Eye, Send, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import WorkCard from '../components/WorkCard';
+import RequestModal from '../components/RequestModal';
 
 const UserProfilePage: React.FC = () => {
   const { id } = useParams();
   const { isAuthenticated } = useAuth();
   const [isFollowing, setIsFollowing] = useState(false);
+  const [showRequestModal, setShowRequestModal] = useState(false);
 
   // ダミーデータ
   const profileUser = {
@@ -25,6 +27,16 @@ const UserProfilePage: React.FC = () => {
     followingCount: 89,
     totalLikes: 1520,
     totalViews: 12450,
+    // 依頼関連の情報を追加
+    isAcceptingRequests: true,
+    requestInfo: {
+      genre: 'イラスト・キャラクターデザイン',
+      basePrice: '3,000円〜',
+      responseDeadline: '3日以内',
+      deliveryDeadline: '1週間〜2週間',
+      totalWorks: 45,
+      onTimeRate: 98,
+    },
   };
 
   const userWorks = [
@@ -65,6 +77,11 @@ const UserProfilePage: React.FC = () => {
     setIsFollowing(!isFollowing);
   };
 
+  const handleRequestSubmit = (requestData: any) => {
+    // 依頼データを処理
+    console.log('依頼データ:', requestData);
+    alert('依頼を送信しました！クリエイターからの返答をお待ちください。');
+  };
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* プロフィールヘッダー */}
@@ -111,6 +128,14 @@ const UserProfilePage: React.FC = () => {
           <div className="mt-4 ml-40">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               {profileUser.displayName}
+              {/* 依頼ステータス */}
+              <span className={`ml-4 px-3 py-1 text-sm font-medium rounded-full ${
+                profileUser.isAcceptingRequests
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-gray-100 text-gray-600'
+              }`}>
+                {profileUser.isAcceptingRequests ? '依頼募集中' : '受付停止中'}
+              </span>
             </h1>
             
             <div className="flex items-center space-x-4 text-gray-600 mb-4">
@@ -154,6 +179,74 @@ const UserProfilePage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* 依頼セクション */}
+      {profileUser.isAcceptingRequests && (
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">依頼について</h2>
+            {isAuthenticated ? (
+              <button
+                onClick={() => setShowRequestModal(true)}
+                className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-lg"
+              >
+                <Send className="h-5 w-5 mr-2" />
+                依頼する
+              </button>
+            ) : (
+              <button
+                disabled
+                className="flex items-center px-6 py-3 bg-gray-400 text-white rounded-lg cursor-not-allowed font-medium text-lg"
+              >
+                <Send className="h-5 w-5 mr-2" />
+                ログインが必要
+              </button>
+            )}
+          </div>
+
+          {/* 依頼情報 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="font-medium text-gray-900 mb-2">ジャンル:</h3>
+              <p className="text-gray-700">{profileUser.requestInfo.genre}</p>
+            </div>
+            
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="font-medium text-gray-900 mb-2">おまかせ金額:</h3>
+              <p className="text-gray-700 font-semibold text-lg text-green-600">
+                {profileUser.requestInfo.basePrice}
+              </p>
+            </div>
+            
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="font-medium text-gray-900 mb-2">返答締め切り日数:</h3>
+              <p className="text-gray-700">{profileUser.requestInfo.responseDeadline}</p>
+            </div>
+            
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="font-medium text-gray-900 mb-2">納品締め切り日数:</h3>
+              <p className="text-gray-700">{profileUser.requestInfo.deliveryDeadline}</p>
+            </div>
+            
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="font-medium text-gray-900 mb-2">総作品数:</h3>
+              <p className="text-gray-700">{profileUser.requestInfo.totalWorks}件</p>
+            </div>
+            
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="font-medium text-gray-900 mb-2">締め切り厳守率:</h3>
+              <div className="flex items-center">
+                <p className="text-gray-700 font-semibold">{profileUser.requestInfo.onTimeRate}%</p>
+                {profileUser.requestInfo.onTimeRate >= 95 ? (
+                  <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-red-500 ml-2" />
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 作品セクション */}
       <div className="bg-white rounded-lg shadow-sm p-6">
@@ -206,6 +299,14 @@ const UserProfilePage: React.FC = () => {
         )}
       </div>
     </div>
+
+    {/* 依頼モーダル */}
+    <RequestModal
+      isOpen={showRequestModal}
+      onClose={() => setShowRequestModal(false)}
+      creatorName={profileUser.displayName}
+      onSubmit={handleRequestSubmit}
+    />
   );
 };
 
