@@ -36,7 +36,7 @@ function App() {
               <Route path="/ranking" element={<RankingPage />} />
               <Route path="/contests" element={<ContestsPage />} />
               <Route path="/contests/:id" element={<ContestDetailPage />} />
-              <Route path="/requests" element={<RequestsPage />} />
+
               <Route path="/direct-requests" element={<DirectRequestsPage />} />
               <Route path="/mypage" element={<MyPage />} />
               <Route path="/r18" element={<R18Page />} />
