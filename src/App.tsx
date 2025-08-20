@@ -32,7 +32,7 @@ function App() {
         case 'requests':
           return <DirectRequestsPage contentType="manga" />;
         case 'ranking':
-          return <MangaRankingPage contentType="manga" />;
+          return <MangaRankingPage />;
         default:
           return <MangaPage />;
       }
