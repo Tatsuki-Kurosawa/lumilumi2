@@ -4,8 +4,7 @@ import Header from './components/Header';
 import HomePage from './pages/HomePage';
 import MangaPage from './pages/MangaPage';
 import IllustrationsPage from './pages/IllustrationsPage';
-import MangaRankingPage from './pages/MangaRankingPage';
-import IllustrationRankingPage from './pages/IllustrationRankingPage';
+
 import ContestsPage from './pages/ContestsPage';
 import ContestDetailPage from './pages/ContestDetailPage';
 import DirectRequestsPage from './pages/DirectRequestsPage';
