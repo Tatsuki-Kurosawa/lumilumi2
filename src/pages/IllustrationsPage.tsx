@@ -103,7 +103,7 @@ const IllustrationsPage: React.FC = () => {
                 placeholder="イラスト作品を検索..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
               <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
             </div>
@@ -122,7 +122,7 @@ const IllustrationsPage: React.FC = () => {
                   onClick={() => handleTagClick(tag)}
                   className={`px-3 py-1 rounded-full text-sm transition-colors ${
                     selectedTags.includes(tag)
-                      ? 'bg-purple-600 text-white'
+                      ? 'bg-orange-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
@@ -151,7 +151,7 @@ const IllustrationsPage: React.FC = () => {
                 key={page}
                 className={`px-3 py-2 rounded-md transition-colors ${
                   page === 1
-                    ? 'bg-purple-600 text-white'
+                    ? 'bg-orange-600 text-white'
                     : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
                 }`}
               >

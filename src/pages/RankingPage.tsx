@@ -79,13 +79,24 @@ const RankingPage: React.FC = () => {
     return 'text-gray-700 bg-gray-100';
   };
 
+  // コンテンツタイプでフィルタリング
+  const filteredRanking = contentType 
+    ? overallRanking.filter(work => work.type === contentType)
+    : overallRanking;
+
+  const getPageTitle = () => {
+    if (contentType === 'manga') return 'マンガランキング';
+    if (contentType === 'illustration') return 'イラストランキング';
+    return '週間ランキング';
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* ヘッダー */}
       <div className="mb-8">
         <div className="flex items-center mb-4">
           <Trophy className="h-8 w-8 text-yellow-600 mr-3" />
-          <h1 className="text-3xl font-bold text-gray-900">週間ランキング</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{getPageTitle()}</h1>
         </div>
         <div className="flex items-center text-gray-600 mb-6">
           <Calendar className="h-5 w-5 mr-2" />
@@ -100,17 +111,17 @@ const RankingPage: React.FC = () => {
             onClick={() => setActiveTab('overall')}
             className={`px-4 py-2 rounded-md font-medium transition-colors ${
               activeTab === 'overall'
-                ? 'bg-white text-blue-600 shadow-sm'
+                ? 'bg-white text-orange-600 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            総合ランキング
+            {contentType === 'manga' ? 'マンガランキング' : contentType === 'illustration' ? 'イラストランキング' : '総合ランキング'}
           </button>
           <button
             onClick={() => setActiveTab('tag')}
             className={`px-4 py-2 rounded-md font-medium transition-colors ${
               activeTab === 'tag'
-                ? 'bg-white text-blue-600 shadow-sm'
+                ? 'bg-white text-orange-600 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
@@ -133,7 +144,7 @@ const RankingPage: React.FC = () => {
                 onClick={() => setSelectedTag(tag)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   selectedTag === tag
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-orange-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -148,7 +159,7 @@ const RankingPage: React.FC = () => {
       <div className="space-y-6">
         {/* トップ3の特別表示 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {overallRanking.slice(0, 3).map((work) => (
+          {filteredRanking.slice(0, 3).map((work) => (
             <div key={work.id} className="relative">
               <div className={`absolute -top-2 -left-2 z-10 w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${getRankColor(work.rank)}`}>
                 {getRankIcon(work.rank)}
@@ -172,6 +183,7 @@ const RankingPage: React.FC = () => {
                       <span>👁️ {work.views}</span>
                     </div>
                     <div className="text-lg font-bold text-blue-600">
+                    <div className="text-lg font-bold text-orange-600">
                       {work.likes + work.views}pt
                     </div>
                   </div>
@@ -185,11 +197,11 @@ const RankingPage: React.FC = () => {
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-900">
-              {activeTab === 'overall' ? '総合ランキング' : `#${selectedTag} ランキング`}
+              {activeTab === 'overall' ? getPageTitle() : `#${selectedTag} ランキング`}
             </h2>
           </div>
           <div className="divide-y divide-gray-200">
-            {overallRanking.map((work) => (
+            {filteredRanking.map((work) => (
               <div key={work.id} className="flex items-center p-6 hover:bg-gray-50 transition-colors">
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold mr-4 ${getRankColor(work.rank)}`}>
                   {getRankIcon(work.rank)}
@@ -216,7 +228,7 @@ const RankingPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="text-right ml-4">
-                  <div className="text-lg font-bold text-blue-600 mb-1">
+                  <div className="text-lg font-bold text-orange-600 mb-1">
                     {(work.likes + work.views).toLocaleString()}pt
                   </div>
                   <div className="text-sm text-gray-500 space-x-2">

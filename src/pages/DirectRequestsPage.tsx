@@ -3,7 +3,11 @@ import { Link } from 'react-router-dom';
 import { Plus, Search, Filter, Clock, DollarSign, User, MessageSquare, Heart, Star } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
-const DirectRequestsPage: React.FC = () => {
+interface DirectRequestsPageProps {
+  contentType?: 'manga' | 'illustration';
+}
+
+const DirectRequestsPage: React.FC<DirectRequestsPageProps> = ({ contentType }) => {
   const { isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'illustration' | 'manga' | 'design'>('all');
@@ -15,6 +19,7 @@ const DirectRequestsPage: React.FC = () => {
       name: '春花@京都大学og',
       avatar: 'https://images.pexels.com/photos/1266808/pexels-photo-1266808.jpeg?auto=compress&cs=tinysrgb&w=200',
       specialties: ['イラスト', 'キャラクター', 'ファンタジー'],
+      type: 'illustration' as const,
       rating: 4.9,
       completedWorks: 45,
       followers: 234,
@@ -32,6 +37,7 @@ const DirectRequestsPage: React.FC = () => {
       name: '新緑@早稲田大学',
       avatar: 'https://images.pexels.com/photos/2422915/pexels-photo-2422915.jpeg?auto=compress&cs=tinysrgb&w=200',
       specialties: ['マンガ', '4コマ', 'コメディ'],
+      type: 'manga' as const,
       rating: 4.7,
       completedWorks: 23,
       followers: 156,
@@ -48,6 +54,7 @@ const DirectRequestsPage: React.FC = () => {
       name: 'デザイナー@東京大学',
       avatar: 'https://images.pexels.com/photos/1266810/pexels-photo-1266810.jpeg?auto=compress&cs=tinysrgb&w=200',
       specialties: ['デザイン', 'ロゴ', 'UI/UX'],
+      type: 'illustration' as const,
       rating: 4.8,
       completedWorks: 67,
       followers: 345,
@@ -69,13 +76,30 @@ const DirectRequestsPage: React.FC = () => {
     { value: 'design', label: 'デザイン' },
   ];
 
+  // コンテンツタイプでフィルタリング
+  const filteredArtists = contentType 
+    ? artists.filter(artist => artist.type === contentType)
+    : artists;
+
+  const getPageTitle = () => {
+    if (contentType === 'manga') return 'マンガクリエイターに依頼';
+    if (contentType === 'illustration') return 'イラストクリエイターに依頼';
+    return 'クリエイターに依頼';
+  };
+
+  const getPageDescription = () => {
+    if (contentType === 'manga') return 'マンガクリエイターに直接依頼を送ることができます。';
+    if (contentType === 'illustration') return 'イラストクリエイターに直接依頼を送ることができます。';
+    return '気になるクリエイターに直接依頼を送ることができます。';
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* ヘッダー */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">クリエイターに依頼</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">{getPageTitle()}</h1>
         <p className="text-gray-600">
-          気になるクリエイターに直接依頼を送ることができます。Skebのような指名型リクエストシステムです。
+          {getPageDescription()}指名型リクエストシステムです。
         </p>
       </div>
 
@@ -97,6 +121,7 @@ const DirectRequestsPage: React.FC = () => {
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value as any)}
             className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           >
             {categories.map(category => (
               <option key={category.value} value={category.value}>
@@ -114,7 +139,7 @@ const DirectRequestsPage: React.FC = () => {
 
       {/* クリエイター一覧 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {artists.map((artist) => (
+        {filteredArtists.map((artist) => (
           <div key={artist.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
             {/* ヘッダー */}
             <div className="flex items-start space-x-4 mb-4">
@@ -233,13 +258,13 @@ const DirectRequestsPage: React.FC = () => {
 
       {/* 空の状態 */}
       {!isAuthenticated && (
-        <div className="mt-12 text-center py-12 bg-blue-50 rounded-lg">
-          <User className="h-16 w-16 text-blue-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-blue-900 mb-2">ログインして依頼を送ろう</h3>
-          <p className="text-blue-700 mb-4">
+        <div className="mt-12 text-center py-12 bg-orange-50 rounded-lg">
+          <User className="h-16 w-16 text-orange-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-orange-900 mb-2">ログインして依頼を送ろう</h3>
+          <p className="text-orange-700 mb-4">
             ログインすると気になるクリエイターに直接依頼を送ることができます
           </p>
-          <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          <button className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
             ログイン
           </button>
         </div>
@@ -250,29 +275,29 @@ const DirectRequestsPage: React.FC = () => {
         <h2 className="text-xl font-semibold text-gray-900 mb-4">依頼の流れ</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="text-center">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <span className="text-blue-600 font-bold">1</span>
+            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <span className="text-orange-600 font-bold">1</span>
             </div>
             <h3 className="font-medium text-gray-900 mb-2">クリエイター選択</h3>
             <p className="text-sm text-gray-600">気になるクリエイターを見つけて「依頼する」をクリック</p>
           </div>
           <div className="text-center">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <span className="text-blue-600 font-bold">2</span>
+            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <span className="text-orange-600 font-bold">2</span>
             </div>
             <h3 className="font-medium text-gray-900 mb-2">依頼内容入力</h3>
             <p className="text-sm text-gray-600">希望する作品の詳細や予算を入力して送信</p>
           </div>
           <div className="text-center">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <span className="text-blue-600 font-bold">3</span>
+            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <span className="text-orange-600 font-bold">3</span>
             </div>
             <h3 className="font-medium text-gray-900 mb-2">承諾・制作</h3>
             <p className="text-sm text-gray-600">クリエイターが承諾したら制作開始</p>
           </div>
           <div className="text-center">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <span className="text-blue-600 font-bold">4</span>
+            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <span className="text-orange-600 font-bold">4</span>
             </div>
             <h3 className="font-medium text-gray-900 mb-2">完成・納品</h3>
             <p className="text-sm text-gray-600">作品完成後、納品されて取引完了</p>
@@ -291,7 +316,7 @@ const DirectRequestsPage: React.FC = () => {
               key={page}
               className={`px-3 py-2 rounded-md transition-colors ${
                 page === 1
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-orange-600 text-white'
                   : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
               }`}
             >

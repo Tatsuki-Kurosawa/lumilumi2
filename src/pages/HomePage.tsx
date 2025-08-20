@@ -55,6 +55,7 @@ const HomePage: React.FC = () => {
     <div className="min-h-screen">
       {/* ヒーローセクション */}
       <section className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 text-white py-20">
+      <section className="bg-gradient-to-br from-orange-600 via-red-600 to-pink-500 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
@@ -70,15 +71,15 @@ const HomePage: React.FC = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                to="/works"
-                className="inline-flex items-center px-8 py-3 bg-white text-blue-600 rounded-full font-semibold hover:bg-gray-100 transition-colors"
+                to="/main"
+                className="inline-flex items-center px-8 py-3 bg-white text-orange-600 rounded-full font-semibold hover:bg-gray-100 transition-colors"
               >
                 作品を見る
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
               <Link
                 to="/upload"
-                className="inline-flex items-center px-8 py-3 bg-transparent border-2 border-white text-white rounded-full font-semibold hover:bg-white hover:text-blue-600 transition-colors"
+                className="inline-flex items-center px-8 py-3 bg-transparent border-2 border-white text-white rounded-full font-semibold hover:bg-white hover:text-orange-600 transition-colors"
               >
                 作品を投稿
               </Link>
@@ -93,8 +94,8 @@ const HomePage: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mb-4">
-                  <stat.icon className="h-6 w-6 text-blue-600" />
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-orange-100 rounded-lg mb-4">
+                  <stat.icon className="h-6 w-6 text-orange-600" />
                 </div>
                 <div className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</div>
                 <div className="text-gray-600">{stat.label}</div>
@@ -104,21 +105,42 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* 注目作品セクション */}
+      {/* 注目のマンガセクション */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">注目の作品</h2>
+            <h2 className="text-3xl font-bold text-gray-900">注目のマンガ</h2>
             <Link
-              to="/works"
-              className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
+              to="/main"
+              className="inline-flex items-center text-orange-600 hover:text-orange-700 font-medium"
             >
               すべて見る
               <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredWorks.map((work) => (
+            {featuredWorks.slice(0, 2).map((work) => (
+              <WorkCard key={work.id} work={work} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 注目のイラストセクション */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-bold text-gray-900">注目のイラスト</h2>
+            <Link
+              to="/main"
+              className="inline-flex items-center text-orange-600 hover:text-orange-700 font-medium"
+            >
+              すべて見る
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {featuredWorks.slice(2, 4).map((work) => (
               <WorkCard key={work.id} work={work} />
             ))}
           </div>
@@ -126,7 +148,7 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* 機能紹介セクション */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">プラットフォームの特徴</h2>
@@ -136,8 +158,8 @@ const HomePage: React.FC = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center p-6">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Palette className="h-8 w-8 text-blue-600" />
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Palette className="h-8 w-8 text-orange-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">簡単投稿</h3>
               <p className="text-gray-600">
@@ -145,8 +167,8 @@ const HomePage: React.FC = () => {
               </p>
             </div>
             <div className="text-center p-6">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="h-8 w-8 text-green-600" />
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="h-8 w-8 text-orange-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">学生コミュニティ</h3>
               <p className="text-gray-600">
@@ -154,8 +176,8 @@ const HomePage: React.FC = () => {
               </p>
             </div>
             <div className="text-center p-6">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Star className="h-8 w-8 text-purple-600" />
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Star className="h-8 w-8 text-orange-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">依頼システム</h3>
               <p className="text-gray-600">
@@ -167,19 +189,21 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* CTAセクション */}
-      <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+      <section className="py-16 bg-gradient-to-r from-orange-600 to-red-600 text-white">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold mb-4">今すぐ始めよう</h2>
           <p className="text-xl mb-8 text-blue-100">
             無料で登録して、あなたの創作活動を次のレベルへ
           </p>
-          <Link
-            to="/register"
-            className="inline-flex items-center px-8 py-3 bg-white text-blue-600 rounded-full font-semibold hover:bg-gray-100 transition-colors text-lg"
+          <p className="text-xl mb-8 text-orange-100">
+            無料で登録して、あなたの創作活動を次のレベルへ
+          </p>
+          <button
+            className="inline-flex items-center px-8 py-3 bg-white text-orange-600 rounded-full font-semibold hover:bg-gray-100 transition-colors text-lg"
           >
             無料で始める
             <ArrowRight className="ml-2 h-5 w-5" />
-          </Link>
+          </button>
         </div>
       </section>
     </div>
