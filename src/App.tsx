@@ -32,7 +32,7 @@ function App() {
         case 'requests':
           return <DirectRequestsPage contentType="manga" />;
         case 'ranking':
-          return <RankingPage contentType="manga" />;
+          return <MangaRankingPage contentType="manga" />;
         default:
           return <MangaPage />;
       }
@@ -43,7 +43,7 @@ function App() {
         case 'requests':
           return <DirectRequestsPage contentType="illustration" />;
         case 'ranking':
-          return <RankingPage contentType="illustration" />;
+          return <IllustrationRankingPage contentType="illustration" />;
         return <IllustrationRankingPage />;
           return <IllustrationsPage />;
       }
