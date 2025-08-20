@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, User, Heart, Upload, Menu, X, Trophy, Eye } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -20,6 +20,7 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -28,6 +29,21 @@ const Header: React.FC<HeaderProps> = ({
     console.log('Search:', searchQuery);
   };
 
+  const handleContentTypeChange = (type: 'manga' | 'illustration') => {
+    onContentTypeChange(type);
+    // メインページに移動
+    if (location.pathname !== '/main') {
+      navigate('/main');
+    }
+  };
+
+  const handleSectionChange = (section: 'home' | 'requests' | 'ranking') => {
+    onSectionChange(section);
+    // メインページに移動
+    if (location.pathname !== '/main') {
+      navigate('/main');
+    }
+  };
   return (
     <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50">
       {/* 上段ヘッダー */}
@@ -146,7 +162,7 @@ const Header: React.FC<HeaderProps> = ({
             {/* 左側: コンテンツタイプ切り替え */}
             <div className="flex space-x-2">
               <button
-                onClick={() => onContentTypeChange('manga')}
+                onClick={() => handleContentTypeChange('manga')}
                 className={`px-6 py-2 rounded-lg font-semibold text-lg transition-colors ${
                   activeContentType === 'manga'
                     ? 'bg-yellow-400 text-white shadow-md'
@@ -156,7 +172,7 @@ const Header: React.FC<HeaderProps> = ({
                 マンガ
               </button>
               <button
-                onClick={() => onContentTypeChange('illustration')}
+                onClick={() => handleContentTypeChange('illustration')}
                 className={`px-6 py-2 rounded-lg font-semibold text-lg transition-colors ${
                   activeContentType === 'illustration'
                     ? 'bg-yellow-400 text-white shadow-md'
@@ -170,7 +186,7 @@ const Header: React.FC<HeaderProps> = ({
             {/* 右側: セクション切り替え */}
             <div className="flex space-x-1 bg-white rounded-lg p-1 border border-gray-200">
               <button
-                onClick={() => onSectionChange('home')}
+                onClick={() => handleSectionChange('home')}
                 className={`px-4 py-2 rounded-md font-medium transition-colors ${
                   activeSection === 'home'
                     ? 'bg-cyan-500 text-white shadow-sm'
@@ -180,7 +196,7 @@ const Header: React.FC<HeaderProps> = ({
                 ホーム
               </button>
               <button
-                onClick={() => onSectionChange('requests')}
+                onClick={() => handleSectionChange('requests')}
                 className={`px-4 py-2 rounded-md font-medium transition-colors ${
                   activeSection === 'requests'
                     ? 'bg-cyan-500 text-white shadow-sm'
@@ -190,7 +206,7 @@ const Header: React.FC<HeaderProps> = ({
                 依頼
               </button>
               <button
-                onClick={() => onSectionChange('ranking')}
+                onClick={() => handleSectionChange('ranking')}
                 className={`px-4 py-2 rounded-md font-medium transition-colors ${
                   activeSection === 'ranking'
                     ? 'bg-cyan-500 text-white shadow-sm'
@@ -209,7 +225,7 @@ const Header: React.FC<HeaderProps> = ({
               <div className="space-y-2">
                 <div className="text-center">
                   <button
-                    onClick={() => onContentTypeChange('manga')}
+                    onClick={() => handleContentTypeChange('manga')}
                     className={`w-full px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
                       activeContentType === 'manga'
                         ? 'bg-yellow-400 text-white'
@@ -222,8 +238,8 @@ const Header: React.FC<HeaderProps> = ({
                 <div className="space-y-1">
                   <button
                     onClick={() => {
-                      onContentTypeChange('manga');
-                      onSectionChange('home');
+                      handleContentTypeChange('manga');
+                      handleSectionChange('home');
                     }}
                     className={`w-full px-2 py-1 rounded text-xs transition-colors ${
                       activeContentType === 'manga' && activeSection === 'home'
@@ -235,8 +251,8 @@ const Header: React.FC<HeaderProps> = ({
                   </button>
                   <button
                     onClick={() => {
-                      onContentTypeChange('manga');
-                      onSectionChange('requests');
+                      handleContentTypeChange('manga');
+                      handleSectionChange('requests');
                     }}
                     className={`w-full px-2 py-1 rounded text-xs transition-colors ${
                       activeContentType === 'manga' && activeSection === 'requests'
@@ -248,8 +264,8 @@ const Header: React.FC<HeaderProps> = ({
                   </button>
                   <button
                     onClick={() => {
-                      onContentTypeChange('manga');
-                      onSectionChange('ranking');
+                      handleContentTypeChange('manga');
+                      handleSectionChange('ranking');
                     }}
                     className={`w-full px-2 py-1 rounded text-xs transition-colors ${
                       activeContentType === 'manga' && activeSection === 'ranking'
@@ -266,7 +282,7 @@ const Header: React.FC<HeaderProps> = ({
               <div className="space-y-2">
                 <div className="text-center">
                   <button
-                    onClick={() => onContentTypeChange('illustration')}
+                    onClick={() => handleContentTypeChange('illustration')}
                     className={`w-full px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
                       activeContentType === 'illustration'
                         ? 'bg-yellow-400 text-white'
@@ -279,8 +295,8 @@ const Header: React.FC<HeaderProps> = ({
                 <div className="space-y-1">
                   <button
                     onClick={() => {
-                      onContentTypeChange('illustration');
-                      onSectionChange('home');
+                      handleContentTypeChange('illustration');
+                      handleSectionChange('home');
                     }}
                     className={`w-full px-2 py-1 rounded text-xs transition-colors ${
                       activeContentType === 'illustration' && activeSection === 'home'
@@ -292,8 +308,8 @@ const Header: React.FC<HeaderProps> = ({
                   </button>
                   <button
                     onClick={() => {
-                      onContentTypeChange('illustration');
-                      onSectionChange('requests');
+                      handleContentTypeChange('illustration');
+                      handleSectionChange('requests');
                     }}
                     className={`w-full px-2 py-1 rounded text-xs transition-colors ${
                       activeContentType === 'illustration' && activeSection === 'requests'
@@ -305,8 +321,8 @@ const Header: React.FC<HeaderProps> = ({
                   </button>
                   <button
                     onClick={() => {
-                      onContentTypeChange('illustration');
-                      onSectionChange('ranking');
+                      handleContentTypeChange('illustration');
+                      handleSectionChange('ranking');
                     }}
                     className={`w-full px-2 py-1 rounded text-xs transition-colors ${
                       activeContentType === 'illustration' && activeSection === 'ranking'

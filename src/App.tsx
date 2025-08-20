@@ -62,7 +62,6 @@ function App() {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/main" element={renderMainContent()} />
-              <Route path="/main" element={renderMainContent()} />
               <Route path="/works/:id" element={<WorkDetailPage />} />
               <Route path="/contests" element={<ContestsPage />} />
               <Route path="/contests/:id" element={<ContestDetailPage />} />
@@ -70,6 +69,8 @@ function App() {
               <Route path="/r18" element={<R18Page />} />
               <Route path="/upload" element={<UploadPage />} />
               <Route path="/user/:id" element={<UserProfilePage />} />
+              {/* デフォルトルート - メインページにリダイレクト */}
+              <Route path="*" element={renderMainContent()} />
             </Routes>
           </main>
           {showLoginModal && (
