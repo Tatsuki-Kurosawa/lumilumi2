@@ -13,6 +13,8 @@ import R18Page from './pages/R18Page';
 import UploadPage from './pages/UploadPage';
 import WorkDetailPage from './pages/WorkDetailPage';
 import UserProfilePage from './pages/UserProfilePage';
+import MangaRankingPage from './pages/MangaRankingPage';
+import IllustrationRankingPage from './pages/IllustrationRankingPage';
 import LoginModal from './components/LoginModal';
 import { AuthProvider } from './contexts/AuthContext';
 
@@ -41,7 +43,7 @@ function App() {
           return <DirectRequestsPage contentType="illustration" />;
         case 'ranking':
           return <RankingPage contentType="illustration" />;
-        default:
+        return <IllustrationRankingPage />;
           return <IllustrationsPage />;
       }
     }
