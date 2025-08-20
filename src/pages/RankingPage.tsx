@@ -182,7 +182,6 @@ const RankingPage: React.FC = () => {
                       <span>❤️ {work.likes}</span>
                       <span>👁️ {work.views}</span>
                     </div>
-                    <div className="text-lg font-bold text-blue-600">
                     <div className="text-lg font-bold text-orange-600">
                       {work.likes + work.views}pt
                     </div>
