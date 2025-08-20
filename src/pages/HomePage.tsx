@@ -55,6 +55,7 @@ const HomePage: React.FC = () => {
     <div className="min-h-screen">
       {/* ヒーローセクション */}
       <section className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 text-white py-20">
+      </section>
       <section className="bg-gradient-to-br from-orange-600 via-red-600 to-pink-500 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
