@@ -35,7 +35,8 @@ const Header: React.FC<HeaderProps> = ({
            location.pathname === '/r18' ||
            location.pathname.startsWith('/mypage') ||
            location.pathname.startsWith('/user/') ||
-           location.pathname.startsWith('/works/');
+           location.pathname.startsWith('/works/') ||
+           location.pathname.startsWith('/contests/');
   };
 
   return (
@@ -62,7 +63,7 @@ const Header: React.FC<HeaderProps> = ({
                     placeholder="検索..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-48 pl-8 pr-4 py-1.5 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-48 pl-8 pr-4 py-1.5 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                   />
                   <Search className="absolute left-2.5 top-2 h-4 w-4 text-gray-400" />
                 </form>
@@ -72,7 +73,7 @@ const Header: React.FC<HeaderProps> = ({
               {isAuthenticated && (
                 <Link
                   to="/upload"
-                  className="hidden sm:flex items-center space-x-1 px-3 py-1.5 bg-orange-600 text-white rounded-full hover:bg-orange-700 transition-colors text-sm"
+                  className="hidden sm:flex items-center space-x-1 px-3 py-1.5 bg-yellow-500 text-white rounded-full hover:bg-yellow-600 transition-colors text-sm"
                 >
                   <Upload className="h-4 w-4" />
                   <span>投稿</span>
@@ -82,7 +83,7 @@ const Header: React.FC<HeaderProps> = ({
               {/* コンテスト */}
               <Link
                 to="/contests"
-                className="hidden sm:flex items-center space-x-1 px-3 py-1.5 text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-full transition-colors text-sm"
+                className="hidden sm:flex items-center space-x-1 px-3 py-1.5 text-gray-700 hover:text-yellow-600 hover:bg-yellow-50 rounded-full transition-colors text-sm"
               >
                 <Trophy className="h-4 w-4" />
                 <span>コンテスト</span>
@@ -130,7 +131,7 @@ const Header: React.FC<HeaderProps> = ({
               ) : (
                 <button
                   onClick={onLoginClick}
-                  className="px-4 py-1.5 bg-orange-600 text-white rounded-full hover:bg-orange-700 transition-colors text-sm"
+                  className="px-4 py-1.5 bg-yellow-500 text-white rounded-full hover:bg-yellow-600 transition-colors text-sm"
                 >
                   ログイン
                 </button>
@@ -139,7 +140,7 @@ const Header: React.FC<HeaderProps> = ({
               {/* モバイルメニューボタン */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="sm:hidden p-2 text-gray-700 hover:text-orange-600 transition-colors"
+                className="sm:hidden p-2 text-gray-700 hover:text-yellow-600 transition-colors"
               >
                 {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
@@ -149,7 +150,7 @@ const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* 下段ヘッダー（特別ページ以外で表示） */}
-      {!isSpecialPage() && (
+      {location.pathname === '/main' && (
         <div className="bg-gray-50 border-b border-gray-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-14">
@@ -159,8 +160,8 @@ const Header: React.FC<HeaderProps> = ({
                   onClick={() => onContentTypeChange('manga')}
                   className={`px-6 py-2 rounded-lg font-semibold text-lg transition-colors ${
                     activeContentType === 'manga'
-                      ? 'bg-orange-600 text-white shadow-md'
-                      : 'bg-white text-gray-700 hover:bg-orange-50 hover:text-orange-600 border border-gray-200'
+                      ? 'bg-yellow-500 text-white shadow-md'
+                      : 'bg-white text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 border border-gray-200'
                   }`}
                 >
                   マンガ
@@ -169,8 +170,8 @@ const Header: React.FC<HeaderProps> = ({
                   onClick={() => onContentTypeChange('illustration')}
                   className={`px-6 py-2 rounded-lg font-semibold text-lg transition-colors ${
                     activeContentType === 'illustration'
-                      ? 'bg-orange-600 text-white shadow-md'
-                      : 'bg-white text-gray-700 hover:bg-orange-50 hover:text-orange-600 border border-gray-200'
+                      ? 'bg-yellow-500 text-white shadow-md'
+                      : 'bg-white text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 border border-gray-200'
                   }`}
                 >
                   イラスト
@@ -183,8 +184,8 @@ const Header: React.FC<HeaderProps> = ({
                   onClick={() => onSectionChange('home')}
                   className={`px-4 py-2 rounded-md font-medium transition-colors ${
                     activeSection === 'home'
-                      ? 'bg-orange-600 text-white shadow-sm'
-                      : 'text-gray-600 hover:text-orange-600 hover:bg-orange-50'
+                      ? 'bg-yellow-500 text-white shadow-sm'
+                      : 'text-gray-600 hover:text-yellow-600 hover:bg-yellow-50'
                   }`}
                 >
                   ホーム
@@ -193,8 +194,8 @@ const Header: React.FC<HeaderProps> = ({
                   onClick={() => onSectionChange('requests')}
                   className={`px-4 py-2 rounded-md font-medium transition-colors ${
                     activeSection === 'requests'
-                      ? 'bg-orange-600 text-white shadow-sm'
-                      : 'text-gray-600 hover:text-orange-600 hover:bg-orange-50'
+                      ? 'bg-yellow-500 text-white shadow-sm'
+                      : 'text-gray-600 hover:text-yellow-600 hover:bg-yellow-50'
                   }`}
                 >
                   依頼
@@ -203,8 +204,8 @@ const Header: React.FC<HeaderProps> = ({
                   onClick={() => onSectionChange('ranking')}
                   className={`px-4 py-2 rounded-md font-medium transition-colors ${
                     activeSection === 'ranking'
-                      ? 'bg-orange-600 text-white shadow-sm'
-                      : 'text-gray-600 hover:text-orange-600 hover:bg-orange-50'
+                      ? 'bg-yellow-500 text-white shadow-sm'
+                      : 'text-gray-600 hover:text-yellow-600 hover:bg-yellow-50'
                   }`}
                 >
                   ランキング
@@ -221,14 +222,14 @@ const Header: React.FC<HeaderProps> = ({
           <div className="flex flex-col space-y-2 px-4">
             <Link
               to="/upload"
-              className="px-3 py-2 text-gray-700 hover:text-orange-600 hover:bg-gray-50 rounded-md"
+              className="px-3 py-2 text-gray-700 hover:text-yellow-600 hover:bg-gray-50 rounded-md"
               onClick={() => setIsMenuOpen(false)}
             >
               投稿
             </Link>
             <Link
               to="/contests"
-              className="px-3 py-2 text-gray-700 hover:text-orange-600 hover:bg-gray-50 rounded-md"
+              className="px-3 py-2 text-gray-700 hover:text-yellow-600 hover:bg-gray-50 rounded-md"
               onClick={() => setIsMenuOpen(false)}
             >
               コンテスト
@@ -249,7 +250,7 @@ const Header: React.FC<HeaderProps> = ({
                 placeholder="検索..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
               />
               <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             </form>

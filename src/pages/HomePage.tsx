@@ -72,15 +72,15 @@ const HomePage: React.FC = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                to="/main"
-                className="inline-flex items-center px-8 py-3 bg-white text-orange-600 rounded-full font-semibold hover:bg-gray-100 transition-colors"
+                to="/main" 
+                className="inline-flex items-center px-8 py-3 bg-white text-yellow-600 rounded-full font-semibold hover:bg-gray-100 transition-colors"
               >
                 作品を見る
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
               <Link
                 to="/upload"
-                className="inline-flex items-center px-8 py-3 bg-transparent border-2 border-white text-white rounded-full font-semibold hover:bg-white hover:text-orange-600 transition-colors"
+                className="inline-flex items-center px-8 py-3 bg-transparent border-2 border-white text-white rounded-full font-semibold hover:bg-white hover:text-yellow-600 transition-colors"
               >
                 作品を投稿
               </Link>
@@ -113,7 +113,7 @@ const HomePage: React.FC = () => {
             <h2 className="text-3xl font-bold text-gray-900">注目のマンガ</h2>
             <Link
               to="/main"
-              className="inline-flex items-center text-orange-600 hover:text-orange-700 font-medium"
+              className="inline-flex items-center text-yellow-600 hover:text-yellow-700 font-medium"
             >
               すべて見る
               <ArrowRight className="ml-1 h-4 w-4" />
@@ -134,7 +134,7 @@ const HomePage: React.FC = () => {
             <h2 className="text-3xl font-bold text-gray-900">注目のイラスト</h2>
             <Link
               to="/main"
-              className="inline-flex items-center text-orange-600 hover:text-orange-700 font-medium"
+              className="inline-flex items-center text-yellow-600 hover:text-yellow-700 font-medium"
             >
               すべて見る
               <ArrowRight className="ml-1 h-4 w-4" />
@@ -159,8 +159,8 @@ const HomePage: React.FC = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center p-6">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Palette className="h-8 w-8 text-orange-600" />
+              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Palette className="h-8 w-8 text-yellow-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">簡単投稿</h3>
               <p className="text-gray-600">
@@ -168,8 +168,8 @@ const HomePage: React.FC = () => {
               </p>
             </div>
             <div className="text-center p-6">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="h-8 w-8 text-orange-600" />
+              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="h-8 w-8 text-yellow-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">学生コミュニティ</h3>
               <p className="text-gray-600">
@@ -177,8 +177,8 @@ const HomePage: React.FC = () => {
               </p>
             </div>
             <div className="text-center p-6">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Star className="h-8 w-8 text-orange-600" />
+              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Star className="h-8 w-8 text-yellow-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">依頼システム</h3>
               <p className="text-gray-600">
@@ -190,7 +190,7 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* CTAセクション */}
-      <section className="py-16 bg-gradient-to-r from-orange-600 to-red-600 text-white">
+      <section className="py-16 bg-gradient-to-r from-yellow-500 to-orange-500 text-white">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold mb-4">今すぐ始めよう</h2>
           <p className="text-xl mb-8 text-blue-100">
@@ -200,7 +200,7 @@ const HomePage: React.FC = () => {
             無料で登録して、あなたの創作活動を次のレベルへ
           </p>
           <button
-            className="inline-flex items-center px-8 py-3 bg-white text-orange-600 rounded-full font-semibold hover:bg-gray-100 transition-colors text-lg"
+            className="inline-flex items-center px-8 py-3 bg-white text-yellow-600 rounded-full font-semibold hover:bg-gray-100 transition-colors text-lg"
           >
             無料で始める
             <ArrowRight className="ml-2 h-5 w-5" />
