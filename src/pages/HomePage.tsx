@@ -54,9 +54,7 @@ const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen">
       {/* ヒーローセクション */}
-      <section className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 text-white py-20">
-      </section>
-      <section className="bg-gradient-to-br from-orange-600 via-red-600 to-pink-500 text-white py-20">
+      <section className="bg-gradient-to-br from-yellow-400 via-orange-400 to-red-400 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
@@ -66,21 +64,21 @@ const HomePage: React.FC = () => {
                 創作プラットフォーム
               </span>
             </h1>
-            <p className="text-xl md:text-2xl mb-8 text-blue-100 max-w-3xl mx-auto">
+            <p className="text-xl md:text-2xl mb-8 text-orange-100 max-w-3xl mx-auto">
               あなたの描いた漫画・イラストを世界に発信しよう。
               学生同士で繋がり、創作活動を支援し合うコミュニティ。
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/main" 
-                className="inline-flex items-center px-8 py-3 bg-white text-yellow-600 rounded-full font-semibold hover:bg-gray-100 transition-colors"
+                className="inline-flex items-center px-8 py-3 bg-white text-orange-600 rounded-full font-semibold hover:bg-gray-100 transition-colors"
               >
                 作品を見る
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
               <Link
                 to="/upload"
-                className="inline-flex items-center px-8 py-3 bg-transparent border-2 border-white text-white rounded-full font-semibold hover:bg-white hover:text-yellow-600 transition-colors"
+                className="inline-flex items-center px-8 py-3 bg-transparent border-2 border-white text-white rounded-full font-semibold hover:bg-white hover:text-orange-600 transition-colors"
               >
                 作品を投稿
               </Link>
@@ -95,8 +93,8 @@ const HomePage: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mb-4">
-                  <stat.icon className="h-6 w-6 text-blue-600" />
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-lg mb-4">
+                  <stat.icon className="h-6 w-6 text-yellow-600" />
                 </div>
                 <div className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</div>
                 <div className="text-gray-600">{stat.label}</div>
@@ -190,17 +188,14 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* CTAセクション */}
-      <section className="py-16 bg-gradient-to-r from-yellow-500 to-orange-500 text-white">
+      <section className="py-16 bg-gradient-to-r from-yellow-400 to-orange-400 text-white">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold mb-4">今すぐ始めよう</h2>
-          <p className="text-xl mb-8 text-blue-100">
-            無料で登録して、あなたの創作活動を次のレベルへ
-          </p>
           <p className="text-xl mb-8 text-orange-100">
             無料で登録して、あなたの創作活動を次のレベルへ
           </p>
           <button
-            className="inline-flex items-center px-8 py-3 bg-white text-yellow-600 rounded-full font-semibold hover:bg-gray-100 transition-colors text-lg"
+            className="inline-flex items-center px-8 py-3 bg-white text-orange-600 rounded-full font-semibold hover:bg-gray-100 transition-colors text-lg"
           >
             無料で始める
             <ArrowRight className="ml-2 h-5 w-5" />

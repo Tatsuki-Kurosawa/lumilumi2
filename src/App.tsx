@@ -58,7 +58,7 @@ function App() {
             activeSection={activeSection}
             onSectionChange={setActiveSection}
           />
-          <main className="pt-24">
+          <main className="pt-32">
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/main" element={renderMainContent()} />

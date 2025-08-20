@@ -28,17 +28,6 @@ const Header: React.FC<HeaderProps> = ({
     console.log('Search:', searchQuery);
   };
 
-  const isSpecialPage = () => {
-    return location.pathname === '/' || 
-           location.pathname === '/upload' || 
-           location.pathname === '/contests' || 
-           location.pathname === '/r18' ||
-           location.pathname.startsWith('/mypage') ||
-           location.pathname.startsWith('/user/') ||
-           location.pathname.startsWith('/works/') ||
-           location.pathname.startsWith('/contests/');
-  };
-
   return (
     <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50">
       {/* 上段ヘッダー */}
@@ -47,7 +36,7 @@ const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center justify-between h-12">
             {/* ロゴ */}
             <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">M</span>
               </div>
               <span className="text-xl font-bold text-gray-900 hidden sm:block">MangaHub</span>
@@ -63,7 +52,7 @@ const Header: React.FC<HeaderProps> = ({
                     placeholder="検索..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-48 pl-8 pr-4 py-1.5 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                    className="w-48 pl-8 pr-4 py-1.5 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
                   />
                   <Search className="absolute left-2.5 top-2 h-4 w-4 text-gray-400" />
                 </form>
@@ -73,7 +62,7 @@ const Header: React.FC<HeaderProps> = ({
               {isAuthenticated && (
                 <Link
                   to="/upload"
-                  className="hidden sm:flex items-center space-x-1 px-3 py-1.5 bg-yellow-500 text-white rounded-full hover:bg-yellow-600 transition-colors text-sm"
+                  className="hidden sm:flex items-center space-x-1 px-3 py-1.5 bg-yellow-400 text-white rounded-full hover:bg-yellow-500 transition-colors text-sm"
                 >
                   <Upload className="h-4 w-4" />
                   <span>投稿</span>
@@ -131,7 +120,7 @@ const Header: React.FC<HeaderProps> = ({
               ) : (
                 <button
                   onClick={onLoginClick}
-                  className="px-4 py-1.5 bg-yellow-500 text-white rounded-full hover:bg-yellow-600 transition-colors text-sm"
+                  className="px-4 py-1.5 bg-yellow-400 text-white rounded-full hover:bg-yellow-500 transition-colors text-sm"
                 >
                   ログイン
                 </button>
@@ -149,74 +138,192 @@ const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* 下段ヘッダー（特別ページ以外で表示） */}
-      {location.pathname === '/main' && (
-        <div className="bg-gray-50 border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-14">
-              {/* 左側: コンテンツタイプ切り替え */}
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => onContentTypeChange('manga')}
-                  className={`px-6 py-2 rounded-lg font-semibold text-lg transition-colors ${
-                    activeContentType === 'manga'
-                      ? 'bg-yellow-500 text-white shadow-md'
-                      : 'bg-white text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 border border-gray-200'
-                  }`}
-                >
-                  マンガ
-                </button>
-                <button
-                  onClick={() => onContentTypeChange('illustration')}
-                  className={`px-6 py-2 rounded-lg font-semibold text-lg transition-colors ${
-                    activeContentType === 'illustration'
-                      ? 'bg-yellow-500 text-white shadow-md'
-                      : 'bg-white text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 border border-gray-200'
-                  }`}
-                >
-                  イラスト
-                </button>
+      {/* 下段ヘッダー（常に表示） */}
+      <div className="bg-gray-50 border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* デスクトップ表示 */}
+          <div className="hidden sm:flex items-center justify-between h-14">
+            {/* 左側: コンテンツタイプ切り替え */}
+            <div className="flex space-x-2">
+              <button
+                onClick={() => onContentTypeChange('manga')}
+                className={`px-6 py-2 rounded-lg font-semibold text-lg transition-colors ${
+                  activeContentType === 'manga'
+                    ? 'bg-yellow-400 text-white shadow-md'
+                    : 'bg-white text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 border border-gray-200'
+                }`}
+              >
+                マンガ
+              </button>
+              <button
+                onClick={() => onContentTypeChange('illustration')}
+                className={`px-6 py-2 rounded-lg font-semibold text-lg transition-colors ${
+                  activeContentType === 'illustration'
+                    ? 'bg-yellow-400 text-white shadow-md'
+                    : 'bg-white text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 border border-gray-200'
+                }`}
+              >
+                イラスト
+              </button>
+            </div>
+
+            {/* 右側: セクション切り替え */}
+            <div className="flex space-x-1 bg-white rounded-lg p-1 border border-gray-200">
+              <button
+                onClick={() => onSectionChange('home')}
+                className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                  activeSection === 'home'
+                    ? 'bg-cyan-500 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-cyan-600 hover:bg-cyan-50'
+                }`}
+              >
+                ホーム
+              </button>
+              <button
+                onClick={() => onSectionChange('requests')}
+                className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                  activeSection === 'requests'
+                    ? 'bg-cyan-500 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-cyan-600 hover:bg-cyan-50'
+                }`}
+              >
+                依頼
+              </button>
+              <button
+                onClick={() => onSectionChange('ranking')}
+                className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                  activeSection === 'ranking'
+                    ? 'bg-cyan-500 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-cyan-600 hover:bg-cyan-50'
+                }`}
+              >
+                ランキング
+              </button>
+            </div>
+          </div>
+
+          {/* モバイル表示 */}
+          <div className="sm:hidden py-3">
+            <div className="grid grid-cols-2 gap-2">
+              {/* マンガセクション */}
+              <div className="space-y-2">
+                <div className="text-center">
+                  <button
+                    onClick={() => onContentTypeChange('manga')}
+                    className={`w-full px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
+                      activeContentType === 'manga'
+                        ? 'bg-yellow-400 text-white'
+                        : 'bg-white text-gray-700 border border-gray-200'
+                    }`}
+                  >
+                    マンガ
+                  </button>
+                </div>
+                <div className="space-y-1">
+                  <button
+                    onClick={() => {
+                      onContentTypeChange('manga');
+                      onSectionChange('home');
+                    }}
+                    className={`w-full px-2 py-1 rounded text-xs transition-colors ${
+                      activeContentType === 'manga' && activeSection === 'home'
+                        ? 'bg-cyan-500 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-cyan-50'
+                    }`}
+                  >
+                    ホーム
+                  </button>
+                  <button
+                    onClick={() => {
+                      onContentTypeChange('manga');
+                      onSectionChange('requests');
+                    }}
+                    className={`w-full px-2 py-1 rounded text-xs transition-colors ${
+                      activeContentType === 'manga' && activeSection === 'requests'
+                        ? 'bg-cyan-500 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-cyan-50'
+                    }`}
+                  >
+                    依頼
+                  </button>
+                  <button
+                    onClick={() => {
+                      onContentTypeChange('manga');
+                      onSectionChange('ranking');
+                    }}
+                    className={`w-full px-2 py-1 rounded text-xs transition-colors ${
+                      activeContentType === 'manga' && activeSection === 'ranking'
+                        ? 'bg-cyan-500 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-cyan-50'
+                    }`}
+                  >
+                    ランキング
+                  </button>
+                </div>
               </div>
 
-              {/* 右側: セクション切り替え */}
-              <div className="flex space-x-1 bg-white rounded-lg p-1 border border-gray-200">
-                <button
-                  onClick={() => onSectionChange('home')}
-                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                    activeSection === 'home'
-                      ? 'bg-yellow-500 text-white shadow-sm'
-                      : 'text-gray-600 hover:text-yellow-600 hover:bg-yellow-50'
-                  }`}
-                >
-                  ホーム
-                </button>
-                <button
-                  onClick={() => onSectionChange('requests')}
-                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                    activeSection === 'requests'
-                      ? 'bg-yellow-500 text-white shadow-sm'
-                      : 'text-gray-600 hover:text-yellow-600 hover:bg-yellow-50'
-                  }`}
-                >
-                  依頼
-                </button>
-                <button
-                  onClick={() => onSectionChange('ranking')}
-                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                    activeSection === 'ranking'
-                      ? 'bg-yellow-500 text-white shadow-sm'
-                      : 'text-gray-600 hover:text-yellow-600 hover:bg-yellow-50'
-                  }`}
-                >
-                  ランキング
-                </button>
+              {/* イラストセクション */}
+              <div className="space-y-2">
+                <div className="text-center">
+                  <button
+                    onClick={() => onContentTypeChange('illustration')}
+                    className={`w-full px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
+                      activeContentType === 'illustration'
+                        ? 'bg-yellow-400 text-white'
+                        : 'bg-white text-gray-700 border border-gray-200'
+                    }`}
+                  >
+                    イラスト
+                  </button>
+                </div>
+                <div className="space-y-1">
+                  <button
+                    onClick={() => {
+                      onContentTypeChange('illustration');
+                      onSectionChange('home');
+                    }}
+                    className={`w-full px-2 py-1 rounded text-xs transition-colors ${
+                      activeContentType === 'illustration' && activeSection === 'home'
+                        ? 'bg-cyan-500 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-cyan-50'
+                    }`}
+                  >
+                    ホーム
+                  </button>
+                  <button
+                    onClick={() => {
+                      onContentTypeChange('illustration');
+                      onSectionChange('requests');
+                    }}
+                    className={`w-full px-2 py-1 rounded text-xs transition-colors ${
+                      activeContentType === 'illustration' && activeSection === 'requests'
+                        ? 'bg-cyan-500 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-cyan-50'
+                    }`}
+                  >
+                    依頼
+                  </button>
+                  <button
+                    onClick={() => {
+                      onContentTypeChange('illustration');
+                      onSectionChange('ranking');
+                    }}
+                    className={`w-full px-2 py-1 rounded text-xs transition-colors ${
+                      activeContentType === 'illustration' && activeSection === 'ranking'
+                        ? 'bg-cyan-500 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-cyan-50'
+                    }`}
+                  >
+                    ランキング
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* モバイルメニュー */}
+      {/* モバイルメニュー（上段の追加メニュー） */}
       {isMenuOpen && (
         <div className="sm:hidden border-t border-gray-200 py-4 bg-white">
           <div className="flex flex-col space-y-2 px-4">
@@ -250,7 +357,7 @@ const Header: React.FC<HeaderProps> = ({
                 placeholder="検索..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
               />
               <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             </form>

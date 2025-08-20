@@ -142,7 +142,7 @@ const MangaPage: React.FC = () => {
                 key={page}
                 className={`px-3 py-2 rounded-md transition-colors ${
                   page === 1
-                    ? 'bg-orange-600 text-white'
+                    ? 'bg-yellow-400 text-white'
                     : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
                 }`}
               >
