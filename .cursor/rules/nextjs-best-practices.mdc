@@ -1,0 +1,59 @@
+# Next.js ベストプラクティス
+
+## プロジェクト構造
+- `src/app/` ディレクトリを使用したApp Router構造を採用
+- `src/components/` で再利用可能なコンポーネントを管理
+- `src/lib/` でユーティリティ関数やAPIクライアントを管理
+- `src/types/` でTypeScript型定義を管理
+
+## コンポーネント設計
+- 関数コンポーネントとReact Hooksを使用
+- `use client` ディレクティブは必要最小限に留める
+- サーバーコンポーネントを優先的に使用
+- コンポーネントは単一責任の原則に従う
+
+## パフォーマンス最適化
+- `next/image` を使用して画像最適化を実装
+- 動的インポート（`dynamic()`）でコード分割を実装
+- `useMemo` と `useCallback` で不要な再レンダリングを防止
+- 静的生成（SSG）とサーバーサイドレンダリング（SSR）を適切に使い分け
+
+## データフェッチング
+- Server Componentsでのデータフェッチを優先
+- `fetch` APIを使用し、適切なキャッシュ戦略を実装
+- API Routesは必要最小限に留める
+- データベースクエリはサーバーサイドで実行
+
+## ルーティング
+- App Routerのファイルベースルーティングを使用
+- 動的ルート（`[id]`）を適切に実装
+- ネストされたレイアウトで共通UIを管理
+- エラーハンドリング用の `error.tsx` と `not-found.tsx` を実装
+
+## スタイリング
+- Tailwind CSSを使用したユーティリティファーストアプローチ
+- CSS Modulesは必要最小限に留める
+- レスポンシブデザインを優先的に実装
+- ダークモード対応を考慮した設計
+
+## セキュリティ
+- 環境変数は `.env.local` で管理
+- 認証は NextAuth.js または Clerk を使用
+- API Routesでは適切な認証・認可を実装
+- XSS対策として適切なエスケープ処理を実装
+
+## テスト
+- Jest と React Testing Library を使用
+- コンポーネントの単体テストを優先
+- E2Eテストは Playwright を使用
+- テストカバレッジ80%以上を目標
+
+## 開発効率
+- ESLint と Prettier でコード品質を保つ
+- TypeScript strict mode を有効化
+- コミット前のlint-staged を設定
+- 適切なエラーハンドリングとログ出力を実装
+description:
+globs:
+alwaysApply: false
+---
