@@ -83,6 +83,26 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
           {/* ナビゲーション */}
           <nav className="hidden lg:flex items-center space-x-6">
             <Link
+              to="/manga"
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                isActive('/manga')
+                  ? 'text-cyan-600 bg-cyan-50'
+                  : 'text-gray-700 hover:text-cyan-600 hover:bg-gray-50'
+              }`}
+            >
+              マンガ
+            </Link>
+            <Link
+              to="/illustrations"
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                isActive('/illustrations')
+                  ? 'text-cyan-600 bg-cyan-50'
+                  : 'text-gray-700 hover:text-cyan-600 hover:bg-gray-50'
+              }`}
+            >
+              イラスト
+            </Link>
+            <Link
               to="/works"
               className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 isActive('/works')
@@ -253,6 +273,20 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
         {isMenuOpen && (
           <div className="lg:hidden border-t border-gray-200 py-4">
             <div className="flex flex-col space-y-2">
+              <Link
+                to="/manga"
+                className="px-3 py-2 text-gray-700 hover:text-cyan-600 hover:bg-gray-50 rounded-md"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                マンガ
+              </Link>
+              <Link
+                to="/illustrations"
+                className="px-3 py-2 text-gray-700 hover:text-cyan-600 hover:bg-gray-50 rounded-md"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                イラスト
+              </Link>
               <Link
                 to="/works"
                 className="px-3 py-2 text-gray-700 hover:text-cyan-600 hover:bg-gray-50 rounded-md"
