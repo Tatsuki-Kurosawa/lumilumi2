@@ -16,42 +16,9 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  // 6パターンのページかどうかを判定
-  const isMainContentPage = ['/manga', '/illustrations', '/manga-ranking', '/illustration-ranking', '/direct-requests'].includes(location.pathname);
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Search:', searchQuery);
-  };
-
-  const handleNavigation = (contentType: 'manga' | 'illustration', section: 'home' | 'requests' | 'ranking') => {
-    setIsMenuOpen(false);
-    
-    if (contentType === 'manga') {
-      switch (section) {
-        case 'home':
-          navigate('/manga');
-          break;
-        case 'requests':
-          navigate('/direct-requests');
-          break;
-        case 'ranking':
-          navigate('/manga-ranking');
-          break;
-      }
-    } else {
-      switch (section) {
-        case 'home':
-          navigate('/illustrations');
-          break;
-        case 'requests':
-          navigate('/direct-requests');
-          break;
-        case 'ranking':
-          navigate('/illustration-ranking');
-          break;
-      }
-    }
   };
 
   return (
@@ -131,61 +98,6 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
               R-18
             </Link>
           </nav>
-
-          {/* ユーザーメニュー */}
-          <div className="flex items-center space-x-6">
-            {isAuthenticated ? (
-              <>
-                <Link
-                  to="/upload"
-                  className="hidden sm:flex items-center space-x-1 px-4 py-2 bg-yellow-400 text-white rounded-full hover:bg-yellow-500 transition-colors"
-                >
-                  <Upload className="h-4 w-4" />
-                  <span>投稿</span>
-                </Link>
-                <Link to="/mypage" className="p-2 text-gray-700 hover:text-cyan-600 transition-colors">
-                  <Heart className="h-5 w-5" />
-                </Link>
-                <div className="relative group">
-                  <button className="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 transition-colors">
-                    {user?.avatar ? (
-                      <img src={user.avatar} alt={user.displayName} className="w-8 h-8 rounded-full" />
-                    ) : (
-                      <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                        <User className="h-4 w-4 text-gray-600" />
-                      </div>
-                    )}
-                    <span className="hidden sm:block text-sm font-medium text-gray-700">
-                      {user?.displayName}
-                    </span>
-                  </button>
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                    <Link
-                      to="/mypage"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      マイページ
-                    </Link>
-                    <button
-                      onClick={logout}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      ログアウト
-                    </button>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <button
-                onClick={onLoginClick}
-                className="px-4 py-2 bg-yellow-400 text-white rounded-full hover:bg-yellow-500 transition-colors"
-              >
-                ログイン
-              </button>
-            )}
-
-            {/* モバイルメニューボタン */}
-            <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="lg:hidden p-2 text-gray-700 hover:text-cyan-600 transition-colors"
             >
@@ -382,7 +294,3 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
         )}
       </div>
     </header>
-  );
-};
-
-export default Header;
