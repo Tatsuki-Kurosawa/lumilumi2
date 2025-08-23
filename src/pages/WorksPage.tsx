@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Search, Filter } from 'lucide-react';
 import WorkCard from '../components/WorkCard';
 import CategoryNavigation from '../components/CategoryNavigation';
-import CategoryNavigation from '../components/CategoryNavigation';
 
 const WorksPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
