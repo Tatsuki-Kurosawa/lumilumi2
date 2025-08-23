@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Filter } from 'lucide-react';
 import WorkCard from '../components/WorkCard';
-import CategoryNavigation from '../components/CategoryNavigation';
 
 const WorksPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -91,11 +90,6 @@ const WorksPage: React.FC = () => {
 
   return (
     <div>
-      <CategoryNavigation 
-        activeCategory={activeCategory}
-        onCategoryChange={setActiveCategory}
-      />
-      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* ヘッダー */}
         <div className="mb-8">
