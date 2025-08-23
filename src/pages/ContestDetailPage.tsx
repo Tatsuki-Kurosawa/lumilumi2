@@ -7,6 +7,7 @@ const ContestDetailPage: React.FC = () => {
   const [isParticipating, setIsParticipating] = useState(false);
 
   // ダミーデータ
+  // githubテスト
   const contest = {
     id: id || '1',
     title: '夏のイラストコンテスト2024',

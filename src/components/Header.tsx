@@ -1,119 +1,144 @@
 import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, User, Heart, Upload, Menu, X, Trophy, Eye } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Search, User, Heart, Upload, Menu, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface HeaderProps {
   onLoginClick: () => void;
-  activeContentType: 'manga' | 'illustration';
-  onContentTypeChange: (type: 'manga' | 'illustration') => void;
-  activeSection: 'home' | 'requests' | 'ranking';
-  onSectionChange: (section: 'home' | 'requests' | 'ranking') => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ 
-  onLoginClick, 
-  activeContentType, 
-  onContentTypeChange,
-  activeSection,
-  onSectionChange
-}) => {
+const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
   const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // 6パターンのページかどうかを判定
-  const isMainPage = location.pathname === '/main';
+  const isActive = (path: string) => location.pathname === path;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    // 検索処理の実装
     console.log('Search:', searchQuery);
   };
 
-  const handleContentTypeChange = (type: 'manga' | 'illustration') => {
-    onContentTypeChange(type);
-    // メインページに移動
-    if (location.pathname !== '/main') {
-      navigate('/main');
-    }
-  };
-
-  const handleSectionChange = (section: 'home' | 'requests' | 'ranking') => {
-    onSectionChange(section);
-    // メインページに移動
-    if (location.pathname !== '/main') {
-      navigate('/main');
-    }
-  };
   return (
     <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50">
-      {/* 上段ヘッダー */}
-      <div className="border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-12">
-            {/* ロゴ */}
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">M</span>
-              </div>
-              <span className="text-xl font-bold text-gray-900 hidden sm:block">MangaHub</span>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* ロゴ */}
+          <Link to="/" className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">M</span>
+            </div>
+            <span className="text-xl font-bold text-gray-900 hidden sm:block">MangaHub</span>
+          </Link>
+
+          {/* 検索バー */}
+          <div className="flex-1 max-w-lg mx-4 hidden md:block">
+            <form onSubmit={handleSearch} className="relative">
+              <input
+                type="text"
+                placeholder="作品やユーザーを検索..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+            </form>
+          </div>
+
+          {/* ナビゲーション */}
+          <nav className="hidden lg:flex items-center space-x-6">
+            <Link
+              to="/manga"
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                isActive('/manga')
+                  ? 'text-blue-600 bg-blue-50'
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+              }`}
+            >
+              マンガ
             </Link>
+            <Link
+              to="/illustrations"
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                isActive('/illustrations')
+                  ? 'text-blue-600 bg-blue-50'
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+              }`}
+            >
+              イラスト
+            </Link>
+            <Link
+              to="/works"
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                isActive('/works')
+                  ? 'text-blue-600 bg-blue-50'
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+              }`}
+            >
+              作品一覧
+            </Link>
+            <Link
+              to="/ranking"
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                isActive('/ranking')
+                  ? 'text-blue-600 bg-blue-50'
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+              }`}
+            >
+              ランキング
+            </Link>
+            <Link
+              to="/contests"
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                isActive('/contests')
+                  ? 'text-blue-600 bg-blue-50'
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+              }`}
+            >
+              コンテスト
+            </Link>
+            <Link
+              to="/direct-requests"
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                isActive('/direct-requests')
+                  ? 'text-blue-600 bg-blue-50'
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+              }`}
+            >
+              依頼
+            </Link>
+            <Link
+              to="/r18"
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors bg-red-50 text-red-600 hover:bg-red-100 ${
+                isActive('/r18') ? 'bg-red-100' : ''
+              }`}
+            >
+              R-18
+            </Link>
+          </nav>
 
-            {/* 右側メニュー */}
-            <div className="flex items-center space-x-4">
-              {/* 検索 */}
-              <div className="hidden md:block">
-                <form onSubmit={handleSearch} className="relative">
-                  <input
-                    type="text"
-                    placeholder="検索..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-48 pl-8 pr-4 py-1.5 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                  />
-                  <Search className="absolute left-2.5 top-2 h-4 w-4 text-gray-400" />
-                </form>
-              </div>
-
-              {/* 投稿 */}
-              {isAuthenticated && (
+          {/* ユーザーメニュー */}
+          <div className="flex items-center space-x-6">
+            {isAuthenticated ? (
+              <>
                 <Link
                   to="/upload"
-                  className="hidden sm:flex items-center space-x-1 px-3 py-1.5 bg-yellow-400 text-white rounded-full hover:bg-yellow-500 transition-colors text-sm"
+                  className="hidden sm:flex items-center space-x-1 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
                 >
                   <Upload className="h-4 w-4" />
                   <span>投稿</span>
                 </Link>
-              )}
-
-              {/* コンテスト */}
-              <Link
-                to="/contests"
-                className="hidden sm:flex items-center space-x-1 px-3 py-1.5 text-gray-700 hover:text-yellow-600 hover:bg-yellow-50 rounded-full transition-colors text-sm"
-              >
-                <Trophy className="h-4 w-4" />
-                <span>コンテスト</span>
-              </Link>
-
-              {/* R-18 */}
-              <Link
-                to="/r18"
-                className="hidden sm:flex items-center space-x-1 px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-full transition-colors text-sm"
-              >
-                <Eye className="h-4 w-4" />
-                <span>R-18</span>
-              </Link>
-
-              {/* ユーザーメニュー */}
-              {isAuthenticated ? (
+                <Link to="/mypage" className="p-2 text-gray-700 hover:text-blue-600 transition-colors">
+                  <Heart className="h-5 w-5" />
+                </Link>
                 <div className="relative group">
-                  <button className="flex items-center space-x-2 p-1.5 rounded-full hover:bg-gray-100 transition-colors">
+                  <button className="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 transition-colors">
                     {user?.avatar ? (
-                      <img src={user.avatar} alt={user.displayName} className="w-7 h-7 rounded-full" />
+                      <img src={user.avatar} alt={user.displayName} className="w-8 h-8 rounded-full" />
                     ) : (
-                      <div className="w-7 h-7 bg-gray-300 rounded-full flex items-center justify-center">
+                      <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
                         <User className="h-4 w-4 text-gray-600" />
                       </div>
                     )}
@@ -136,270 +161,96 @@ const Header: React.FC<HeaderProps> = ({
                     </button>
                   </div>
                 </div>
-              ) : (
-                <button
-                  onClick={onLoginClick}
-                  className="px-4 py-1.5 bg-yellow-400 text-white rounded-full hover:bg-yellow-500 transition-colors text-sm"
-                >
-                  ログイン
-                </button>
-              )}
-
-              {/* モバイルメニューボタン */}
+              </>
+            ) : (
               <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="sm:hidden p-2 text-gray-700 hover:text-yellow-600 transition-colors"
+                onClick={onLoginClick}
+                className="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
               >
-                {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                ログイン
               </button>
-            </div>
+            )}
+
+            {/* モバイルメニューボタン */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="lg:hidden p-2 text-gray-700 hover:text-blue-600 transition-colors"
+            >
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* 下段ヘッダー（常に表示） */}
-      <div className="bg-gray-50 border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* デスクトップ表示 */}
-          <div className="hidden sm:flex items-center justify-between h-14">
-            {/* 左側: コンテンツタイプ切り替え */}
-            <div className="flex space-x-2">
-              <button
-                onClick={() => handleContentTypeChange('manga')}
-                className={`px-6 py-2 rounded-lg font-semibold text-lg transition-colors ${
-                  isMainPage && activeContentType === 'manga'
-                    ? 'bg-yellow-400 text-white shadow-md'
-                    : 'bg-white text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 border border-gray-200'
-                }`}
+        {/* モバイルメニュー */}
+        {isMenuOpen && (
+          <div className="lg:hidden border-t border-gray-200 py-4">
+            <div className="flex flex-col space-y-2">
+              <Link
+                to="/manga"
+                className="px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
+                onClick={() => setIsMenuOpen(false)}
               >
                 マンガ
-              </button>
-              <button
-                onClick={() => handleContentTypeChange('illustration')}
-                className={`px-6 py-2 rounded-lg font-semibold text-lg transition-colors ${
-                  isMainPage && activeContentType === 'illustration'
-                    ? 'bg-yellow-400 text-white shadow-md'
-                    : 'bg-white text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 border border-gray-200'
-                }`}
+              </Link>
+              <Link
+                to="/illustrations"
+                className="px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
+                onClick={() => setIsMenuOpen(false)}
               >
                 イラスト
-              </button>
-            </div>
-
-            {/* 右側: セクション切り替え */}
-            <div className="flex space-x-1 bg-white rounded-lg p-1 border border-gray-200">
-              <button
-                onClick={() => handleSectionChange('home')}
-                className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                  isMainPage && activeSection === 'home'
-                    ? 'bg-cyan-500 text-white shadow-sm'
-                    : 'text-gray-600 hover:text-cyan-600 hover:bg-cyan-50'
-                }`}
+              </Link>
+              <Link
+                to="/works"
+                className="px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
+                onClick={() => setIsMenuOpen(false)}
               >
-                ホーム
-              </button>
-              <button
-                onClick={() => handleSectionChange('requests')}
-                className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                  isMainPage && activeSection === 'requests'
-                    ? 'bg-cyan-500 text-white shadow-sm'
-                    : 'text-gray-600 hover:text-cyan-600 hover:bg-cyan-50'
-                }`}
-              >
-                依頼
-              </button>
-              <button
-                onClick={() => handleSectionChange('ranking')}
-                className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                  isMainPage && activeSection === 'ranking'
-                    ? 'bg-cyan-500 text-white shadow-sm'
-                    : 'text-gray-600 hover:text-cyan-600 hover:bg-cyan-50'
-                }`}
+                作品一覧
+              </Link>
+              <Link
+                to="/ranking"
+                className="px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
+                onClick={() => setIsMenuOpen(false)}
               >
                 ランキング
-              </button>
+              </Link>
+              <Link
+                to="/contests"
+                className="px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                コンテスト
+              </Link>
+              <Link
+                to="/direct-requests"
+                className="px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                依頼
+              </Link>
+              <Link
+                to="/r18"
+                className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-md"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                R-18
+              </Link>
+            </div>
+            {/* モバイル検索 */}
+            <div className="mt-4">
+              <form onSubmit={handleSearch} className="relative">
+                <input
+                  type="text"
+                  placeholder="作品やユーザーを検索..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+              </form>
             </div>
           </div>
-
-        </div>
+        )}
       </div>
-
-      {/* モバイルメニュー */}
-      {isMenuOpen && (
-        <div className="sm:hidden border-t border-gray-200 py-4 bg-white">
-          <div className="flex flex-col space-y-2 px-4">
-            <Link
-              to="/upload"
-              className="px-3 py-2 text-gray-700 hover:text-yellow-600 hover:bg-gray-50 rounded-md"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              投稿
-            </Link>
-            <Link
-              to="/contests"
-              className="px-3 py-2 text-gray-700 hover:text-yellow-600 hover:bg-gray-50 rounded-md"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              コンテスト
-            </Link>
-            <Link
-              to="/r18"
-              className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-md"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              R-18
-            </Link>
-          </div>
-          
-          {/* ナビゲーションメニュー */}
-          <div className="mt-4 px-4">
-            <div className="border-t border-gray-200 pt-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">ナビゲーション</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {/* マンガセクション */}
-                <div className="space-y-2">
-                  <div className="text-center">
-                    <button
-                      onClick={() => {
-                        handleContentTypeChange('manga');
-                        setIsMenuOpen(false);
-                      }}
-                      className={`w-full px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
-                        isMainPage && activeContentType === 'manga'
-                          ? 'bg-yellow-400 text-white'
-                          : 'bg-white text-gray-700 border border-gray-200'
-                      }`}
-                    >
-                      マンガ
-                    </button>
-                  </div>
-                  <div className="space-y-1">
-                    <button
-                      onClick={() => {
-                        handleContentTypeChange('manga');
-                        handleSectionChange('home');
-                        setIsMenuOpen(false);
-                      }}
-                      className={`w-full px-2 py-1 rounded text-xs transition-colors ${
-                        isMainPage && activeContentType === 'manga' && activeSection === 'home'
-                          ? 'bg-cyan-500 text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-cyan-50'
-                      }`}
-                    >
-                      ホーム
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleContentTypeChange('manga');
-                        handleSectionChange('requests');
-                        setIsMenuOpen(false);
-                      }}
-                      className={`w-full px-2 py-1 rounded text-xs transition-colors ${
-                        isMainPage && activeContentType === 'manga' && activeSection === 'requests'
-                          ? 'bg-cyan-500 text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-cyan-50'
-                      }`}
-                    >
-                      依頼
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleContentTypeChange('manga');
-                        handleSectionChange('ranking');
-                        setIsMenuOpen(false);
-                      }}
-                      className={`w-full px-2 py-1 rounded text-xs transition-colors ${
-                        isMainPage && activeContentType === 'manga' && activeSection === 'ranking'
-                          ? 'bg-cyan-500 text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-cyan-50'
-                      }`}
-                    >
-                      ランキング
-                    </button>
-                  </div>
-                </div>
-
-                {/* イラストセクション */}
-                <div className="space-y-2">
-                  <div className="text-center">
-                    <button
-                      onClick={() => {
-                        handleContentTypeChange('illustration');
-                        setIsMenuOpen(false);
-                      }}
-                      className={`w-full px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
-                        isMainPage && activeContentType === 'illustration'
-                          ? 'bg-yellow-400 text-white'
-                          : 'bg-white text-gray-700 border border-gray-200'
-                      }`}
-                    >
-                      イラスト
-                    </button>
-                  </div>
-                  <div className="space-y-1">
-                    <button
-                      onClick={() => {
-                        handleContentTypeChange('illustration');
-                        handleSectionChange('home');
-                        setIsMenuOpen(false);
-                      }}
-                      className={`w-full px-2 py-1 rounded text-xs transition-colors ${
-                        isMainPage && activeContentType === 'illustration' && activeSection === 'home'
-                          ? 'bg-cyan-500 text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-cyan-50'
-                      }`}
-                    >
-                      ホーム
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleContentTypeChange('illustration');
-                        handleSectionChange('requests');
-                        setIsMenuOpen(false);
-                      }}
-                      className={`w-full px-2 py-1 rounded text-xs transition-colors ${
-                        isMainPage && activeContentType === 'illustration' && activeSection === 'requests'
-                          ? 'bg-cyan-500 text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-cyan-50'
-                      }`}
-                    >
-                      依頼
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleContentTypeChange('illustration');
-                        handleSectionChange('ranking');
-                        setIsMenuOpen(false);
-                      }}
-                      className={`w-full px-2 py-1 rounded text-xs transition-colors ${
-                        isMainPage && activeContentType === 'illustration' && activeSection === 'ranking'
-                          ? 'bg-cyan-500 text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-cyan-50'
-                      }`}
-                    >
-                      ランキング
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* モバイル検索 */}
-          <div className="mt-4 px-4">
-            <form onSubmit={handleSearch} className="relative">
-              <input
-                type="text"
-                placeholder="検索..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-              />
-              <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-            </form>
-          </div>
-        </div>
-      )}
     </header>
   );
 };

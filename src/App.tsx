@@ -2,77 +2,46 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import HomePage from './pages/HomePage';
+import WorksPage from './pages/WorksPage';
 import MangaPage from './pages/MangaPage';
 import IllustrationsPage from './pages/IllustrationsPage';
-
+import RankingPage from './pages/RankingPage';
 import ContestsPage from './pages/ContestsPage';
 import ContestDetailPage from './pages/ContestDetailPage';
 import DirectRequestsPage from './pages/DirectRequestsPage';
+//import RequestsPage from './pages/RequestsPage';
 import MyPage from './pages/MyPage';
 import R18Page from './pages/R18Page';
 import UploadPage from './pages/UploadPage';
 import WorkDetailPage from './pages/WorkDetailPage';
 import UserProfilePage from './pages/UserProfilePage';
-import MangaRankingPage from './pages/MangaRankingPage';
-import IllustrationRankingPage from './pages/IllustrationRankingPage';
 import LoginModal from './components/LoginModal';
 import { AuthProvider } from './contexts/AuthContext';
 
 function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [activeContentType, setActiveContentType] = useState<'manga' | 'illustration'>('manga');
-  const [activeSection, setActiveSection] = useState<'home' | 'requests' | 'ranking'>('home');
-
-  const renderMainContent = () => {
-    if (activeContentType === 'manga') {
-      switch (activeSection) {
-        case 'home':
-          return <MangaPage />;
-        case 'requests':
-          return <DirectRequestsPage contentType="manga" />;
-        case 'ranking':
-          return <MangaRankingPage />;
-        default:
-          return <MangaPage />;
-      }
-    } else {
-      switch (activeSection) {
-        case 'home':
-          return <IllustrationsPage />;
-        case 'requests':
-          return <DirectRequestsPage contentType="illustration" />;
-        case 'ranking':
-          return <IllustrationRankingPage contentType="illustration" />;
-        return <IllustrationRankingPage />;
-          return <IllustrationsPage />;
-      }
-    }
-  };
 
   return (
     <AuthProvider>
       <Router>
         <div className="min-h-screen bg-gray-50">
-          <Header 
-            onLoginClick={() => setShowLoginModal(true)}
-            activeContentType={activeContentType}
-            onContentTypeChange={setActiveContentType}
-            activeSection={activeSection}
-            onSectionChange={setActiveSection}
-          />
-          <main className="pt-32">
+          <Header onLoginClick={() => setShowLoginModal(true)} />
+          <main className="pt-16">
             <Routes>
               <Route path="/" element={<HomePage />} />
-              <Route path="/main" element={renderMainContent()} />
+              <Route path="/manga" element={<MangaPage />} />
+              <Route path="/illustrations" element={<IllustrationsPage />} />
+              <Route path="/works" element={<WorksPage />} />
               <Route path="/works/:id" element={<WorkDetailPage />} />
+              <Route path="/ranking" element={<RankingPage />} />
               <Route path="/contests" element={<ContestsPage />} />
               <Route path="/contests/:id" element={<ContestDetailPage />} />
+
+              <Route path="/direct-requests" element={<DirectRequestsPage />} />
               <Route path="/mypage" element={<MyPage />} />
               <Route path="/r18" element={<R18Page />} />
               <Route path="/upload" element={<UploadPage />} />
               <Route path="/user/:id" element={<UserProfilePage />} />
-              {/* デフォルトルート - メインページにリダイレクト */}
-              <Route path="*" element={renderMainContent()} />
             </Routes>
           </main>
           {showLoginModal && (
