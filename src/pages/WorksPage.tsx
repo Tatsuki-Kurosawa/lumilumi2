@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Search, Filter } from 'lucide-react';
 import WorkCard from '../components/WorkCard';
 import CategoryNavigation from '../components/CategoryNavigation';
+import CategoryNavigation from '../components/CategoryNavigation';
 
 const WorksPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -145,13 +146,25 @@ const WorksPage: React.FC = () => {
                     className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
                   >
                     #{tag}
+                    <button
+                      onClick={() => handleTagClick(tag)}
+                      className="ml-1 text-blue-600 hover:text-blue-800"
+                    >
+                      ×
+                    </button>
                   </span>
                 ))}
+                <button
+                  onClick={() => setSelectedTags([])}
+                  className="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  すべてクリア
+                </button>
               </div>
             )}
           </div>
         </div>
-
+          
         {/* 作品一覧 */}
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {works.map((work) => (
