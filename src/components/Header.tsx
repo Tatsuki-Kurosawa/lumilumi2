@@ -294,3 +294,5 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
         )}
       </div>
     </header>
+  )
+}
