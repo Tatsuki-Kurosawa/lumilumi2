@@ -110,15 +110,12 @@ CREATE TABLE request_images (
     display_order INTEGER NOT NULL DEFAULT 1
 );
 
--- 12. page_views テーブル (ページビュー)
+-- 12. page_views テーブル (ページビュー) - 最適化版
 CREATE TABLE page_views (
     id BIGSERIAL PRIMARY KEY,
     post_id BIGINT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
     viewer_id UUID REFERENCES profiles(id) ON DELETE SET NULL, -- 匿名ユーザーも記録
-    ip_address INET, -- 重複カウント防止用
-    user_agent TEXT, -- ボット判定用
-    viewed_at TIMESTAMPTZ DEFAULT NOW(),
-    is_unique BOOLEAN DEFAULT TRUE -- 同一ユーザーからの重複アクセス判定
+    viewed_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- 13. age_verifications テーブル (年齢確認)
@@ -127,6 +124,28 @@ CREATE TABLE age_verifications (
     user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     verified_at TIMESTAMPTZ DEFAULT NOW(),
     ip_address INET
+);
+
+-- Phase 1 最適化: 集計テーブルの追加
+
+-- 14. post_view_counts テーブル (投稿閲覧数集計)
+CREATE TABLE post_view_counts (
+    post_id BIGINT PRIMARY KEY REFERENCES posts(id) ON DELETE CASCADE,
+    daily_views JSONB DEFAULT '{}', -- 日別閲覧数: {"2024-01-01": 15, "2024-01-02": 23}
+    weekly_views JSONB DEFAULT '{}', -- 週別閲覧数: {"2024-W01": 156, "2024-W02": 189}
+    monthly_views JSONB DEFAULT '{}', -- 月別閲覧数: {"2024-01": 1200, "2024-02": 1350}
+    total_views INTEGER DEFAULT 0,
+    last_updated TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 15. post_like_counts テーブル (投稿いいね数集計)
+CREATE TABLE post_like_counts (
+    post_id BIGINT PRIMARY KEY REFERENCES posts(id) ON DELETE CASCADE,
+    daily_likes JSONB DEFAULT '{}', -- 日別いいね数: {"2024-01-01": 5, "2024-01-02": 8}
+    weekly_likes JSONB DEFAULT '{}', -- 週別いいね数: {"2024-W01": 45, "2024-W02": 52}
+    monthly_likes JSONB DEFAULT '{}', -- 月別いいね数: {"2024-01": 180, "2024-02": 210}
+    total_likes INTEGER DEFAULT 0,
+    last_updated TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- インデックスの作成
@@ -188,16 +207,24 @@ CREATE INDEX idx_requests_created_at ON requests(created_at DESC);
 CREATE INDEX idx_request_images_request_id ON request_images(request_id);
 CREATE INDEX idx_request_images_display_order ON request_images(request_id, display_order);
 
--- page_views テーブルのインデックス
+-- page_views テーブルのインデックス（最適化版）
 CREATE INDEX idx_page_views_post_id ON page_views(post_id);
 CREATE INDEX idx_page_views_viewed_at ON page_views(viewed_at DESC);
 CREATE INDEX idx_page_views_post_viewed ON page_views(post_id, viewed_at);
-CREATE INDEX idx_page_views_unique ON page_views(post_id, viewer_id, viewed_at);
-CREATE INDEX idx_page_views_ip_address ON page_views(ip_address);
 
 -- age_verifications テーブルのインデックス
 CREATE INDEX idx_age_verifications_user_id ON age_verifications(user_id);
 CREATE INDEX idx_age_verifications_verified_at ON age_verifications(verified_at);
+
+-- 集計テーブルのインデックス
+CREATE INDEX idx_post_view_counts_total_views ON post_view_counts(total_views DESC);
+CREATE INDEX idx_post_like_counts_total_likes ON post_like_counts(total_likes DESC);
+CREATE INDEX idx_post_view_counts_daily_views ON post_view_counts USING GIN(daily_views);
+CREATE INDEX idx_post_view_counts_weekly_views ON post_view_counts USING GIN(weekly_views);
+CREATE INDEX idx_post_view_counts_monthly_views ON post_view_counts USING GIN(monthly_views);
+CREATE INDEX idx_post_like_counts_daily_likes ON post_like_counts USING GIN(daily_likes);
+CREATE INDEX idx_post_like_counts_weekly_likes ON post_like_counts USING GIN(weekly_likes);
+CREATE INDEX idx_post_like_counts_monthly_likes ON post_like_counts USING GIN(monthly_likes);
 
 -- Row Level Security (RLS) の有効化
 ALTER TABLE universities ENABLE ROW LEVEL SECURITY;
@@ -213,6 +240,8 @@ ALTER TABLE requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE request_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE page_views ENABLE ROW LEVEL SECURITY;
 ALTER TABLE age_verifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE post_view_counts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE post_like_counts ENABLE ROW LEVEL SECURITY;
 
 -- RLS ポリシーの作成
 
@@ -437,6 +466,14 @@ CREATE POLICY "age_verifications_insert_policy" ON age_verifications
 CREATE POLICY "age_verifications_delete_policy" ON age_verifications
     FOR DELETE USING (auth.uid() = user_id);
 
+-- 集計テーブルのポリシー
+-- 全ユーザーが読み取り可能
+CREATE POLICY "post_view_counts_read_policy" ON post_view_counts
+    FOR SELECT USING (true);
+
+CREATE POLICY "post_like_counts_read_policy" ON post_like_counts
+    FOR SELECT USING (true);
+
 -- トリガー関数の作成
 -- updated_at フィールドの自動更新用
 
@@ -453,6 +490,223 @@ CREATE TRIGGER update_requests_updated_at
     BEFORE UPDATE ON requests 
     FOR EACH ROW 
     EXECUTE FUNCTION update_updated_at_column();
+
+-- Phase 1 最適化: 集計更新とデータクリーンアップ関数
+
+-- 閲覧数集計更新関数
+CREATE OR REPLACE FUNCTION update_view_counts()
+RETURNS void AS $$
+BEGIN
+    -- 日別閲覧数の更新
+    INSERT INTO post_view_counts (post_id, daily_views, total_views)
+    SELECT 
+        post_id,
+        jsonb_object_agg(
+            TO_CHAR(viewed_at, 'YYYY-MM-DD'),
+            COUNT(*)
+        ) as daily_views,
+        COUNT(*) as total_views
+    FROM page_views 
+    WHERE viewed_at >= NOW() - INTERVAL '30 days'
+    GROUP BY post_id
+    ON CONFLICT (post_id) DO UPDATE SET
+        daily_views = EXCLUDED.daily_views,
+        total_views = EXCLUDED.total_views,
+        last_updated = NOW();
+    
+    -- 週別閲覧数の更新
+    UPDATE post_view_counts SET
+        weekly_views = (
+            SELECT jsonb_object_agg(
+                TO_CHAR(viewed_at, 'IYYY-"W"IW'),
+                COUNT(*)
+            )
+            FROM page_views 
+            WHERE post_id = post_view_counts.post_id
+            AND viewed_at >= NOW() - INTERVAL '12 weeks'
+            GROUP BY TO_CHAR(viewed_at, 'IYYY-"W"IW')
+        ),
+        last_updated = NOW()
+    WHERE post_id IN (
+        SELECT DISTINCT post_id FROM page_views 
+        WHERE viewed_at >= NOW() - INTERVAL '12 weeks'
+    );
+    
+    -- 月別閲覧数の更新
+    UPDATE post_view_counts SET
+        monthly_views = (
+            SELECT jsonb_object_agg(
+                TO_CHAR(viewed_at, 'YYYY-MM'),
+                COUNT(*)
+            )
+            FROM page_views 
+            WHERE post_id = post_view_counts.post_id
+            AND viewed_at >= NOW() - INTERVAL '12 months'
+            GROUP BY TO_CHAR(viewed_at, 'YYYY-MM')
+        ),
+        last_updated = NOW()
+    WHERE post_id IN (
+        SELECT DISTINCT post_id FROM page_views 
+        WHERE viewed_at >= NOW() - INTERVAL '12 months'
+    );
+END;
+$$ LANGUAGE plpgsql;
+
+-- いいね数集計更新関数
+CREATE OR REPLACE FUNCTION update_like_counts()
+RETURNS void AS $$
+BEGIN
+    -- 日別いいね数の更新
+    INSERT INTO post_like_counts (post_id, daily_likes, total_likes)
+    SELECT 
+        post_id,
+        jsonb_object_agg(
+            TO_CHAR(created_at, 'YYYY-MM-DD'),
+            COUNT(*)
+        ) as daily_likes,
+        COUNT(*) as total_likes
+    FROM likes 
+    WHERE created_at >= NOW() - INTERVAL '90 days'
+    GROUP BY post_id
+    ON CONFLICT (post_id) DO UPDATE SET
+        daily_likes = EXCLUDED.daily_likes,
+        total_likes = EXCLUDED.total_likes,
+        last_updated = NOW();
+    
+    -- 週別いいね数の更新
+    UPDATE post_like_counts SET
+        weekly_likes = (
+            SELECT jsonb_object_agg(
+                TO_CHAR(created_at, 'IYYY-"W"IW'),
+                COUNT(*)
+            )
+            FROM likes 
+            WHERE post_id = post_like_counts.post_id
+            AND created_at >= NOW() - INTERVAL '12 weeks'
+            GROUP BY TO_CHAR(created_at, 'IYYY-"W"IW')
+        ),
+        last_updated = NOW()
+    WHERE post_id IN (
+        SELECT DISTINCT post_id FROM likes 
+        WHERE created_at >= NOW() - INTERVAL '12 weeks'
+    );
+    
+    -- 月別いいね数の更新
+    UPDATE post_like_counts SET
+        monthly_likes = (
+            SELECT jsonb_object_agg(
+                TO_CHAR(created_at, 'YYYY-MM'),
+                COUNT(*)
+            )
+            FROM likes 
+            WHERE post_id = post_like_counts.post_id
+            AND created_at >= NOW() - INTERVAL '12 months'
+            GROUP BY TO_CHAR(created_at, 'YYYY-MM')
+        ),
+        last_updated = NOW()
+    WHERE post_id IN (
+        SELECT DISTINCT post_id FROM likes 
+        WHERE created_at >= NOW() - INTERVAL '12 months'
+    );
+END;
+$$ LANGUAGE plpgsql;
+
+-- 古いpage_viewsデータの自動削除関数
+CREATE OR REPLACE FUNCTION cleanup_old_page_views()
+RETURNS void AS $$
+BEGIN
+    -- 30日以上古いpage_viewsを削除
+    DELETE FROM page_views 
+    WHERE viewed_at < NOW() - INTERVAL '30 days';
+    
+    -- 集計テーブルを更新
+    PERFORM update_view_counts();
+END;
+$$ LANGUAGE plpgsql;
+
+-- 古いlikesデータの自動削除関数
+CREATE OR REPLACE FUNCTION cleanup_old_likes()
+RETURNS void AS $$
+BEGIN
+    -- 90日以上古いlikesを削除（ランキング計算に影響なし）
+    DELETE FROM likes 
+    WHERE created_at < NOW() - INTERVAL '90 days';
+    
+    -- 集計テーブルを更新
+    PERFORM update_like_counts();
+END;
+$$ LANGUAGE plpgsql;
+
+-- トリガー関数: 新しいpage_view追加時の自動集計更新
+CREATE OR REPLACE FUNCTION page_views_update_trigger()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- 該当投稿の閲覧数を即座に更新
+    INSERT INTO post_view_counts (post_id, daily_views, total_views)
+    VALUES (
+        NEW.post_id,
+        jsonb_build_object(
+            TO_CHAR(NEW.viewed_at, 'YYYY-MM-DD'),
+            1
+        ),
+        1
+    )
+    ON CONFLICT (post_id) DO UPDATE SET
+        daily_views = post_view_counts.daily_views || 
+            jsonb_build_object(
+                TO_CHAR(NEW.viewed_at, 'YYYY-MM-DD'),
+                COALESCE(
+                    (post_view_counts.daily_views->>TO_CHAR(NEW.viewed_at, 'YYYY-MM-DD'))::integer,
+                    0
+                ) + 1
+            ),
+        total_views = post_view_counts.total_views + 1,
+        last_updated = NOW();
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- トリガー関数: 新しいlike追加時の自動集計更新
+CREATE OR REPLACE FUNCTION likes_update_trigger()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- 該当投稿のいいね数を即座に更新
+    INSERT INTO post_like_counts (post_id, daily_likes, total_likes)
+    VALUES (
+        NEW.post_id,
+        jsonb_build_object(
+            TO_CHAR(NEW.created_at, 'YYYY-MM-DD'),
+            1
+        ),
+        1
+    )
+    ON CONFLICT (post_id) DO UPDATE SET
+        daily_likes = post_like_counts.daily_likes || 
+            jsonb_build_object(
+                TO_CHAR(NEW.created_at, 'YYYY-MM-DD'),
+                COALESCE(
+                    (post_like_counts.daily_likes->>TO_CHAR(NEW.created_at, 'YYYY-MM-DD'))::integer,
+                    0
+                ) + 1
+            ),
+        total_likes = post_like_counts.total_likes + 1,
+        last_updated = NOW();
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- トリガーの設定
+CREATE TRIGGER page_views_update_trigger
+    AFTER INSERT ON page_views
+    FOR EACH ROW
+    EXECUTE FUNCTION page_views_update_trigger();
+
+CREATE TRIGGER likes_update_trigger
+    AFTER INSERT ON likes
+    FOR EACH ROW
+    EXECUTE FUNCTION likes_update_trigger();
 
 -- サンプルデータの挿入
 
@@ -483,7 +737,7 @@ INSERT INTO tags (name) VALUES
 ('コメディ');
 
 -- データベース関数の作成
--- 週間ランキング計算用
+-- 週間ランキング計算用（最適化版）
 
 CREATE OR REPLACE FUNCTION calculate_weekly_ranking()
 RETURNS TABLE (
@@ -502,31 +756,34 @@ BEGIN
         p.title,
         pr.display_name,
         pr.university,
-        (COALESCE(pv.view_count, 0) * 0.1 + COALESCE(l.like_count, 0) * 1.0) * 
+        -- 集計テーブルから直接取得（高速化）
+        (COALESCE(pvc.total_views, 0) * 0.1 + COALESCE(plc.total_likes, 0) * 1.0) * 
         GREATEST(0.1, 1.0 - EXTRACT(EPOCH FROM (NOW() - p.created_at)) / (7 * 24 * 3600)) as total_score,
-        COALESCE(pv.view_count, 0) as view_count,
-        COALESCE(l.like_count, 0) as like_count
+        COALESCE(pvc.total_views, 0) as view_count,
+        COALESCE(plc.total_likes, 0) as like_count
     FROM posts p
     JOIN profiles pr ON p.author_id = pr.id
-    LEFT JOIN (
-        SELECT 
-            post_id,
-            COUNT(*) as view_count
-        FROM page_views 
-        WHERE viewed_at >= NOW() - INTERVAL '7 days'
-        AND is_unique = true
-        GROUP BY post_id
-    ) pv ON p.id = pv.post_id
-    LEFT JOIN (
-        SELECT 
-            post_id,
-            COUNT(*) as like_count
-        FROM likes 
-        WHERE created_at >= NOW() - INTERVAL '7 days'
-        GROUP BY post_id
-    ) l ON p.id = l.post_id
+    LEFT JOIN post_view_counts pvc ON p.id = pvc.post_id
+    LEFT JOIN post_like_counts plc ON p.id = plc.post_id
     WHERE p.created_at >= NOW() - INTERVAL '30 days'
     ORDER BY total_score DESC
     LIMIT 100;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 定期実行のための関数（Supabase Edge Functionsで実装推奨）
+-- 毎日午前2時に古いデータをクリーンアップ
+CREATE OR REPLACE FUNCTION scheduled_cleanup()
+RETURNS void AS $$
+BEGIN
+    -- 古いpage_viewsを削除
+    PERFORM cleanup_old_page_views();
+    
+    -- 古いlikesを削除
+    PERFORM cleanup_old_likes();
+    
+    -- 集計テーブルの更新
+    PERFORM update_view_counts();
+    PERFORM update_like_counts();
 END;
 $$ LANGUAGE plpgsql;
