@@ -1,19 +1,40 @@
 -- 漫画・イラスト投稿プラットフォーム データベーススキーマ
 -- Supabase用のSQLスクリプト
 
--- 1. profiles テーブル (ユーザープロフィール)
+-- 1. universities テーブル (大学一覧)
+CREATE TABLE universities (
+    id BIGSERIAL PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL,
+    display_order INTEGER NOT NULL DEFAULT 0
+);
+
+-- 2. profiles テーブル (ユーザープロフィール)
 CREATE TABLE profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     username TEXT UNIQUE NOT NULL,
     display_name TEXT NOT NULL,
-    university TEXT NOT NULL,
+    university TEXT NOT NULL REFERENCES universities(name),
     status TEXT NOT NULL CHECK (status IN ('student', 'ob', 'og')),
     avatar_url TEXT,
     bio TEXT,
+    is_creator BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 2. posts テーブル (投稿作品)
+-- 3. creator_profiles テーブル (作家プロフィール)
+CREATE TABLE creator_profiles (
+    id BIGSERIAL PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    is_accepting_requests BOOLEAN DEFAULT FALSE,
+    critique_price INTEGER CHECK (critique_price >= 0),
+    commission_price INTEGER CHECK (commission_price >= 0),
+    specialties TEXT[] DEFAULT '{}',
+    portfolio_description TEXT,
+    experience_years INTEGER CHECK (experience_years >= 0),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 4. posts テーブル (投稿作品)
 CREATE TABLE posts (
     id BIGSERIAL PRIMARY KEY,
     author_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -24,7 +45,7 @@ CREATE TABLE posts (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 3. post_images テーブル (投稿画像)
+-- 5. post_images テーブル (投稿画像)
 CREATE TABLE post_images (
     id BIGSERIAL PRIMARY KEY,
     post_id BIGINT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
@@ -32,20 +53,20 @@ CREATE TABLE post_images (
     display_order INTEGER NOT NULL DEFAULT 1
 );
 
--- 4. tags テーブル (タグ)
+-- 6. tags テーブル (タグ)
 CREATE TABLE tags (
     id BIGSERIAL PRIMARY KEY,
     name TEXT UNIQUE NOT NULL
 );
 
--- 5. post_tags テーブル (投稿とタグの中間テーブル)
+-- 7. post_tags テーブル (投稿とタグの中間テーブル)
 CREATE TABLE post_tags (
     post_id BIGINT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
     tag_id BIGINT NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
     PRIMARY KEY (post_id, tag_id)
 );
 
--- 6. likes テーブル (いいね)
+-- 8. likes テーブル (いいね)
 CREATE TABLE likes (
     user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     post_id BIGINT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
@@ -53,7 +74,7 @@ CREATE TABLE likes (
     PRIMARY KEY (user_id, post_id)
 );
 
--- 7. follows テーブル (フォロー)
+-- 9. follows テーブル (フォロー)
 CREATE TABLE follows (
     follower_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     following_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -62,22 +83,34 @@ CREATE TABLE follows (
     CHECK (follower_id != following_id) -- 自分自身をフォローできない
 );
 
--- 8. requests テーブル (依頼)
+-- 10. requests テーブル (依頼)
 CREATE TABLE requests (
     id BIGSERIAL PRIMARY KEY,
     client_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     creator_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-    request_type TEXT NOT NULL CHECK (request_type IN ('critique', 'commission', 'other')),
+    request_type TEXT NOT NULL CHECK (request_type IN ('critique', 'commission')),
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'in_progress', 'completed', 'cancelled')),
+    title TEXT NOT NULL,
     body TEXT NOT NULL,
     price INTEGER NOT NULL CHECK (price >= 0),
     deadline_delivery TIMESTAMPTZ,
     delivered_image_url TEXT,
+    client_visibility TEXT NOT NULL DEFAULT 'public' CHECK (client_visibility IN ('public', 'private')),
+    creator_visibility TEXT NOT NULL DEFAULT 'public' CHECK (creator_visibility IN ('public', 'private')),
     created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
     CHECK (client_id != creator_id) -- 自分自身に依頼できない
 );
 
--- 9. page_views テーブル (ページビュー)
+-- 11. request_images テーブル (依頼画像)
+CREATE TABLE request_images (
+    id BIGSERIAL PRIMARY KEY,
+    request_id BIGINT NOT NULL REFERENCES requests(id) ON DELETE CASCADE,
+    image_url TEXT NOT NULL,
+    display_order INTEGER NOT NULL DEFAULT 1
+);
+
+-- 12. page_views テーブル (ページビュー)
 CREATE TABLE page_views (
     id BIGSERIAL PRIMARY KEY,
     post_id BIGINT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
@@ -88,13 +121,33 @@ CREATE TABLE page_views (
     is_unique BOOLEAN DEFAULT TRUE -- 同一ユーザーからの重複アクセス判定
 );
 
+-- 13. age_verifications テーブル (年齢確認)
+CREATE TABLE age_verifications (
+    id BIGSERIAL PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    verified_at TIMESTAMPTZ DEFAULT NOW(),
+    ip_address INET
+);
+
 -- インデックスの作成
 -- 検索パフォーマンス向上のため
+
+-- universities テーブルのインデックス
+CREATE INDEX idx_universities_name ON universities(name);
+CREATE INDEX idx_universities_display_order ON universities(display_order);
 
 -- profiles テーブルのインデックス
 CREATE INDEX idx_profiles_username ON profiles(username);
 CREATE INDEX idx_profiles_university ON profiles(university);
 CREATE INDEX idx_profiles_status ON profiles(status);
+CREATE INDEX idx_profiles_is_creator ON profiles(is_creator);
+
+-- creator_profiles テーブルのインデックス
+CREATE INDEX idx_creator_profiles_user_id ON creator_profiles(user_id);
+CREATE INDEX idx_creator_profiles_is_accepting_requests ON creator_profiles(is_accepting_requests);
+CREATE INDEX idx_creator_profiles_critique_price ON creator_profiles(critique_price);
+CREATE INDEX idx_creator_profiles_commission_price ON creator_profiles(commission_price);
+CREATE INDEX idx_creator_profiles_specialties ON creator_profiles USING GIN(specialties);
 
 -- posts テーブルのインデックス
 CREATE INDEX idx_posts_author_id ON posts(author_id);
@@ -128,7 +181,12 @@ CREATE INDEX idx_follows_created_at ON follows(created_at DESC);
 CREATE INDEX idx_requests_client_id ON requests(client_id);
 CREATE INDEX idx_requests_creator_id ON requests(creator_id);
 CREATE INDEX idx_requests_status ON requests(status);
+CREATE INDEX idx_requests_request_type ON requests(request_type);
 CREATE INDEX idx_requests_created_at ON requests(created_at DESC);
+
+-- request_images テーブルのインデックス
+CREATE INDEX idx_request_images_request_id ON request_images(request_id);
+CREATE INDEX idx_request_images_display_order ON request_images(request_id, display_order);
 
 -- page_views テーブルのインデックス
 CREATE INDEX idx_page_views_post_id ON page_views(post_id);
@@ -137,8 +195,14 @@ CREATE INDEX idx_page_views_post_viewed ON page_views(post_id, viewed_at);
 CREATE INDEX idx_page_views_unique ON page_views(post_id, viewer_id, viewed_at);
 CREATE INDEX idx_page_views_ip_address ON page_views(ip_address);
 
+-- age_verifications テーブルのインデックス
+CREATE INDEX idx_age_verifications_user_id ON age_verifications(user_id);
+CREATE INDEX idx_age_verifications_verified_at ON age_verifications(verified_at);
+
 -- Row Level Security (RLS) の有効化
+ALTER TABLE universities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE creator_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE post_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tags ENABLE ROW LEVEL SECURITY;
@@ -146,9 +210,16 @@ ALTER TABLE post_tags ENABLE ROW LEVEL SECURITY;
 ALTER TABLE likes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE follows ENABLE ROW LEVEL SECURITY;
 ALTER TABLE requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE request_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE page_views ENABLE ROW LEVEL SECURITY;
+ALTER TABLE age_verifications ENABLE ROW LEVEL SECURITY;
 
 -- RLS ポリシーの作成
+
+-- universities テーブルのポリシー
+-- 全ユーザーが読み取り可能
+CREATE POLICY "universities_read_policy" ON universities
+    FOR SELECT USING (true);
 
 -- profiles テーブルのポリシー
 -- 全ユーザーが読み取り可能
@@ -162,6 +233,19 @@ CREATE POLICY "profiles_update_policy" ON profiles
 -- 自分のプロフィールのみ削除可能
 CREATE POLICY "profiles_delete_policy" ON profiles
     FOR DELETE USING (auth.uid() = id);
+
+-- creator_profiles テーブルのポリシー
+-- 全ユーザーが読み取り可能
+CREATE POLICY "creator_profiles_read_policy" ON creator_profiles
+    FOR SELECT USING (true);
+
+-- 自分の作家プロフィールのみ更新可能
+CREATE POLICY "creator_profiles_update_policy" ON creator_profiles
+    FOR UPDATE USING (auth.uid() = user_id);
+
+-- 自分の作家プロフィールのみ削除可能
+CREATE POLICY "creator_profiles_delete_policy" ON creator_profiles
+    FOR DELETE USING (auth.uid() = user_id);
 
 -- posts テーブルのポリシー
 -- 全ユーザーが読み取り可能
@@ -221,14 +305,14 @@ CREATE POLICY "tags_read_policy" ON tags
 
 -- 認証済みユーザーのみタグ作成可能
 CREATE POLICY "tags_insert_policy" ON tags
-    FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 
 -- post_tags テーブルのポリシー
 -- 全ユーザーが読み取り可能
 CREATE POLICY "post_tags_read_policy" ON post_tags
     FOR SELECT USING (true);
 
--- 投稿者のみタグ追加・削除可能
+-- 投稿者のみタグ追加可能
 CREATE POLICY "post_tags_insert_policy" ON post_tags
     FOR INSERT WITH CHECK (
         EXISTS (
@@ -238,6 +322,7 @@ CREATE POLICY "post_tags_insert_policy" ON post_tags
         )
     );
 
+-- 投稿者のみタグ削除可能
 CREATE POLICY "post_tags_delete_policy" ON post_tags
     FOR DELETE USING (
         EXISTS (
@@ -274,26 +359,60 @@ CREATE POLICY "follows_delete_policy" ON follows
     FOR DELETE USING (auth.uid() = follower_id);
 
 -- requests テーブルのポリシー
--- 依頼者と受注者のみ読み取り可能
+-- 依頼者または受注者のみ読み取り可能
 CREATE POLICY "requests_read_policy" ON requests
-    FOR SELECT USING (
-        auth.uid() = client_id OR auth.uid() = client_id
-    );
+    FOR SELECT USING (auth.uid() = client_id OR auth.uid() = creator_id);
 
 -- 認証済みユーザーのみ依頼作成可能
 CREATE POLICY "requests_insert_policy" ON requests
     FOR INSERT WITH CHECK (auth.uid() = client_id);
 
--- 依頼者と受注者のみ更新可能
+-- 依頼者または受注者のみ更新可能
 CREATE POLICY "requests_update_policy" ON requests
-    FOR UPDATE USING (
-        auth.uid() = client_id OR auth.uid() = creator_id
+    FOR UPDATE USING (auth.uid() = client_id OR auth.uid() = creator_id);
+
+-- 依頼者または受注者のみ削除可能
+CREATE POLICY "requests_delete_policy" ON requests
+    FOR DELETE USING (auth.uid() = client_id OR auth.uid() = creator_id);
+
+-- request_images テーブルのポリシー
+-- 依頼者または受注者のみ読み取り可能
+CREATE POLICY "request_images_read_policy" ON request_images
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM requests 
+            WHERE requests.id = request_images.request_id 
+            AND (requests.client_id = auth.uid() OR requests.creator_id = auth.uid())
+        )
     );
 
--- 依頼者と受注者のみ削除可能
-CREATE POLICY "requests_delete_policy" ON requests
+-- 依頼者のみ画像追加可能
+CREATE POLICY "request_images_insert_policy" ON request_images
+    FOR INSERT WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM requests 
+            WHERE requests.id = request_images.request_id 
+            AND requests.client_id = auth.uid()
+        )
+    );
+
+-- 依頼者または受注者のみ画像更新・削除可能
+CREATE POLICY "request_images_update_policy" ON request_images
+    FOR UPDATE USING (
+        EXISTS (
+            SELECT 1 FROM requests 
+            WHERE requests.id = request_images.request_id 
+            AND (requests.client_id = auth.uid() OR requests.creator_id = auth.uid())
+        )
+    );
+
+CREATE POLICY "request_images_delete_policy" ON request_images
     FOR DELETE USING (
-        auth.uid() = client_id OR auth.uid() = creator_id
+        EXISTS (
+            SELECT 1 FROM requests 
+            WHERE requests.id = request_images.request_id 
+            AND (requests.client_id = auth.uid() OR requests.creator_id = auth.uid())
+        )
     );
 
 -- page_views テーブルのポリシー
@@ -301,228 +420,113 @@ CREATE POLICY "requests_delete_policy" ON requests
 CREATE POLICY "page_views_read_policy" ON page_views
     FOR SELECT USING (true);
 
--- 全ユーザーがPV記録可能（匿名ユーザーも含む）
+-- 認証済みユーザーのみPV記録可能
 CREATE POLICY "page_views_insert_policy" ON page_views
     FOR INSERT WITH CHECK (true);
 
--- 関数の作成
+-- age_verifications テーブルのポリシー
+-- 自分の年齢確認記録のみ読み取り可能
+CREATE POLICY "age_verifications_read_policy" ON age_verifications
+    FOR SELECT USING (auth.uid() = user_id);
 
--- ユーザー作成時にプロフィールを自動作成する関数
-CREATE OR REPLACE FUNCTION public.handle_new_user()
+-- 認証済みユーザーのみ年齢確認記録作成可能
+CREATE POLICY "age_verifications_insert_policy" ON age_verifications
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- 自分の年齢確認記録のみ削除可能
+CREATE POLICY "age_verifications_delete_policy" ON age_verifications
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- トリガー関数の作成
+-- updated_at フィールドの自動更新用
+
+CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO public.profiles (id, username, display_name, university, status)
-    VALUES (
-        NEW.id,
-        COALESCE(NEW.raw_user_meta_data->>'username', 'user_' || NEW.id),
-        COALESCE(NEW.raw_user_meta_data->>'display_name', 'ユーザー'),
-        COALESCE(NEW.raw_user_meta_data->>'university', '未設定'),
-        COALESCE(NEW.raw_user_meta_data->>'status', 'student')
-    );
+    NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ language 'plpgsql';
 
--- トリガーの作成
-CREATE TRIGGER on_auth_user_created
-    AFTER INSERT ON auth.users
-    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+-- requests テーブルにトリガーを設定
+CREATE TRIGGER update_requests_updated_at 
+    BEFORE UPDATE ON requests 
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
 
--- いいね数を取得する関数
-CREATE OR REPLACE FUNCTION get_like_count(post_id_param BIGINT)
-RETURNS INTEGER AS $$
+-- サンプルデータの挿入
+
+-- 大学データ
+INSERT INTO universities (name, display_order) VALUES
+('東京大学', 1),
+('京都大学', 2),
+('大阪大学', 3),
+('名古屋大学', 4),
+('東北大学', 5),
+('九州大学', 6),
+('北海道大学', 7),
+('早稲田大学', 8),
+('慶應義塾大学', 9),
+('上智大学', 10);
+
+-- サンプルタグ
+INSERT INTO tags (name) VALUES
+('オリジナル'),
+('風景'),
+('人物'),
+('動物'),
+('ファンタジー'),
+('SF'),
+('日常'),
+('アクション'),
+('恋愛'),
+('コメディ');
+
+-- データベース関数の作成
+-- 週間ランキング計算用
+
+CREATE OR REPLACE FUNCTION calculate_weekly_ranking()
+RETURNS TABLE (
+    post_id BIGINT,
+    title TEXT,
+    author_name TEXT,
+    university TEXT,
+    total_score NUMERIC,
+    view_count BIGINT,
+    like_count BIGINT
+) AS $$
 BEGIN
-    RETURN (
-        SELECT COUNT(*)::INTEGER
-        FROM likes
-        WHERE post_id = post_id_param
-    );
+    RETURN QUERY
+    SELECT 
+        p.id,
+        p.title,
+        pr.display_name,
+        pr.university,
+        (COALESCE(pv.view_count, 0) * 0.1 + COALESCE(l.like_count, 0) * 1.0) * 
+        GREATEST(0.1, 1.0 - EXTRACT(EPOCH FROM (NOW() - p.created_at)) / (7 * 24 * 3600)) as total_score,
+        COALESCE(pv.view_count, 0) as view_count,
+        COALESCE(l.like_count, 0) as like_count
+    FROM posts p
+    JOIN profiles pr ON p.author_id = pr.id
+    LEFT JOIN (
+        SELECT 
+            post_id,
+            COUNT(*) as view_count
+        FROM page_views 
+        WHERE viewed_at >= NOW() - INTERVAL '7 days'
+        AND is_unique = true
+        GROUP BY post_id
+    ) pv ON p.id = pv.post_id
+    LEFT JOIN (
+        SELECT 
+            post_id,
+            COUNT(*) as like_count
+        FROM likes 
+        WHERE created_at >= NOW() - INTERVAL '7 days'
+        GROUP BY post_id
+    ) l ON p.id = l.post_id
+    WHERE p.created_at >= NOW() - INTERVAL '30 days'
+    ORDER BY total_score DESC
+    LIMIT 100;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- 投稿の総PV数を取得する関数
-CREATE OR REPLACE FUNCTION get_page_view_count(post_id_param BIGINT)
-RETURNS INTEGER AS $$
-BEGIN
-    RETURN (
-        SELECT COUNT(*)::INTEGER
-        FROM page_views
-        WHERE post_id = post_id_param
-        AND is_unique = TRUE -- 重複を除いたユニークPV数
-    );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- 期間別PV数を取得する関数
-CREATE OR REPLACE FUNCTION get_page_view_count_by_period(
-    post_id_param BIGINT, 
-    days_param INTEGER
-)
-RETURNS INTEGER AS $$
-BEGIN
-    RETURN (
-        SELECT COUNT(*)::INTEGER
-        FROM page_views
-        WHERE post_id = post_id_param
-        AND viewed_at >= NOW() - INTERVAL '1 day' * days_param
-        AND is_unique = TRUE
-    );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- 投稿の総合スコアを計算する関数（ランキング用）
-CREATE OR REPLACE FUNCTION calculate_post_score(post_id_param BIGINT)
-RETURNS INTEGER AS $$
-DECLARE
-    like_count INTEGER;
-    days_since_creation INTEGER;
-BEGIN
-    -- いいね数を取得
-    SELECT get_like_count(post_id_param) INTO like_count;
-    
-    -- 投稿からの経過日数を計算
-    SELECT EXTRACT(DAY FROM NOW() - created_at)::INTEGER
-    INTO days_since_creation
-    FROM posts
-    WHERE id = post_id_param;
-    
-    -- スコア計算（いいね数 - 経過日数 * 0.1）
-    -- 新しい投稿ほど高スコア、いいねが多いほど高スコア
-    RETURN GREATEST(like_count - COALESCE(days_since_creation, 0) * 0.1, 0)::INTEGER;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- 投稿の総合スコアを計算する関数（PV数 + いいね数）
-CREATE OR REPLACE FUNCTION calculate_post_score_v2(post_id_param BIGINT)
-RETURNS INTEGER AS $$
-DECLARE
-    like_count INTEGER;
-    pv_count INTEGER;
-    days_since_creation INTEGER;
-    time_decay_factor DECIMAL(10,3);
-BEGIN
-    -- いいね数を取得
-    SELECT get_like_count(post_id_param) INTO like_count;
-    
-    -- PV数を取得
-    SELECT get_page_view_count(post_id_param) INTO pv_count;
-    
-    -- 投稿からの経過日数を計算
-    SELECT EXTRACT(DAY FROM NOW() - created_at)::INTEGER
-    INTO days_since_creation
-    FROM posts
-    WHERE id = post_id_param;
-    
-    -- 時間減衰係数（新しい投稿ほど高スコア）
-    time_decay_factor := GREATEST(1.0 - (COALESCE(days_since_creation, 0) * 0.02), 0.1);
-    
-    -- スコア計算（PV数 * 0.1 + いいね数 * 1.0）* 時間減衰係数
-    RETURN (
-        (COALESCE(pv_count, 0) * 0.1 + COALESCE(like_count, 0) * 1.0) * 
-        time_decay_factor
-    )::INTEGER;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- ビューの作成
-
--- 投稿一覧用のビュー（いいね数、画像数、タグを含む）
-CREATE VIEW post_summary AS
-SELECT 
-    p.id,
-    p.author_id,
-    p.type,
-    p.title,
-    p.thumbnail_url,
-    p.is_r18,
-    p.created_at,
-    pr.display_name,
-    pr.username,
-    pr.university,
-    pr.status,
-    get_like_count(p.id) as like_count,
-    calculate_post_score(p.id) as score,
-    (
-        SELECT COUNT(*)::INTEGER
-        FROM post_images pi
-        WHERE pi.post_id = p.id
-    ) as image_count,
-    (
-        SELECT ARRAY_AGG(t.name)
-        FROM post_tags pt
-        JOIN tags t ON pt.tag_id = t.id
-        WHERE pt.post_id = p.id
-    ) as tags
-FROM posts p
-JOIN profiles pr ON p.author_id = pr.id;
-
--- 投稿サマリービューの更新版（PV数 + いいね数）
-CREATE VIEW post_summary_v2 AS
-SELECT 
-    p.id,
-    p.author_id,
-    p.type,
-    p.title,
-    p.thumbnail_url,
-    p.is_r18,
-    p.created_at,
-    pr.display_name,
-    pr.username,
-    pr.university,
-    pr.status,
-    get_like_count(p.id) as like_count,
-    get_page_view_count(p.id) as total_pv_count,
-    get_page_view_count_by_period(p.id, 7) as weekly_pv_count,
-    calculate_post_score_v2(p.id) as score,
-    (
-        SELECT COUNT(*)::INTEGER
-        FROM post_images pi
-        WHERE pi.post_id = p.id
-    ) as image_count,
-    (
-        SELECT ARRAY_AGG(t.name)
-        FROM post_tags pt
-        JOIN tags t ON pt.tag_id = t.id
-        WHERE pt.post_id = p.id
-    ) as tags
-FROM posts p
-JOIN profiles pr ON p.author_id = pr.id;
-
--- 週間ランキング用のビュー
-CREATE VIEW weekly_ranking AS
-SELECT 
-    ps.*,
-    ROW_NUMBER() OVER (ORDER BY ps.score DESC) as rank
-FROM post_summary ps
-WHERE ps.created_at >= NOW() - INTERVAL '7 days'
-ORDER BY ps.score DESC;
-
--- 週間ランキング用のビュー（PV数 + いいね数）
-CREATE VIEW weekly_ranking_v2 AS
-SELECT 
-    ps.*,
-    ROW_NUMBER() OVER (ORDER BY ps.score DESC) as rank
-FROM post_summary_v2 ps
-WHERE ps.created_at >= NOW() - INTERVAL '7 days'
-ORDER BY ps.score DESC;
-
--- コメント
-COMMENT ON TABLE profiles IS 'ユーザープロフィール情報';
-COMMENT ON TABLE posts IS '投稿作品の基本情報';
-COMMENT ON TABLE post_images IS '投稿に紐づく画像ファイル';
-COMMENT ON TABLE tags IS '作品のタグ情報';
-COMMENT ON TABLE post_tags IS '投稿とタグの中間テーブル';
-COMMENT ON TABLE likes IS 'ユーザーのいいね情報';
-COMMENT ON TABLE follows IS 'ユーザー間のフォロー関係';
-COMMENT ON TABLE requests IS '作品依頼情報';
-COMMENT ON TABLE page_views IS '作品のページビュー情報';
-
-COMMENT ON FUNCTION get_like_count IS '指定された投稿のいいね数を取得';
-COMMENT ON FUNCTION get_page_view_count IS '指定された投稿の総PV数を取得';
-COMMENT ON FUNCTION get_page_view_count_by_period IS '指定された投稿の期間別PV数を取得';
-COMMENT ON FUNCTION calculate_post_score IS '投稿の総合スコアを計算（ランキング用）';
-COMMENT ON FUNCTION calculate_post_score_v2 IS '投稿の総合スコアを計算（PV数 + いいね数）';
-COMMENT ON VIEW post_summary IS '投稿一覧表示用のサマリービュー';
-COMMENT ON VIEW post_summary_v2 IS '投稿一覧表示用のサマリービュー（PV数 + いいね数）';
-COMMENT ON VIEW weekly_ranking IS '週間ランキング用のビュー';
-COMMENT ON VIEW weekly_ranking_v2 IS '週間ランキング用のビュー（PV数 + いいね数）';
+$$ LANGUAGE plpgsql;
