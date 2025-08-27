@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, User, Heart, Upload, Menu, X } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 
 interface HeaderProps {
   onLoginClick: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, profile, signOut } = useSupabaseAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -20,6 +20,11 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Search:', searchQuery);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
   };
 
   const handleNavigation = (type: string, action: string) => {
@@ -136,17 +141,17 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
             </button>
 
             {/* ユーザーメニュー */}
-            {isAuthenticated ? (
+            {user && profile ? (
               <div className="flex items-center space-x-2">
                 <Link
                   to="/my-page"
                   className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-cyan-600 transition-colors"
                 >
                   <User className="h-5 w-5" />
-                  <span className="hidden sm:block">{user?.displayName}</span>
+                  <span className="hidden sm:block">{profile.display_name}</span>
                 </Link>
                 <button
-                  onClick={logout}
+                  onClick={handleSignOut}
                   className="px-3 py-2 text-gray-700 hover:text-red-600 transition-colors"
                 >
                   ログアウト

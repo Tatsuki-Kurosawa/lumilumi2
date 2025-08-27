@@ -19,14 +19,14 @@ import UploadPage from './pages/UploadPage';
 import WorkDetailPage from './pages/WorkDetailPage';
 import SupabaseTest from './components/SupabaseTest';
 
-import LoginModal from './components/LoginModal';
-import { AuthProvider } from './contexts/AuthContext';
+import SupabaseLoginModal from './components/SupabaseLoginModal';
+import { SupabaseAuthProvider } from './contexts/SupabaseAuthContext';
 
 function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   return (
-    <AuthProvider>
+    <SupabaseAuthProvider>
       <Router>
         <div className="min-h-screen bg-gray-50">
           <Header onLoginClick={() => setShowLoginModal(true)} />
@@ -49,11 +49,11 @@ function App() {
             </Routes>
           </main>
           {showLoginModal && (
-            <LoginModal onClose={() => setShowLoginModal(false)} />
+            <SupabaseLoginModal onClose={() => setShowLoginModal(false)} />
           )}
         </div>
       </Router>
-    </AuthProvider>
+    </SupabaseAuthProvider>
   );
 }
 
