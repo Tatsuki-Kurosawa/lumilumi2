@@ -17,7 +17,8 @@ import MyPage from './pages/MyPage';
 import R18Page from './pages/R18Page';
 import UploadPage from './pages/UploadPage';
 import WorkDetailPage from './pages/WorkDetailPage';
-import UserProfilePage from './pages/UserProfilePage';
+import SupabaseTest from './components/SupabaseTest';
+
 import LoginModal from './components/LoginModal';
 import { AuthProvider } from './contexts/AuthContext';
 
@@ -29,22 +30,22 @@ function App() {
       <Router>
         <div className="min-h-screen bg-gray-50">
           <Header onLoginClick={() => setShowLoginModal(true)} />
-          <main className="pt-32">
+          <main>
             <Routes>
               <Route path="/" element={<HomePage />} />
+              <Route path="/works" element={<WorksPage />} />
               <Route path="/manga" element={<MangaPage />} />
               <Route path="/illustrations" element={<IllustrationsPage />} />
               <Route path="/manga-ranking" element={<MangaRankingPage />} />
               <Route path="/illustration-ranking" element={<IllustrationRankingPage />} />
-              <Route path="/direct-requests" element={<DirectRequestsPage />} />
-              <Route path="/works" element={<WorksPage />} />
-              <Route path="/works/:id" element={<WorkDetailPage />} />
               <Route path="/contests" element={<ContestsPage />} />
               <Route path="/contests/:id" element={<ContestDetailPage />} />
-              <Route path="/mypage" element={<MyPage />} />
+              <Route path="/direct-requests" element={<DirectRequestsPage />} />
+              <Route path="/my-page" element={<MyPage />} />
               <Route path="/r18" element={<R18Page />} />
               <Route path="/upload" element={<UploadPage />} />
-              <Route path="/user/:id" element={<UserProfilePage />} />
+              <Route path="/works/:id" element={<WorkDetailPage />} />
+              <Route path="/supabase-test" element={<SupabaseTest />} />
             </Routes>
           </main>
           {showLoginModal && (

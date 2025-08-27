@@ -15,10 +15,26 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const isActive = (path: string) => location.pathname === path;
+  const isMainContentPage = ['/manga', '/illustrations', '/works', '/contests', '/direct-requests'].includes(location.pathname);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Search:', searchQuery);
+  };
+
+  const handleNavigation = (type: string, action: string) => {
+    setIsMenuOpen(false);
+    switch (action) {
+      case 'home':
+        navigate(type === 'manga' ? '/manga' : '/illustrations');
+        break;
+      case 'requests':
+        navigate('/direct-requests');
+        break;
+      case 'ranking':
+        navigate(type === 'manga' ? '/manga-ranking' : '/illustration-ranking');
+        break;
+    }
   };
 
   return (
@@ -97,12 +113,53 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
             >
               R-18
             </Link>
+            <Link
+              to="/supabase-test"
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                isActive('/supabase-test')
+                  ? 'text-green-600 bg-green-50'
+                  : 'text-gray-700 hover:text-green-600 hover:bg-green-50'
+              }`}
+            >
+              DBテスト
+            </Link>
           </nav>
+
+          {/* 右側のボタン群 */}
+          <div className="flex items-center space-x-4">
+            {/* ハンバーガーメニューボタン */}
+            <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="lg:hidden p-2 text-gray-700 hover:text-cyan-600 transition-colors"
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
+
+            {/* ユーザーメニュー */}
+            {isAuthenticated ? (
+              <div className="flex items-center space-x-2">
+                <Link
+                  to="/my-page"
+                  className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-cyan-600 transition-colors"
+                >
+                  <User className="h-5 w-5" />
+                  <span className="hidden sm:block">{user?.displayName}</span>
+                </Link>
+                <button
+                  onClick={logout}
+                  className="px-3 py-2 text-gray-700 hover:text-red-600 transition-colors"
+                >
+                  ログアウト
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={onLoginClick}
+                className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors"
+              >
+                ログイン
+              </button>
+            )}
           </div>
         </div>
 
@@ -220,6 +277,13 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
               >
                 R-18
               </Link>
+              <Link
+                to="/supabase-test"
+                className="px-3 py-2 text-green-600 hover:bg-green-50 rounded-md"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                DBテスト
+              </Link>
               
               {/* ナビゲーション */}
               <div className="pt-4 border-t border-gray-200">
@@ -294,5 +358,7 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
         )}
       </div>
     </header>
-  )
-}
+  );
+};
+
+export default Header;
