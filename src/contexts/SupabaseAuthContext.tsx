@@ -117,7 +117,8 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
         email,
         password,
         options: {
-          data: profileData
+          data: profileData,
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
 
@@ -143,6 +144,15 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
 
         if (profileError) {
           console.error('プロフィール作成エラー:', profileError);
+        }
+
+        // 開発環境では自動的にログイン状態にする
+        if (data.session) {
+          // セッションが作成された場合は自動ログイン
+          return { error: null };
+        } else {
+          // メール確認が必要な場合
+          return { error: { message: '確認メールを送信しました。メールを確認してログインしてください。' } as AuthError };
         }
       }
 
