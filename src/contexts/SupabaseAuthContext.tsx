@@ -21,11 +21,13 @@ interface SupabaseAuthContextType {
   profile: UserProfile | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, profileData: Partial<UserProfile>) => Promise<{ error: AuthError | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string, profileData: Partial<UserProfile>) => Promise<{ error: AuthError | null; autoLogin?: boolean }>;
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | null; success?: boolean }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ error: AuthError | null }>;
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
+  checkEmailConfirmation: (email: string) => Promise<{ error: AuthError | null; success?: boolean; message?: string }>;
+  refreshAuthState: () => Promise<{ error: AuthError | null; success?: boolean; user?: User | null }>;
 }
 
 // コンテキストの作成
@@ -46,6 +48,7 @@ interface SupabaseAuthProviderProps {
 }
 
 // プロバイダーコンポーネント
+// Appで呼ばれる
 export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -71,7 +74,7 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
 
     // 認証状態の変更を監視
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: string, session: Session | null) => {
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -110,6 +113,8 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
     }
   };
 
+
+
   // サインアップ
   const signUp = async (email: string, password: string, profileData: Partial<UserProfile>) => {
     try {
@@ -144,17 +149,29 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
 
         if (profileError) {
           console.error('プロフィール作成エラー:', profileError);
+          // プロフィール作成に失敗した場合でも、認証ユーザーは作成されている
+          // 後でプロフィールを更新できるようにする
         }
 
-        // 開発環境では自動的にログイン状態にする
+        // セッションが作成された場合は自動ログイン
         if (data.session) {
-          // セッションが作成された場合は自動ログイン
-          return { error: null };
+          console.log('✅ 新規登録成功：自動ログイン完了');
+          return { error: null, autoLogin: true };
         } else {
           // メール確認が必要な場合
-          return { error: { message: '確認メールを送信しました。メールを確認してログインしてください。' } as AuthError };
+          // ずっとここで401エラーなどが起きていた
+          console.log('📧 新規登録成功：メール確認待ち');
+          return { 
+            error: { 
+              message: 'アカウントが作成されました。メールを確認してログインしてください。',
+              code: 'EMAIL_CONFIRMATION_REQUIRED'
+            } as AuthError,
+            autoLogin: false
+          };
         }
       }
+
+
 
       return { error: null };
     } catch (error) {
@@ -166,12 +183,23 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
   // サインイン
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
-      return { error };
+      if (error) {
+        return { error };
+      }
+
+      if (data.session) {
+        console.log('✅ ログイン成功');
+        // プロフィール情報を取得
+        await fetchProfile(data.user.id);
+        return { error: null, success: true };
+      }
+
+      return { error: null };
     } catch (error) {
       console.error('サインイン中にエラーが発生:', error);
       return { error: { message: 'サインイン中にエラーが発生しました' } as AuthError };
@@ -229,6 +257,52 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
     }
   };
 
+  // メール確認状態の確認
+  const checkEmailConfirmation = async (email: string) => {
+    try {
+      const { data, error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email
+      });
+
+      if (error) {
+        return { error: { message: error.message } as AuthError };
+      }
+
+      return { error: null, success: true, message: '確認メールを再送信しました' };
+    } catch (error) {
+      console.error('メール確認状態確認中にエラーが発生:', error);
+      return { error: { message: 'メール確認状態の確認中にエラーが発生しました' } as AuthError };
+    }
+  };
+
+  // 認証状態の確認とプロフィール同期
+  const refreshAuthState = async () => {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('セッション取得エラー:', error);
+        return { error: { message: error.message } as AuthError };
+      }
+
+      if (session?.user) {
+        setSession(session);
+        setUser(session.user);
+        await fetchProfile(session.user.id);
+        return { error: null, success: true, user: session.user };
+      } else {
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        return { error: null, success: false, user: null };
+      }
+    } catch (error) {
+      console.error('認証状態更新中にエラーが発生:', error);
+      return { error: { message: '認証状態の更新中にエラーが発生しました' } as AuthError };
+    }
+  };
+
   const value: SupabaseAuthContextType = {
     user,
     profile,
@@ -238,7 +312,9 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
     signIn,
     signOut,
     updateProfile,
-    resetPassword
+    resetPassword,
+    checkEmailConfirmation,
+    refreshAuthState
   };
 
   return (

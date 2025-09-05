@@ -168,6 +168,7 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
           </div>
         </div>
 
+        {/* ここからのヘッダー要素は不要、消すこと */}
         {/* 下段ヘッダー（デスクトップ） */}
         <div className="hidden lg:block border-t border-gray-200">
           <div className="flex items-center justify-between py-3">

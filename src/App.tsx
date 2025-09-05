@@ -1,8 +1,8 @@
 
 // スペース作りました
 
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import HomePage from './pages/HomePage';
 import WorksPage from './pages/WorksPage';
@@ -18,41 +18,82 @@ import R18Page from './pages/R18Page';
 import UploadPage from './pages/UploadPage';
 import WorkDetailPage from './pages/WorkDetailPage';
 import SupabaseTest from './components/SupabaseTest';
+import EmailConfirmationPage from './pages/EmailConfirmationPage';
 
 import SupabaseLoginModal from './components/SupabaseLoginModal';
-import { SupabaseAuthProvider } from './contexts/SupabaseAuthContext';
+import { SupabaseAuthProvider, useSupabaseAuth } from './contexts/SupabaseAuthContext';
 
-function App() {
+// 認証が必要なページのラッパーコンポーネント
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading } = useSupabaseAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+function AppContent() {
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const { user, loading } = useSupabaseAuth();
+
+  // ログイン状態の変更を監視
+  useEffect(() => {
+    if (user && !loading) {
+      console.log('✅ ユーザーがログインしました:', user.email);
+      // 必要に応じてログイン後の処理を追加
+      // リダイレクト処理を書くとしたらここ？？？
+    }
+  }, [user, loading]);
 
   return (
+    <Router>
+      <div className="min-h-screen bg-gray-50">
+        {/* setShowLoginModalがtrueになると、ログインフォームが出てくる */}
+        <Header onLoginClick={() => setShowLoginModal(true)} />
+        <main>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/works" element={<WorksPage />} />
+            <Route path="/manga" element={<MangaPage />} />
+            <Route path="/illustrations" element={<IllustrationsPage />} />
+            <Route path="/manga-ranking" element={<MangaRankingPage />} />
+            <Route path="/illustration-ranking" element={<IllustrationRankingPage />} />
+            <Route path="/contests" element={<ContestsPage />} />
+            <Route path="/contests/:id" element={<ContestDetailPage />} />
+            <Route path="/direct-requests" element={<DirectRequestsPage />} />
+            <Route path="/my-page" element={<ProtectedRoute><MyPage /></ProtectedRoute>} />
+            <Route path="/r18" element={<R18Page />} />
+            <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
+            <Route path="/works/:id" element={<WorkDetailPage />} />
+            <Route path="/supabase-test" element={<SupabaseTest />} />
+            <Route path="/email-confirmation" element={<EmailConfirmationPage />} />
+          </Routes>
+        </main>
+        {showLoginModal && (
+          <SupabaseLoginModal onClose={() => setShowLoginModal(false)} />
+        )}
+      </div>
+    </Router>
+  );
+}
+
+function App() {
+  return (
     <SupabaseAuthProvider>
-      <Router>
-        <div className="min-h-screen bg-gray-50">
-          <Header onLoginClick={() => setShowLoginModal(true)} />
-          <main>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/works" element={<WorksPage />} />
-              <Route path="/manga" element={<MangaPage />} />
-              <Route path="/illustrations" element={<IllustrationsPage />} />
-              <Route path="/manga-ranking" element={<MangaRankingPage />} />
-              <Route path="/illustration-ranking" element={<IllustrationRankingPage />} />
-              <Route path="/contests" element={<ContestsPage />} />
-              <Route path="/contests/:id" element={<ContestDetailPage />} />
-              <Route path="/direct-requests" element={<DirectRequestsPage />} />
-              <Route path="/my-page" element={<MyPage />} />
-              <Route path="/r18" element={<R18Page />} />
-              <Route path="/upload" element={<UploadPage />} />
-              <Route path="/works/:id" element={<WorkDetailPage />} />
-              <Route path="/supabase-test" element={<SupabaseTest />} />
-            </Routes>
-          </main>
-          {showLoginModal && (
-            <SupabaseLoginModal onClose={() => setShowLoginModal(false)} />
-          )}
-        </div>
-      </Router>
+      <AppContent />
     </SupabaseAuthProvider>
   );
 }
