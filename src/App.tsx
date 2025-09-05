@@ -55,6 +55,7 @@ function AppContent() {
       console.log('✅ ユーザーがログインしました:', user.email);
       // 必要に応じてログイン後の処理を追加
       // リダイレクト処理を書くとしたらここ？？？
+      // note
     }
   }, [user, loading]);
 
