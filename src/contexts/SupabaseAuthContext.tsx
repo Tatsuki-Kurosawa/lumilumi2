@@ -24,6 +24,7 @@ interface SupabaseAuthContextType {
   signUp: (email: string, password: string, profileData: Partial<UserProfile>) => Promise<{ error: AuthError | null; autoLogin?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null; success?: boolean }>;
   signOut: () => Promise<void>;
+  registerProfile: (profileData: Partial<UserProfile>) => Promise<{ error: AuthError | null }>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ error: AuthError | null }>;
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
   checkEmailConfirmation: (email: string) => Promise<{ error: AuthError | null; success?: boolean; message?: string }>;
@@ -92,25 +93,25 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
   }, []);
 
   // ユーザープロフィールの取得
-  const fetchProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+  const fetchProfile = async (usrId: string) => {
+  //   try {
+  //     const { data, error } = await supabase
+  //       .from('profiles')
+  //       .select('*')
+  //       .eq('id', userId)
+  //       .single();
 
-      if (error) {
-        console.error('プロフィール取得エラー:', error);
-        return;
-      }
+  //     if (error) {
+  //       console.error('プロフィール取得エラー:', error);
+  //       return;
+  //     }
 
-      if (data) {
-        setProfile(data);
-      }
-    } catch (error) {
-      console.error('プロフィール取得中にエラーが発生:', error);
-    }
+  //     if (data) {
+  //       setProfile(data);
+  //     }
+  //   } catch (error) {
+  //     console.error('プロフィール取得中にエラーが発生:', error);
+  //   }
   };
 
 
@@ -123,9 +124,12 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
         password,
         options: {
           data: profileData,
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+          emailRedirectTo: `${window.location.origin}/email-confirmation`
         }
       });
+
+      console.log('data:', data);
+      console.log('error:', error);
 
       if (error) {
         return { error };
@@ -133,25 +137,26 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
 
       if (data.user) {
         // プロフィールテーブルにユーザー情報を挿入
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: data.user.id,
-              username: profileData.username || email.split('@')[0],
-              display_name: profileData.display_name || profileData.username || email.split('@')[0],
-              university: profileData.university || '東京大学',
-              status: profileData.status || 'student',
-              bio: profileData.bio || '',
-              is_creator: profileData.is_creator || false
-            }
-          ]);
+        // const { error: profileError } = await supabase
+        //   .from('profiles')
+        //   .insert([
+        //     {
+        //       id: data.user.id,
+        //       username: profileData.username || email.split('@')[0],
+        //       display_name: profileData.display_name || profileData.username || email.split('@')[0],
+        //       university: profileData.university || '東京大学',
+        //       status: profileData.status || 'student',
+        //       bio: profileData.bio || '',
+        //       is_creator: profileData.is_creator || false
+        //     }
+        //   ]);
 
-        if (profileError) {
-          console.error('プロフィール作成エラー:', profileError);
+        // if (profileError) {
+        //   console.error('プロフィール作成エラー:', profileError);
           // プロフィール作成に失敗した場合でも、認証ユーザーは作成されている
           // 後でプロフィールを更新できるようにする
         }
+
 
         // セッションが作成された場合は自動ログイン
         if (data.session) {
@@ -169,11 +174,8 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
             autoLogin: false
           };
         }
-      }
-
-
-
-      return { error: null };
+      
+        return { error: null };
     } catch (error) {
       console.error('サインアップ中にエラーが発生:', error);
       return { error: { message: 'サインアップ中にエラーが発生しました' } as AuthError };
@@ -215,6 +217,42 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
     }
   };
 
+  // 初期プロフィール設定
+  const registerProfile = async (profileData: Partial<UserProfile>) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .insert(profileData);
+
+      if (error) {
+        return { error: { message: error.message } as AuthError };
+      }
+
+      // ローカル状態を更新（ちょいまち）
+      // idとcreated_atを取ってくる必要あり　get_sessionみたいなやつで
+      if (profileData) {
+        // 一旦例外処理を省く
+        const { data: { session } } = await supabase.auth.getSession();
+        // setProfile({...profileData, created_at: session.user.created_at});
+        setProfile({
+          id: session.user.id,
+          username: profileData.username || '',
+          display_name: profileData.display_name || '',
+          university: profileData.university || '',
+          status: profileData.status || 'student',
+          bio: profileData.bio,
+          is_creator: profileData.is_creator || false,
+          created_at: session.user.created_at
+        });
+      }
+
+      return { error: null };
+    } catch (error) {
+      console.error('プロフィール登録中にエラーが発生:', error);
+      return { error: { message: 'プロフィール登録中にエラーが発生しました' } as AuthError };
+    }
+  };
+
   // プロフィール更新
   const updateProfile = async (updates: Partial<UserProfile>) => {
     if (!user) {
@@ -222,6 +260,7 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
     }
 
     try {
+      // ここに注目
       const { error } = await supabase
         .from('profiles')
         .update(updates)
@@ -279,6 +318,7 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
   // 認証状態の確認とプロフィール同期
   const refreshAuthState = async () => {
     try {
+      // LocalStrageなどにあるセッション情報をとってくる
       const { data: { session }, error } = await supabase.auth.getSession();
       
       if (error) {
@@ -311,6 +351,7 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
     signUp,
     signIn,
     signOut,
+    registerProfile,
     updateProfile,
     resetPassword,
     checkEmailConfirmation,

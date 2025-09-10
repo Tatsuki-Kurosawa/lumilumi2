@@ -5,9 +5,10 @@ import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 
 interface HeaderProps {
   onLoginClick: () => void;
+  onSignUpClick?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
+const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
   const { user, profile, signOut } = useSupabaseAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -158,89 +159,23 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
                 </button>
               </div>
             ) : (
-              <button
-                onClick={onLoginClick}
-                className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors"
-              >
-                ログイン
-              </button>
+              <div className="flex space-x-2">
+                <button
+                  onClick={onLoginClick}
+                  className="px-4 py-2 text-cyan-600 border border-cyan-600 rounded-lg hover:bg-cyan-50 transition-colors"
+                >
+                  ログイン
+                </button>
+                {onSignUpClick && (
+                  <button
+                    onClick={onSignUpClick}
+                    className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors"
+                  >
+                    新規登録
+                  </button>
+                )}
+              </div>
             )}
-          </div>
-        </div>
-
-        {/* ここからのヘッダー要素は不要、消すこと */}
-        {/* 下段ヘッダー（デスクトップ） */}
-        <div className="hidden lg:block border-t border-gray-200">
-          <div className="flex items-center justify-between py-3">
-            {/* 左側: マンガ */}
-            <div className="flex items-center space-x-1">
-              <span className="text-sm font-medium text-gray-600 mr-3">マンガ</span>
-              <button
-                onClick={() => navigate('/manga')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  isMainContentPage && isActive('/manga')
-                    ? 'bg-yellow-400 text-white'
-                    : 'text-gray-600 hover:text-yellow-600 hover:bg-yellow-50'
-                }`}
-              >
-                ホーム
-              </button>
-              <button
-                onClick={() => navigate('/direct-requests')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  isMainContentPage && isActive('/direct-requests')
-                    ? 'bg-yellow-400 text-white'
-                    : 'text-gray-600 hover:text-yellow-600 hover:bg-yellow-50'
-                }`}
-              >
-                依頼
-              </button>
-              <button
-                onClick={() => navigate('/manga-ranking')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  isMainContentPage && isActive('/manga-ranking')
-                    ? 'bg-yellow-400 text-white'
-                    : 'text-gray-600 hover:text-yellow-600 hover:bg-yellow-50'
-                }`}
-              >
-                ランキング
-              </button>
-            </div>
-
-            {/* 右側: イラスト */}
-            <div className="flex items-center space-x-1">
-              <span className="text-sm font-medium text-gray-600 mr-3">イラスト</span>
-              <button
-                onClick={() => navigate('/illustrations')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  isMainContentPage && isActive('/illustrations')
-                    ? 'bg-yellow-400 text-white'
-                    : 'text-gray-600 hover:text-yellow-600 hover:bg-yellow-50'
-                }`}
-              >
-                ホーム
-              </button>
-              <button
-                onClick={() => navigate('/direct-requests')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  isMainContentPage && isActive('/direct-requests')
-                    ? 'bg-yellow-400 text-white'
-                    : 'text-gray-600 hover:text-yellow-600 hover:bg-yellow-50'
-                }`}
-              >
-                依頼
-              </button>
-              <button
-                onClick={() => navigate('/illustration-ranking')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  isMainContentPage && isActive('/illustration-ranking')
-                    ? 'bg-yellow-400 text-white'
-                    : 'text-gray-600 hover:text-yellow-600 hover:bg-yellow-50'
-                }`}
-              >
-                ランキング
-              </button>
-            </div>
           </div>
         </div>
 

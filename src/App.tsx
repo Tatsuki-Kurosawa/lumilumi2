@@ -19,8 +19,9 @@ import UploadPage from './pages/UploadPage';
 import WorkDetailPage from './pages/WorkDetailPage';
 import SupabaseTest from './components/SupabaseTest';
 import EmailConfirmationPage from './pages/EmailConfirmationPage';
+import ProfileSetupPage from './pages/ProfileSetupPage';
 
-import SupabaseLoginModal from './components/SupabaseLoginModal';
+import AuthModals from './components/AuthModals';
 import { SupabaseAuthProvider, useSupabaseAuth } from './contexts/SupabaseAuthContext';
 
 // 認証が必要なページのラッパーコンポーネント
@@ -41,29 +42,47 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   if (!user) {
     return <Navigate to="/" replace />;
   }
-
+ 
   return <>{children}</>;
 };
 
 function AppContent() {
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const { user, loading } = useSupabaseAuth();
+  const [showSignUpModal, setShowSignUpModal] = useState(false);
+  const { user, profile, loading } = useSupabaseAuth();
 
   // ログイン状態の変更を監視
   useEffect(() => {
     if (user && !loading) {
       console.log('✅ ユーザーがログインしました:', user.email);
-      // 必要に応じてログイン後の処理を追加
-      // リダイレクト処理を書くとしたらここ？？？
-      // note
+      
+      // プロフィールが不完全な場合の処理
+      if (profile && (!profile.username || !profile.university)) {
+        console.log('⚠️ プロフィールが不完全です。プロフィール設定ページにリダイレクトします。');
+        // プロフィール設定ページに自動リダイレクトは ProfileSetupPage 内で処理
+      }
     }
-  }, [user, loading]);
+  }, [user, profile, loading]);
+
+  const handleCloseAuthModals = () => {
+    setShowLoginModal(false);
+    setShowSignUpModal(false);
+  };
+
+  const handleLoginClick = () => {
+    setShowSignUpModal(false);
+    setShowLoginModal(true);
+  };
+
+  const handleSignUpClick = () => {
+    setShowLoginModal(false);
+    setShowSignUpModal(true);
+  };
 
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
-        {/* setShowLoginModalがtrueになると、ログインフォームが出てくる */}
-        <Header onLoginClick={() => setShowLoginModal(true)} />
+        <Header onLoginClick={handleLoginClick} onSignUpClick={handleSignUpClick} />
         <main>
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -81,11 +100,14 @@ function AppContent() {
             <Route path="/works/:id" element={<WorkDetailPage />} />
             <Route path="/supabase-test" element={<SupabaseTest />} />
             <Route path="/email-confirmation" element={<EmailConfirmationPage />} />
+            <Route path="/profile-setup" element={<ProtectedRoute><ProfileSetupPage /></ProtectedRoute>} />
           </Routes>
         </main>
-        {showLoginModal && (
-          <SupabaseLoginModal onClose={() => setShowLoginModal(false)} />
-        )}
+        <AuthModals 
+          showLogin={showLoginModal}
+          showSignUp={showSignUpModal}
+          onClose={handleCloseAuthModals}
+        />
       </div>
     </Router>
   );

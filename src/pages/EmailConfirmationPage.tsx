@@ -9,35 +9,73 @@ const EmailConfirmationPage: React.FC = () => {
   const { refreshAuthState } = useSupabaseAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
+  const [isProcessed, setIsProcessed] = useState(false);
 
   useEffect(() => {
     const handleEmailConfirmation = async () => {
+      if (isProcessed) return; // 既に処理済みの場合は実行しない
+      
       try {
-        // URLパラメータからトークンを取得
-        const token = searchParams.get('token');
-        const type = searchParams.get('type');
+        setIsProcessed(true);
 
-        if (!token || type !== 'signup') {
-          setStatus('error');
-          setMessage('無効な確認リンクです。');
+        // URLフラグメント（#の後）もチェック
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const hashAccessToken = hashParams.get('access_token');
+        const hashRefreshToken = hashParams.get('refresh_token');
+        const hashType = hashParams.get('type');
+        
+        console.log('フラグメント - access_token:', hashAccessToken);
+        console.log('フラグメント - refresh_token:', hashRefreshToken);
+        console.log('フラグメント - type:', hashType);
+
+        // Supabaseからのリダイレクトの場合
+        if (hashAccessToken && hashRefreshToken) {
+          console.log('✅ Supabaseからの認証リダイレクトを検出');
+          
+          // 認証状態を更新
+          const result = await refreshAuthState();
+
+          console.log('result:', result);
+          console.log('result.success:', result.success);
+          console.log('result.user:', result.user);
+
+          if (result.success && result.user) {
+            setStatus('success');
+            setMessage('メール確認が完了しました！');
+            
+            // プロフィール情報が不完全な場合はプロフィール設定ページへ
+            setTimeout(() => {
+              navigate('/profile-setup');
+            }, 2000);
+          } else {
+            setStatus('error');
+            setMessage('メール確認の処理中にエラーが発生しました。再度ログインをお試しください。');
+          }
           return;
         }
 
-        // 認証状態を更新
-        const result = await refreshAuthState();
+        // // 従来のトークンベースの確認
+        // if (!token || hashType !== 'signup') {
+        //   setStatus('error');
+        //   setMessage('無効な確認リンクです。');
+        //   return;
+        // }
+
+        // // 認証状態を更新
+        // const result = await refreshAuthState();
         
-        if (result.success && result.user) {
-          setStatus('success');
-          setMessage('メール確認が完了しました！ログインに成功しました。');
+        // if (result.success && result.user) {
+        //   setStatus('success');
+        //   setMessage('メール確認が完了しました！');
           
-          // 3秒後にホームページにリダイレクト
-          setTimeout(() => {
-            navigate('/');
-          }, 3000);
-        } else {
-          setStatus('error');
-          setMessage('メール確認の処理中にエラーが発生しました。再度ログインをお試しください。');
-        }
+        //   // プロフィール設定ページにリダイレクト
+        //   setTimeout(() => {
+        //     navigate('/profile-setup');
+        //   }, 2000);
+        // } else {
+        //   setStatus('error');
+        //   setMessage('メール確認の処理中にエラーが発生しました。再度ログインをお試しください。');
+        // }
       } catch (error) {
         console.error('メール確認処理中にエラーが発生:', error);
         setStatus('error');
@@ -65,7 +103,7 @@ const EmailConfirmationPage: React.FC = () => {
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 mb-2">メール確認完了！</h2>
             <p className="text-gray-600 mb-4">{message}</p>
-            <p className="text-sm text-gray-500">ホームページにリダイレクトします...</p>
+            <p className="text-sm text-gray-500">プロフィール設定ページに移動します...</p>
           </div>
         );
 

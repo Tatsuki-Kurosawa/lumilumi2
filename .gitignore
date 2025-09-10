@@ -13,6 +13,8 @@ dist-ssr
 *.local
 
 # Editor directories and files
+.cursor/*
+.claude/*
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -23,3 +25,4 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.mcp.json
