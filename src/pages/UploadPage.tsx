@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, X, Plus, Image as ImageIcon, Tag, Eye, EyeOff } from 'lucide-react';
+import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
+import { supabase } from '../lib/supabaseClient';
 
 const UploadPage: React.FC = () => {
   const { user, profile } = useSupabaseAuth();
@@ -12,7 +13,7 @@ const UploadPage: React.FC = () => {
     title: '',
     description: '',
     tags: [] as string[],
-    category: 'illustration',
+    category: 'illustration' as 'illustration' | 'manga',
     isR18: false,
   });
 
@@ -24,8 +25,6 @@ const UploadPage: React.FC = () => {
   const categories = [
     { value: 'illustration', label: 'イラスト' },
     { value: 'manga', label: 'マンガ' },
-    { value: 'design', label: 'デザイン' },
-    { value: 'other', label: 'その他' },
   ];
 
   const popularTags = [
@@ -80,13 +79,16 @@ const UploadPage: React.FC = () => {
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
-  const addTag = () => {
-    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
+  const addTag = (tag?: string) => {
+    const tagToAdd = tag || tagInput.trim();
+    if (tagToAdd && !formData.tags.includes(tagToAdd)) {
       setFormData(prev => ({
         ...prev,
-        tags: [...prev.tags, tagInput.trim()]
+        tags: [...prev.tags, tagToAdd]
       }));
-      setTagInput('');
+      if (!tag) {
+        setTagInput('');
+      }
     }
   };
 
@@ -106,12 +108,82 @@ const UploadPage: React.FC = () => {
 
     setIsUploading(true);
     try {
-      // TODO: 実際のアップロード処理を実装
-      console.log('アップロード処理:', { formData, images, user: profile });
+      // 1. ユーザー情報を取得（既に認証チェック済みなので、profileから取得）
+      if (!user || !profile) {
+        alert('ログインが必要です。');
+        setIsUploading(false);
+        return;
+      }
+
+      // 2. 全ての画像を並行してSupabase Storageにアップロード
+      const imageUploadPromises = images.map(file => {
+        const filePath = `${user.id}/${Date.now()}_${file.name}`;
+        return supabase.storage.from('posts').upload(filePath, file); // 'posts'はあなたのバケット名
+      });
       
-      // 成功時の処理
+      const uploadedImageResults = await Promise.all(imageUploadPromises);
+
+      // アップロードエラーがないかチェック
+      const uploadErrors = uploadedImageResults.filter(result => result.error);
+      if (uploadErrors.length > 0) {
+        console.error('画像アップロード中にエラー:', uploadErrors);
+        throw new Error('画像アップロードに失敗しました。');
+      }
+
+      // 全画像の公開URLを取得
+      const imageUrls = uploadedImageResults.map(result => {
+          return supabase.storage.from('posts').getPublicUrl(result.data.path).data.publicUrl;
+      });
+
+      // 3. `posts`テーブルに基本情報を保存し、新しい投稿IDを取得
+      const { data: postData, error: postError } = await supabase
+        .from('posts')
+        .insert({
+          author_id: user.id,
+          title: formData.title,
+          description: formData.description || null,
+          type: formData.category, // 'manga' or 'illustration'
+          thumbnail_url: imageUrls[0], // 最初の画像をサムネイルとして使用
+          is_r18: formData.isR18
+        })
+        .select('id')
+        .single();
+
+      if (postError) throw postError;
+      const newPostId = postData.id;
+
+      // 4. `post_images`テーブルに画像情報を保存
+      const imageRecords = imageUrls.map((url, index) => ({
+          post_id: newPostId,
+          image_url: url,
+          display_order: index + 1
+      }));
+      const { error: imagesError } = await supabase.from('post_images').insert(imageRecords);
+      if (imagesError) throw imagesError;
+
+      // 5. タグ情報を処理 (upsertで重複を避けつつタグを作成し、中間テーブルに保存)
+      if (formData.tags && formData.tags.length > 0) {
+          // tagsテーブルにタグを保存（存在しない場合のみ作成）
+          const { data: tagData, error: tagUpsertError } = await supabase
+              .from('tags')
+              .upsert(formData.tags.map((tag: string) => ({ name: tag })), { onConflict: 'name' })
+              .select('id, name');
+
+          if (tagUpsertError) throw tagUpsertError;
+
+          // post_tags中間テーブルにレコードを保存
+          const postTagRecords = tagData.map((tag: { id: number; name: string }) => ({
+              post_id: newPostId,
+              tag_id: tag.id
+          }));
+          const { error: postTagsError } = await supabase.from('post_tags').insert(postTagRecords);
+          if (postTagsError) throw postTagsError;
+      }
+
+      // 6. 成功時の処理
       alert('投稿が完了しました！');
-      navigate('/works');
+      navigate(`/works/${newPostId}`); // 作成した作品の詳細ページへ遷移
+
     } catch (error) {
       console.error('アップロードエラー:', error);
       alert('アップロード中にエラーが発生しました');
@@ -162,7 +234,7 @@ const UploadPage: React.FC = () => {
             </label>
             <select
               value={formData.category}
-              onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+              onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value as 'illustration' | 'manga' }))}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
             >
@@ -190,7 +262,7 @@ const UploadPage: React.FC = () => {
               />
               <button
                 type="button"
-                onClick={addTag}
+                onClick={() => addTag()}
                 className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
               >
                 追加
@@ -205,7 +277,7 @@ const UploadPage: React.FC = () => {
                   <button
                     key={tag}
                     type="button"
-                    onClick={() => !formData.tags.includes(tag) && addTag()}
+                    onClick={() => !formData.tags.includes(tag) && addTag(tag)}
                     disabled={formData.tags.includes(tag)}
                     className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
