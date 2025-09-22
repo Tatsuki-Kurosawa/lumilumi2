@@ -1,13 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Heart, Eye, Share2, Flag, User, Calendar, Tag, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { LikeService } from '../lib/likeService';
+import { PageViewService } from '../lib/pageViewService';
 
 const WorkDetailPage: React.FC = () => {
   const { id } = useParams();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [isLiked, setIsLiked] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [likeCount, setLikeCount] = useState(0);
+  const [viewCount, setViewCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   // ダミーデータ
   const work = {
@@ -52,12 +57,89 @@ const WorkDetailPage: React.FC = () => {
     },
   ];
 
-  const handleLike = () => {
-    if (!isAuthenticated) {
+  // 初期データの読み込み
+  useEffect(() => {
+    const loadData = async () => {
+      if (!id) return;
+      
+      const postId = parseInt(id);
+      
+      try {
+        // PV数を記録
+        await PageViewService.recordPageView(postId, user?.id);
+        
+        // いいね数とPV数を取得
+        const [likeCountResult, viewCountResult] = await Promise.all([
+          LikeService.getLikeCount(postId),
+          PageViewService.getViewCount(postId)
+        ]);
+        
+        if (likeCountResult.error) {
+          console.error('いいね数取得エラー:', likeCountResult.error);
+        } else {
+          setLikeCount(likeCountResult.count);
+        }
+        
+        if (viewCountResult.error) {
+          console.error('PV数取得エラー:', viewCountResult.error);
+        } else {
+          setViewCount(viewCountResult.count);
+        }
+        
+        // ユーザーがいいねしているかチェック
+        if (user?.id) {
+          const likeStatus = await LikeService.checkUserLike(postId, user.id);
+          if (likeStatus.error) {
+            console.error('いいね状態取得エラー:', likeStatus.error);
+          } else {
+            setIsLiked(likeStatus.isLiked);
+          }
+        }
+        
+      } catch (error) {
+        console.error('データ読み込みエラー:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadData();
+  }, [id, user?.id]);
+
+  const handleLike = async () => {
+    if (!isAuthenticated || !user?.id || !id) {
       // ログインモーダルを表示する処理
       return;
     }
-    setIsLiked(!isLiked);
+    
+    const postId = parseInt(id);
+    
+    try {
+      if (isLiked) {
+        // いいねを削除
+        const result = await LikeService.removeLike(postId, user.id);
+        if (result.success) {
+          setIsLiked(false);
+          setLikeCount(prev => Math.max(0, prev - 1));
+        } else {
+          console.error('いいね削除エラー:', result.error);
+          alert('いいねの削除に失敗しました');
+        }
+      } else {
+        // いいねを追加
+        const result = await LikeService.addLike(postId, user.id);
+        if (result.success) {
+          setIsLiked(true);
+          setLikeCount(prev => prev + 1);
+        } else {
+          console.error('いいね追加エラー:', result.error);
+          alert(result.error || 'いいねの追加に失敗しました');
+        }
+      }
+    } catch (error) {
+      console.error('いいね処理エラー:', error);
+      alert('いいねの処理に失敗しました');
+    }
   };
 
   const handleShare = () => {
@@ -189,7 +271,7 @@ const WorkDetailPage: React.FC = () => {
                 }`}
               >
                 <Heart className={`h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
-                <span>{work.likes + (isLiked ? 1 : 0)}</span>
+                <span>{likeCount}</span>
               </button>
               
               <button
@@ -216,7 +298,7 @@ const WorkDetailPage: React.FC = () => {
             <div className="flex items-center space-x-6 text-sm text-gray-600 mb-6">
               <div className="flex items-center">
                 <Eye className="h-4 w-4 mr-1" />
-                <span>{work.views.toLocaleString()} 回閲覧</span>
+                <span>{viewCount.toLocaleString()} 回閲覧</span>
               </div>
               <div className="flex items-center">
                 <Calendar className="h-4 w-4 mr-1" />
