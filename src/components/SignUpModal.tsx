@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
+// テスト
+import { supabase } from '../lib/supabaseClient';
 
 interface SignUpModalProps {
   onClose: () => void;
@@ -39,21 +41,26 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ onClose, onSwitchToLogin }) =
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('パスワードは6文字以上で入力してください');
+    // パスワード強度チェック（英数記号8文字以上）
+    if (formData.password.length < 8) {
+      setError('パスワードは8文字以上で入力してください');
+      setIsLoading(false);
+      return;
+    }
+
+    const hasLetter = /[a-zA-Z]/.test(formData.password);
+    const hasNumber = /[0-9]/.test(formData.password);
+    const hasSymbol = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password);
+
+    if (!hasLetter || !hasNumber || !hasSymbol) {
+      setError('パスワードは英字、数字、記号をそれぞれ1文字以上含む必要があります');
       setIsLoading(false);
       return;
     }
 
     try {
       // 最小限のプロフィールデータでサインアップ（メール認証後にプロフィールを完成）
-      // ここで送ってはだめ. signUpするときに送る情報はメアドとパスワードだけでいいのか？
-      const { error } = await signUp(formData.email, formData.password, {
-        username: formData.email.split('@')[0], // 仮のユーザー名
-        display_name: formData.email.split('@')[0], // 仮の表示名
-        university: '東京大学', // デフォルト値
-        status: 'student'
-      });
+      const { error } = await signUp(formData.email, formData.password);
 
       // 確認用
       console.log('error:', error);
@@ -61,8 +68,6 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ onClose, onSwitchToLogin }) =
       if (error) {
         if (error.message.includes('already registered')) {
           setError('このメールアドレスは既に登録されています。ログインしてください。');
-        } else if (error.message.includes('password')) {
-          setError('パスワードが弱すぎます。より強力なパスワードを設定してください。');
         } else if (error.message.includes('email')) {
           setError('有効なメールアドレスを入力してください。');
         } else if (error.message.includes('Email confirmation')) {
@@ -70,6 +75,7 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ onClose, onSwitchToLogin }) =
           setUserEmail(formData.email);
           setStep('success');
         } else {
+          // これまでずっとここに入っていた
           setError(error.message);
         }
       } else {
@@ -124,9 +130,9 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ onClose, onSwitchToLogin }) =
             value={formData.password}
             onChange={handleInputChange}
             required
-            minLength={6}
+            minLength={8}
             className="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-            placeholder="6文字以上で入力"
+            placeholder="英数記号8文字以上で入力"
           />
           <button
             type="button"
@@ -136,7 +142,7 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ onClose, onSwitchToLogin }) =
             {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
           </button>
         </div>
-        <p className="text-xs text-gray-500 mt-1">6文字以上で入力してください</p>
+        <p className="text-xs text-gray-500 mt-1">英字、数字、記号を含む8文字以上で入力してください</p>
       </div>
 
       {/* パスワード確認 */}

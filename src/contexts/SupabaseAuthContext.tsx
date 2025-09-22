@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabaseClient';
+import { supabase, testSupabaseConnection } from '../lib/supabaseClient';
 
 // ユーザープロフィールの型定義
 interface UserProfile {
@@ -21,7 +21,7 @@ interface SupabaseAuthContextType {
   profile: UserProfile | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, profileData: Partial<UserProfile>) => Promise<{ error: AuthError | null; autoLogin?: boolean }>;
+  signUp: (email: string, password: string) => Promise<{ error: AuthError | null; autoLogin?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null; success?: boolean }>;
   signOut: () => Promise<void>;
   registerProfile: (profileData: Partial<UserProfile>) => Promise<{ error: AuthError | null }>;
@@ -65,7 +65,9 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        console.log("useEffect,getSession内で呼ばれている");
         await fetchProfile(session.user.id);
+        console.log('fetchProfile完了');
       }
       
       setLoading(false);
@@ -76,12 +78,18 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
     // 認証状態の変更を監視
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: string, session: Session | null) => {
+        console.log('onAuthStateChange内で呼ばれているevent', event);
+        // console.log('onAuthStateChange内で呼ばれているsession情報', session);
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
+          console.log("useEffect,async内で呼ばれている");
+          console.log("session.user.id", session.user.id);
           await fetchProfile(session.user.id);
+          console.log('fetchProfile後のprofile', profile);
         } else {
+          console.log('sessionがnullの場合に発動した');
           setProfile(null);
         }
         
@@ -92,90 +100,61 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
     return () => subscription.unsubscribe();
   }, []);
 
+  // ログイン処理のために作る必要あり
   // ユーザープロフィールの取得
-  const fetchProfile = async (usrId: string) => {
-  //   try {
-  //     const { data, error } = await supabase
-  //       .from('profiles')
-  //       .select('*')
-  //       .eq('id', userId)
-  //       .single();
+  const fetchProfile = async (userId: string) => {
+    try {
+      console.log('fetchProfile呼ばれた');
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      console.log('取得完了');
+      
+      if (error) {
+        // プロフィールが存在しない場合は正常な状態として扱う
+        if (error.code === 'PGRST116') { // No rows found
+          console.log('プロフィール未設定状態 - ユーザーID:', userId);
+          setProfile(null);
+          return;
+        }
+        console.error('プロフィール取得エラー:', error);
+        return;
+      }
+      
+      console.log('dataの値', data);
+      if (data) {
+        console.log('fetchProfile内でプロフィール取得成功:', data);
+        setProfile(data);
+        return;
+      }
 
-  //     if (error) {
-  //       console.error('プロフィール取得エラー:', error);
-  //       return;
-  //     }
-
-  //     if (data) {
-  //       setProfile(data);
-  //     }
-  //   } catch (error) {
-  //     console.error('プロフィール取得中にエラーが発生:', error);
-  //   }
+      return;
+    } catch (error) {
+      console.error('プロフィール取得中にエラーが発生:', error);
+      return;
+    }
   };
 
-
-
   // サインアップ
-  const signUp = async (email: string, password: string, profileData: Partial<UserProfile>) => {
+  // 発生したエラーを知らせるのみ
+  const signUp = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: profileData,
           emailRedirectTo: `${window.location.origin}/email-confirmation`
         }
       });
 
-      console.log('data:', data);
-      console.log('error:', error);
-
       if (error) {
         return { error };
+      } else {
+        return { error: null };
       }
 
-      if (data.user) {
-        // プロフィールテーブルにユーザー情報を挿入
-        // const { error: profileError } = await supabase
-        //   .from('profiles')
-        //   .insert([
-        //     {
-        //       id: data.user.id,
-        //       username: profileData.username || email.split('@')[0],
-        //       display_name: profileData.display_name || profileData.username || email.split('@')[0],
-        //       university: profileData.university || '東京大学',
-        //       status: profileData.status || 'student',
-        //       bio: profileData.bio || '',
-        //       is_creator: profileData.is_creator || false
-        //     }
-        //   ]);
-
-        // if (profileError) {
-        //   console.error('プロフィール作成エラー:', profileError);
-          // プロフィール作成に失敗した場合でも、認証ユーザーは作成されている
-          // 後でプロフィールを更新できるようにする
-        }
-
-
-        // セッションが作成された場合は自動ログイン
-        if (data.session) {
-          console.log('✅ 新規登録成功：自動ログイン完了');
-          return { error: null, autoLogin: true };
-        } else {
-          // メール確認が必要な場合
-          // ずっとここで401エラーなどが起きていた
-          console.log('📧 新規登録成功：メール確認待ち');
-          return { 
-            error: { 
-              message: 'アカウントが作成されました。メールを確認してログインしてください。',
-              code: 'EMAIL_CONFIRMATION_REQUIRED'
-            } as AuthError,
-            autoLogin: false
-          };
-        }
-      
-        return { error: null };
     } catch (error) {
       console.error('サインアップ中にエラーが発生:', error);
       return { error: { message: 'サインアップ中にエラーが発生しました' } as AuthError };
@@ -189,6 +168,9 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
         email,
         password
       });
+
+      console.log('email:', email);
+      console.log('password:', password);
 
       if (error) {
         return { error };
@@ -220,36 +202,71 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
   // 初期プロフィール設定
   const registerProfile = async (profileData: Partial<UserProfile>) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .insert(profileData);
 
-      if (error) {
-        return { error: { message: error.message } as AuthError };
+      // const { error } = await supabase.from('profiles').insert(profileData);
+
+      // if (error) {
+      //   return { error };
+      // }
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const accessToken = session?.access_token;
+
+      const response = await fetch(`${supabaseUrl}/rest/v1/profiles`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+          'apikey': anonKey,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(profileData)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("❌ fetch エラーレスポンス:", errorText);
+        // ステータスコード別のエラー分析
+        if (response.status === 401) {
+          return { error: { message: '認証エラー: アクセストークンが無効です' } as AuthError };
+        } else if (response.status === 403) {
+          return { error: { message: '権限エラー: プロフィール作成権限がありません' } as AuthError };
+        } else if (response.status === 422) {
+          return { error: { message: `データエラー: ${errorText}` } as AuthError };
+        } else {
+          return { error: { message: `HTTPエラー ${response.status}: ${errorText}` } as AuthError };
+        }
       }
 
-      // ローカル状態を更新（ちょいまち）
-      // idとcreated_atを取ってくる必要あり　get_sessionみたいなやつで
-      if (profileData) {
-        // 一旦例外処理を省く
-        const { data: { session } } = await supabase.auth.getSession();
-        // setProfile({...profileData, created_at: session.user.created_at});
-        setProfile({
-          id: session.user.id,
+      const responseText = await response.text();
+      console.log("✅ fetch 成功レスポンス:", responseText);
+      // 成功時：ローカル状態を更新
+      if (profileData && user) {
+        const newProfile: UserProfile = {
+          id: user.id,
           username: profileData.username || '',
           display_name: profileData.display_name || '',
           university: profileData.university || '',
           status: profileData.status || 'student',
-          bio: profileData.bio,
+          avatar_url: profileData.avatar_url || '',
+          bio: profileData.bio || '',
           is_creator: profileData.is_creator || false,
-          created_at: session.user.created_at
-        });
+          created_at: user.created_at
+        };
+        console.log('✅ プロフィール登録成功 - ローカル状態を更新:', newProfile);
+        setProfile(newProfile);
       }
-
       return { error: null };
+
     } catch (error) {
-      console.error('プロフィール登録中にエラーが発生:', error);
-      return { error: { message: 'プロフィール登録中にエラーが発生しました' } as AuthError };
+      console.error('❌ プロフィール登録中にエラーが発生:', error);
+      console.error('❌ エラーの型:', typeof error);
+      console.error('❌ エラーの詳細:', error instanceof Error ? error.message : String(error));
+      console.error('❌ エラーのスタック:', error instanceof Error ? error.stack : 'スタック情報なし');
+
+      const errorMessage = error instanceof Error ? error.message : 'プロフィール登録中にエラーが発生しました';
+      return { error: { message: errorMessage } as AuthError };
     }
   };
 

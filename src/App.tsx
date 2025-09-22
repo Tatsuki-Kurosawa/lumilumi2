@@ -65,8 +65,8 @@ function AppContent() {
   }, [user, profile, loading]);
 
   const handleCloseAuthModals = () => {
-    setShowLoginModal(false);
     setShowSignUpModal(false);
+    setShowLoginModal(false);
   };
 
   const handleLoginClick = () => {
@@ -75,8 +75,8 @@ function AppContent() {
   };
 
   const handleSignUpClick = () => {
-    setShowLoginModal(false);
     setShowSignUpModal(true);
+    setShowLoginModal(false);
   };
 
   return (
