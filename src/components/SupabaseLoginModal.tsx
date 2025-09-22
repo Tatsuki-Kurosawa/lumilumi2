@@ -116,8 +116,19 @@ const SupabaseLoginModal: React.FC<SupabaseLoginModalProps> = ({ onClose }) => {
           return;
         }
 
-        if (formData.password.length < 6) {
-          setError('パスワードは6文字以上で入力してください');
+        // パスワード強度チェック（英数記号8文字以上）
+        if (formData.password.length < 8) {
+          setError('パスワードは8文字以上で入力してください');
+          setIsLoading(false);
+          return;
+        }
+
+        const hasLetter = /[a-zA-Z]/.test(formData.password);
+        const hasNumber = /[0-9]/.test(formData.password);
+        const hasSymbol = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password);
+
+        if (!hasLetter || !hasNumber || !hasSymbol) {
+          setError('パスワードは英字、数字、記号をそれぞれ1文字以上含む必要があります');
           setIsLoading(false);
           return;
         }
@@ -262,9 +273,9 @@ const SupabaseLoginModal: React.FC<SupabaseLoginModalProps> = ({ onClose }) => {
                 value={formData.password}
                 onChange={handleInputChange}
                 required
-                minLength={6}
+                minLength={8}
                 className="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-                placeholder="6文字以上で入力"
+                placeholder="英数記号8文字以上で入力"
               />
               <button
                 type="button"
@@ -275,7 +286,7 @@ const SupabaseLoginModal: React.FC<SupabaseLoginModalProps> = ({ onClose }) => {
               </button>
             </div>
             {!isLogin && (
-              <p className="text-xs text-gray-500 mt-1">6文字以上で入力してください</p>
+              <p className="text-xs text-gray-500 mt-1">英字、数字、記号を含む8文字以上で入力してください</p>
             )}
           </div>
 

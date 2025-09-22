@@ -120,8 +120,14 @@ const UploadPage: React.FC = () => {
         const filePath = `${user.id}/${Date.now()}_${file.name}`;
         return supabase.storage.from('posts').upload(filePath, file); // 'posts'はあなたのバケット名
       });
+
+      console.log("imageUploadPromises");
+      console.log(imageUploadPromises);
       
       const uploadedImageResults = await Promise.all(imageUploadPromises);
+
+      console.log("uploadedImageResults");
+      console.log(uploadedImageResults);
 
       // アップロードエラーがないかチェック
       const uploadErrors = uploadedImageResults.filter(result => result.error);
@@ -129,11 +135,16 @@ const UploadPage: React.FC = () => {
         console.error('画像アップロード中にエラー:', uploadErrors);
         throw new Error('画像アップロードに失敗しました。');
       }
+      
+      console.log("エラーなし");
 
       // 全画像の公開URLを取得
       const imageUrls = uploadedImageResults.map(result => {
           return supabase.storage.from('posts').getPublicUrl(result.data.path).data.publicUrl;
       });
+
+      console.log("imageUrls");
+      console.log(imageUrls);
 
       // 3. `posts`テーブルに基本情報を保存し、新しい投稿IDを取得
       const { data: postData, error: postError } = await supabase
@@ -148,6 +159,8 @@ const UploadPage: React.FC = () => {
         })
         .select('id')
         .single();
+      
+      if (postError) console.log("postsテーブル格納時にエラー発生");
 
       if (postError) throw postError;
       const newPostId = postData.id;
@@ -159,6 +172,9 @@ const UploadPage: React.FC = () => {
           display_order: index + 1
       }));
       const { error: imagesError } = await supabase.from('post_images').insert(imageRecords);
+
+      if (imagesError) console.log("post_imagesテーブル格納時にエラー発生");
+
       if (imagesError) throw imagesError;
 
       // 5. タグ情報を処理 (upsertで重複を避けつつタグを作成し、中間テーブルに保存)

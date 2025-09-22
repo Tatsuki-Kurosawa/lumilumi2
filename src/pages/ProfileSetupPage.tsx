@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 import { User, GraduationCap, Edit3, FileText, CheckCircle } from 'lucide-react';
 
+// 状態変数profileを設定するために、setProfileをもってくる必要がある
+
 const ProfileSetupPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, profile, updateProfile, registerProfile } = useSupabaseAuth();
@@ -124,30 +126,26 @@ const ProfileSetupPage: React.FC = () => {
         return;
       }
 
-      // ここに試しにinsertの処理を入れてみる
+      // プロフィール登録データの準備
       const insertData = {
         id: user?.id,
         username: formData.username.trim(),
         display_name: formData.displayName.trim() || formData.username.trim(),
         university: finalUniversity,
         status: formData.status,
+        avatar_url: '',
         bio: formData.bio.trim(),
         is_creator: formData.isCreator
       };
 
+      console.log('🔄 プロフィール登録開始:', insertData);
+      console.log('📊 現在のuser:', user);
+      console.log('📊 現在のprofile:', profile);
+
+
       const { error } = await registerProfile(insertData);
 
-      // プロフィール更新
-      // const updateData = {
-      //   username: formData.username.trim(),
-      //   display_name: formData.displayName.trim() || formData.username.trim(),
-      //   university: finalUniversity,
-      //   status: formData.status,
-      //   bio: formData.bio.trim(),
-      //   is_creator: formData.isCreator
-      // };
-
-      // const { error } = await updateProfile(updateData);
+      console.log('✅ registerProfile完了 - error:', error);
       
       if (error) {
         if (error.message.includes('username')) {
@@ -168,8 +166,13 @@ const ProfileSetupPage: React.FC = () => {
       }, 3000);
 
     } catch (err) {
-      console.error('プロフィール設定エラー:', err);
-      setError('予期しないエラーが発生しました。しばらく時間をおいて再度お試しください。');
+      console.error('❌ プロフィール設定エラー:', err);
+      console.error('❌ エラーの型:', typeof err);
+      console.error('❌ エラーの詳細:', err instanceof Error ? err.message : String(err));
+      console.error('❌ エラーのスタック:', err instanceof Error ? err.stack : 'スタック情報なし');
+
+      const errorMessage = err instanceof Error ? err.message : '予期しないエラーが発生しました。しばらく時間をおいて再度お試しください。';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface NewLoginModalProps {
   onClose: () => void;
@@ -14,6 +15,7 @@ const NewLoginModal: React.FC<NewLoginModalProps> = ({ onClose, onSwitchToSignUp
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isResetMode, setIsResetMode] = useState(false);
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     email: '',
@@ -47,6 +49,7 @@ const NewLoginModal: React.FC<NewLoginModalProps> = ({ onClose, onSwitchToSignUp
       } else if (success) {
         console.log('✅ ログイン成功');
         onClose();
+        navigate('/');
       }
     } catch (err) {
       console.error('ログインエラー:', err);

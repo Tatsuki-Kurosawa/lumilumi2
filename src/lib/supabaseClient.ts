@@ -23,7 +23,13 @@ let supabase: any = null;
 
 try {
   if (supabaseUrl && supabaseAnonKey) {
-    supabase = createClient(supabaseUrl, supabaseAnonKey);
+    supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        detectSessionInUrl: true,
+        autoRefreshToken: true
+      }
+    });
     console.log('✅ Supabaseクライアントが正常に作成されました');
   } else {
     console.error('❌ Supabaseクライアントの作成に失敗しました');
@@ -47,7 +53,7 @@ export const testSupabaseConnection = async () => {
   }
 
   try {
-    const { data, error } = await supabase.from('profiles').select('count').limit(1);
+    const { data, error } = await supabase.from('universities').select('*').limit(1);
     
     if (error) {
       console.error('Supabase接続エラー:', error);
