@@ -58,6 +58,11 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
 
   // セッションとユーザーの監視
   useEffect(() => {
+    // useEffect実行回数をカウント
+    if (!window.authEffectCounter) window.authEffectCounter = 0;
+    window.authEffectCounter++;
+    console.log(`🔄 SupabaseAuthContext useEffect実行回数: ${window.authEffectCounter}`);
+
     // 現在のセッションを取得
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -69,6 +74,17 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
         await fetchProfile(session.user.id);
         console.log('fetchProfile完了');
       }
+
+      // JWTのexpクレーム確認
+      // if (session?.access_token)
+      // {
+      //   const payload = session.access_token.split('.')[1];
+      //   const decodedPayload = JSON.parse(atob(payload));
+      //   console.log('decodedPayload', decodedPayload);
+      //   console.log('decodedPayload.exp', decodedPayload.exp);
+      //   const expiry = new Date(decodedPayload.exp * 1000);
+      //   console.log('expiry', expiry.toISOString());
+      // }
       
       setLoading(false);
     };
@@ -92,6 +108,17 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
           console.log('sessionがnullの場合に発動した');
           setProfile(null);
         }
+
+        // JWTのexpクレーム確認
+        // if (session?.access_token)
+        // {
+        //   const payload = session.access_token.split('.')[1];
+        //   const decodedPayload = JSON.parse(atob(payload));
+        //   console.log('decodedPayload', decodedPayload);
+        //   console.log('decodedPayload.exp', decodedPayload.exp);
+        //   const expiry = new Date(decodedPayload.exp * 1000);
+        //   console.log('expiry', expiry.toISOString());
+        // }
         
         setLoading(false);
       }
@@ -193,6 +220,7 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
   // サインアウト
   const signOut = async () => {
     try {
+      console.log('signOut呼ばれた');
       await supabase.auth.signOut();
     } catch (error) {
       console.error('サインアウト中にエラーが発生:', error);

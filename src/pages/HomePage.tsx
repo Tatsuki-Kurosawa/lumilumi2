@@ -1,48 +1,49 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { TrendingUp, Users, Palette, Star, ArrowRight } from 'lucide-react';
 import WorkCard from '../components/WorkCard';
+import { PostsService } from '../lib/postsService';
+// import { PostWithDetails } from '../types';
 
 const HomePage: React.FC = () => {
-  // ダミーデータ
-  const featuredWorks = [
-    {
-      id: '1',
-      title: '夏の思い出',
-      thumbnail: 'https://images.pexels.com/photos/1266810/pexels-photo-1266810.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: '太郎@東京大学',
-      likes: 245,
-      views: 1520,
-      tags: ['イラスト', '夏', '青春'],
-    },
-    {
-      id: '2',
-      title: '都市の夜景',
-      thumbnail: 'https://images.pexels.com/photos/2422915/pexels-photo-2422915.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: '花子@京都大学og',
-      likes: 189,
-      views: 892,
-      tags: ['背景', '夜景', 'デジタル'],
-    },
-    {
-      id: '3',
-      title: 'キャラクターデザイン集',
-      thumbnail: 'https://images.pexels.com/photos/1266808/pexels-photo-1266808.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: '次郎@大阪大学',
-      likes: 312,
-      views: 2140,
-      tags: ['キャラデザ', 'オリジナル', 'ファンタジー'],
-    },
-    {
-      id: '4',
-      title: '水彩風景画',
-      thumbnail: 'https://images.pexels.com/photos/1266807/pexels-photo-1266807.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: '美咲@慶應義塾大学',
-      likes: 156,
-      views: 743,
-      tags: ['水彩', '風景', 'アナログ'],
-    },
-  ];
+  const [featuredWorks, setFeaturedWorks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // 投稿データを取得
+  useEffect(() => {
+    const fetchFeaturedWorks = async () => {
+      setLoading(true);
+      try {
+        const { posts, error } = await PostsService.getRecommendedPosts(4);
+        if (error) {
+          console.error('注目作品の取得に失敗:', error);
+          // エラーの場合はダミーデータを使用
+          setFeaturedWorks([
+            {
+              id: '1',
+              title: '投稿データの読み込みに失敗しました',
+              thumbnail: 'https://images.pexels.com/photos/1266810/pexels-photo-1266810.jpeg?auto=compress&cs=tinysrgb&w=400',
+              author: 'システム',
+              likes: 0,
+              views: 0,
+              tags: ['エラー'],
+            }
+          ]);
+        } else {
+          // 投稿データをWorkCardコンポーネント用に変換
+          const formattedWorks = posts.map(post => PostsService.formatPostForWorkCard(post));
+          setFeaturedWorks(formattedWorks);
+        }
+      } catch (error) {
+        console.error('投稿データ取得中にエラーが発生:', error);
+        setFeaturedWorks([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeaturedWorks();
+  }, []);
 
   const stats = [
     { icon: Users, label: '登録ユーザー', value: '12,450+' },
@@ -118,9 +119,37 @@ const HomePage: React.FC = () => {
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredWorks.map((work) => (
-              <WorkCard key={work.id} work={work} />
-            ))}
+            {loading ? (
+              // ローディング表示
+              Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
+                  <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded mb-2"></div>
+                  <div className="flex space-x-2">
+                    <div className="h-3 w-12 bg-gray-200 rounded"></div>
+                    <div className="h-3 w-16 bg-gray-200 rounded"></div>
+                  </div>
+                </div>
+              ))
+            ) : featuredWorks.length > 0 ? (
+              featuredWorks.map((work) => (
+                <WorkCard key={work.id} work={work} />
+              ))
+            ) : (
+              // データがない場合の表示
+              <div className="col-span-full text-center py-12">
+                <Palette className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">投稿作品がありません</h3>
+                <p className="text-gray-600 mb-4">まだ作品が投稿されていません。最初の作品を投稿してみませんか？</p>
+                <Link
+                  to="/upload"
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  作品を投稿する
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </section>
