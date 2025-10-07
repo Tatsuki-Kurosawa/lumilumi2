@@ -5,7 +5,7 @@ import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 import { supabase } from '../lib/supabaseClient';
 
 const UploadPage: React.FC = () => {
-  const { user, profile } = useSupabaseAuth();
+  const { user, profile, session } = useSupabaseAuth();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -106,6 +106,9 @@ const UploadPage: React.FC = () => {
       return;
     }
 
+    // console.log('supabase', supabase);
+    // console.log('session', session);
+
     setIsUploading(true);
     try {
       // 1. ユーザー情報を取得（既に認証チェック済みなので、profileから取得）
@@ -115,6 +118,14 @@ const UploadPage: React.FC = () => {
         return;
       }
 
+      // // 追加
+      // const result = await supabase.storage.from('posts').upload(
+      //   `test_${Date.now()}.txt`,
+      //   new Blob(["hello"], { type: "text/plain" })
+      // );
+      
+      // console.log("upload result:", result);
+
       // 2. 全ての画像を並行してSupabase Storageにアップロード
       const imageUploadPromises = images.map(file => {
         const filePath = `${user.id}/${Date.now()}_${file.name}`;
@@ -123,6 +134,8 @@ const UploadPage: React.FC = () => {
 
       console.log("imageUploadPromises");
       console.log(imageUploadPromises);
+      const isPromise = imageUploadPromises instanceof Promise;
+      console.log(isPromise); // true なら Promise
       
       const uploadedImageResults = await Promise.all(imageUploadPromises);
 
@@ -198,7 +211,8 @@ const UploadPage: React.FC = () => {
 
       // 6. 成功時の処理
       alert('投稿が完了しました！');
-      navigate(`/works/${newPostId}`); // 作成した作品の詳細ページへ遷移
+      navigate(`/`); // トップページへ遷移
+      // navigate(`/works/${newPostId}`); // 作成した作品の詳細ページへ遷移
 
     } catch (error) {
       console.error('アップロードエラー:', error);

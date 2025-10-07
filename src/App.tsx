@@ -1,7 +1,7 @@
 
 // スペース作りました
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import HomePage from './pages/HomePage';
@@ -51,8 +51,71 @@ function AppContent() {
   const [showSignUpModal, setShowSignUpModal] = useState(false);
   const { user, profile, loading } = useSupabaseAuth();
 
+  const prevUserRef = useRef(user);
+  const prevProfileRef = useRef(profile);
+  const prevLoadingRef = useRef(loading);
+
+  // 差分を出力するヘルパー関数
+  const logDifference = (label: string, prevValue: any, newValue: any) => {
+    console.log(`✅ ${label}が変更されました:`);
+    console.log('  前の値:', prevValue);
+    console.log('  新しい値:', newValue);
+    
+    // オブジェクトの場合は詳細な差分を表示
+    if (prevValue && newValue && typeof prevValue === 'object' && typeof newValue === 'object') {
+      const changes: string[] = [];
+      
+      // 新しく追加されたプロパティ
+      Object.keys(newValue).forEach(key => {
+        if (!(key in prevValue)) {
+          changes.push(`+ ${key}: ${newValue[key]}`);
+        }
+      });
+      
+      // 削除されたプロパティ
+      Object.keys(prevValue).forEach(key => {
+        if (!(key in newValue)) {
+          changes.push(`- ${key}: ${prevValue[key]}`);
+        }
+      });
+      
+      // 変更されたプロパティ
+      Object.keys(newValue).forEach(key => {
+        if (key in prevValue && prevValue[key] !== newValue[key]) {
+          changes.push(`~ ${key}: ${prevValue[key]} → ${newValue[key]}`);
+        }
+      });
+      
+      if (changes.length > 0) {
+        console.log('  詳細な変更:');
+        changes.forEach(change => console.log('    ', change));
+      }
+    }
+  };
+
   // ログイン状態の変更を監視
   useEffect(() => {
+
+    // （レンダリングの前後で値が変わらないcurrentと、値が変わるuserを比較している）
+    // レンダリングを引き起こさないcurrentと、引き起こすuserを比較している
+    // 常に比較を行うのであれば、currentを更新する必要があるのでは？
+    if (prevUserRef.current !== user) {
+      logDifference('ユーザー', prevUserRef.current, user);
+      prevUserRef.current = user;
+    }
+    if (prevProfileRef.current !== profile) {
+      logDifference('プロフィール', prevProfileRef.current, profile);
+      prevProfileRef.current = profile;
+    }
+    if (prevLoadingRef.current !== loading) {
+      logDifference('ローディング', prevLoadingRef.current, loading);
+      prevLoadingRef.current = loading;
+    }
+    
+    console.log('✅ ユーザー:', user);
+    console.log('✅ ユーザーのプロフィール:', profile);
+    console.log('✅ ユーザーのローディング:', loading);
+
     if (user && !loading) {
       console.log('✅ ユーザーがログインしました:', user.email);
       

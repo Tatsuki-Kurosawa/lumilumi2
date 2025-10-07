@@ -1,84 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Filter, BookOpen, TrendingUp, Clock, Star, ArrowRight } from 'lucide-react';
 import WorkCard from '../components/WorkCard';
+import { PostsService } from '../lib/postsService';
+import { PostWithDetails } from '../types';
 
 const MangaPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [recommendedWorks, setRecommendedWorks] = useState<any[]>([]);
+  const [trendingWorks, setTrendingWorks] = useState<any[]>([]);
+  const [latestWorks, setLatestWorks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // ダミーデータ（マンガ作品）
-  const recommendedWorks = [
-    {
-      id: '1',
-      title: '青春学園物語 第1話',
-      thumbnail: 'https://images.pexels.com/photos/1266810/pexels-photo-1266810.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: '太郎@東京大学',
-      likes: 345,
-      views: 2520,
-      tags: ['マンガ', '学園', '青春', 'オリジナル'],
-    },
-    {
-      id: '2',
-      title: 'ファンタジー冒険記',
-      thumbnail: 'https://images.pexels.com/photos/1266808/pexels-photo-1266808.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: '花子@京都大学og',
-      likes: 289,
-      views: 1892,
-      tags: ['マンガ', 'ファンタジー', '冒険', '魔法'],
-    },
-    {
-      id: '3',
-      title: '日常系4コマ集',
-      thumbnail: 'https://images.pexels.com/photos/2422915/pexels-photo-2422915.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: '次郎@大阪大学',
-      likes: 412,
-      views: 3140,
-      tags: ['マンガ', '4コマ', '日常', 'コメディ'],
-    },
-  ];
+  // マンガ作品データを取得
+  useEffect(() => {
+    const fetchMangaWorks = async () => {
+      setLoading(true);
+      try {
+        // 各セクションのマンガ作品を並行して取得
+        const [recommended, trending, latest] = await Promise.all([
+          PostsService.getRecommendedPostsByCategory('manga', 3),
+          PostsService.getTrendingPostsByCategory('manga', 2),
+          PostsService.getLatestPostsByCategory('manga', 2)
+        ]);
 
-  const trendingWorks = [
-    {
-      id: '4',
-      title: 'SF近未来物語',
-      thumbnail: 'https://images.pexels.com/photos/1266807/pexels-photo-1266807.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: '美咲@慶應義塾大学',
-      likes: 256,
-      views: 1743,
-      tags: ['マンガ', 'SF', '近未来', 'ロボット'],
-    },
-    {
-      id: '5',
-      title: 'ホラー短編集',
-      thumbnail: 'https://images.pexels.com/photos/1266810/pexels-photo-1266810.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: 'さくら@早稲田大学',
-      likes: 189,
-      views: 1234,
-      tags: ['マンガ', 'ホラー', '短編'],
-    },
-  ];
+        if (recommended.error) {
+          console.error('おすすめマンガ作品の取得に失敗:', recommended.error);
+        } else {
+          const formattedRecommended = recommended.posts.map(post => PostsService.formatPostForWorkCard(post));
+          setRecommendedWorks(formattedRecommended);
+        }
 
-  const latestWorks = [
-    {
-      id: '6',
-      title: '恋愛コメディ 第1話',
-      thumbnail: 'https://images.pexels.com/photos/2422915/pexels-photo-2422915.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: '愛子@上智大学',
-      likes: 123,
-      views: 567,
-      tags: ['マンガ', '恋愛', 'コメディ'],
-    },
-    {
-      id: '7',
-      title: 'バトル漫画 序章',
-      thumbnail: 'https://images.pexels.com/photos/1266808/pexels-photo-1266808.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: '勇気@東北大学',
-      likes: 98,
-      views: 432,
-      tags: ['マンガ', 'バトル', 'アクション'],
-    },
-  ];
+        if (trending.error) {
+          console.error('急上昇マンガ作品の取得に失敗:', trending.error);
+        } else {
+          const formattedTrending = trending.posts.map(post => PostsService.formatPostForWorkCard(post));
+          setTrendingWorks(formattedTrending);
+        }
+
+        if (latest.error) {
+          console.error('新着マンガ作品の取得に失敗:', latest.error);
+        } else {
+          const formattedLatest = latest.posts.map(post => PostsService.formatPostForWorkCard(post));
+          setLatestWorks(formattedLatest);
+        }
+      } catch (error) {
+        console.error('マンガ作品データ取得中にエラーが発生:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMangaWorks();
+  }, []);
 
   const popularTags = [
     'マンガ', '学園', 'ファンタジー', '4コマ', 'SF', '日常',
@@ -199,9 +174,28 @@ const MangaPage: React.FC = () => {
           </Link>
         </div>
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {recommendedWorks.map((work) => (
-            <WorkCard key={work.id} work={work} />
-          ))}
+          {loading ? (
+            Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
+                <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded mb-2"></div>
+                <div className="flex space-x-2">
+                  <div className="h-3 w-12 bg-gray-200 rounded"></div>
+                  <div className="h-3 w-16 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            ))
+          ) : recommendedWorks.length > 0 ? (
+            recommendedWorks.map((work) => (
+              <WorkCard key={work.id} work={work} />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-8">
+              <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+              <p className="text-gray-600">おすすめのマンガ作品がありません</p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -221,9 +215,28 @@ const MangaPage: React.FC = () => {
           </Link>
         </div>
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {trendingWorks.map((work) => (
-            <WorkCard key={work.id} work={work} />
-          ))}
+          {loading ? (
+            Array.from({ length: 2 }).map((_, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
+                <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded mb-2"></div>
+                <div className="flex space-x-2">
+                  <div className="h-3 w-12 bg-gray-200 rounded"></div>
+                  <div className="h-3 w-16 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            ))
+          ) : trendingWorks.length > 0 ? (
+            trendingWorks.map((work) => (
+              <WorkCard key={work.id} work={work} />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-8">
+              <TrendingUp className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+              <p className="text-gray-600">急上昇のマンガ作品がありません</p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -243,9 +256,28 @@ const MangaPage: React.FC = () => {
           </Link>
         </div>
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {latestWorks.map((work) => (
-            <WorkCard key={work.id} work={work} />
-          ))}
+          {loading ? (
+            Array.from({ length: 2 }).map((_, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
+                <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded mb-2"></div>
+                <div className="flex space-x-2">
+                  <div className="h-3 w-12 bg-gray-200 rounded"></div>
+                  <div className="h-3 w-16 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            ))
+          ) : latestWorks.length > 0 ? (
+            latestWorks.map((work) => (
+              <WorkCard key={work.id} work={work} />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-8">
+              <Clock className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+              <p className="text-gray-600">新着のマンガ作品がありません</p>
+            </div>
+          )}
         </div>
       </section>
     </div>

@@ -15,9 +15,6 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  console.log('user確認', user);
-  console.log('profile確認', profile);
-
   const isActive = (path: string) => location.pathname === path;
   const isMainContentPage = ['/manga', '/illustrations', '/works', '/contests', '/direct-requests'].includes(location.pathname);
 

@@ -1,84 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Filter, Palette, TrendingUp, Clock, Star, ArrowRight } from 'lucide-react';
 import WorkCard from '../components/WorkCard';
+import { PostsService } from '../lib/postsService';
+import { PostWithDetails } from '../types';
 
 const IllustrationsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [recommendedWorks, setRecommendedWorks] = useState<any[]>([]);
+  const [trendingWorks, setTrendingWorks] = useState<any[]>([]);
+  const [latestWorks, setLatestWorks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // ダミーデータ（イラスト作品）
-  const recommendedWorks = [
-    {
-      id: '1',
-      title: 'キャラクターイラスト',
-      thumbnail: 'https://images.pexels.com/photos/1266810/pexels-photo-1266810.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: '太郎@東京大学',
-      likes: 445,
-      views: 2820,
-      tags: ['イラスト', 'キャラクター', 'デジタル', 'オリジナル'],
-    },
-    {
-      id: '2',
-      title: '風景画コレクション',
-      thumbnail: 'https://images.pexels.com/photos/1266808/pexels-photo-1266808.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: '花子@京都大学og',
-      likes: 389,
-      views: 1992,
-      tags: ['イラスト', '風景', '背景', '自然'],
-    },
-    {
-      id: '3',
-      title: 'ファンタジーアート',
-      thumbnail: 'https://images.pexels.com/photos/2422915/pexels-photo-2422915.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: '次郎@大阪大学',
-      likes: 512,
-      views: 3240,
-      tags: ['イラスト', 'ファンタジー', '魔法', 'ドラゴン'],
-    },
-  ];
+  // イラスト作品データを取得
+  useEffect(() => {
+    const fetchIllustrationWorks = async () => {
+      setLoading(true);
+      try {
+        // 各セクションのイラスト作品を並行して取得
+        const [recommended, trending, latest] = await Promise.all([
+          PostsService.getRecommendedPostsByCategory('illustration', 3),
+          PostsService.getTrendingPostsByCategory('illustration', 2),
+          PostsService.getLatestPostsByCategory('illustration', 2)
+        ]);
 
-  const trendingWorks = [
-    {
-      id: '4',
-      title: 'ポートレート集',
-      thumbnail: 'https://images.pexels.com/photos/1266807/pexels-photo-1266807.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: '美咲@慶應義塾大学',
-      likes: 356,
-      views: 1843,
-      tags: ['イラスト', 'ポートレート', '人物', 'リアル'],
-    },
-    {
-      id: '5',
-      title: 'アニメ風イラスト',
-      thumbnail: 'https://images.pexels.com/photos/1266810/pexels-photo-1266810.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: 'さくら@早稲田大学',
-      likes: 623,
-      views: 4190,
-      tags: ['イラスト', 'アニメ', 'かわいい', '女の子'],
-    },
-  ];
+        if (recommended.error) {
+          console.error('おすすめイラスト作品の取得に失敗:', recommended.error);
+        } else {
+          const formattedRecommended = recommended.posts.map(post => PostsService.formatPostForWorkCard(post));
+          setRecommendedWorks(formattedRecommended);
+        }
 
-  const latestWorks = [
-    {
-      id: '6',
-      title: '水彩花束',
-      thumbnail: 'https://images.pexels.com/photos/2422915/pexels-photo-2422915.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: '花音@慶應義塾大学',
-      likes: 156,
-      views: 743,
-      tags: ['イラスト', '水彩', '花', 'アナログ'],
-    },
-    {
-      id: '7',
-      title: 'SF都市背景',
-      thumbnail: 'https://images.pexels.com/photos/1266808/pexels-photo-1266808.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: '未来@東北大学',
-      likes: 234,
-      views: 890,
-      tags: ['イラスト', 'SF', '背景', 'デジタル'],
-    },
-  ];
+        if (trending.error) {
+          console.error('急上昇イラスト作品の取得に失敗:', trending.error);
+        } else {
+          const formattedTrending = trending.posts.map(post => PostsService.formatPostForWorkCard(post));
+          setTrendingWorks(formattedTrending);
+        }
+
+        if (latest.error) {
+          console.error('新着イラスト作品の取得に失敗:', latest.error);
+        } else {
+          const formattedLatest = latest.posts.map(post => PostsService.formatPostForWorkCard(post));
+          setLatestWorks(formattedLatest);
+        }
+      } catch (error) {
+        console.error('イラスト作品データ取得中にエラーが発生:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchIllustrationWorks();
+  }, []);
 
   const popularTags = [
     'イラスト', 'キャラクター', '風景', 'ファンタジー', 'ポートレート', 'アニメ',
@@ -199,9 +174,28 @@ const IllustrationsPage: React.FC = () => {
           </Link>
         </div>
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {recommendedWorks.map((work) => (
-            <WorkCard key={work.id} work={work} />
-          ))}
+          {loading ? (
+            Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
+                <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded mb-2"></div>
+                <div className="flex space-x-2">
+                  <div className="h-3 w-12 bg-gray-200 rounded"></div>
+                  <div className="h-3 w-16 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            ))
+          ) : recommendedWorks.length > 0 ? (
+            recommendedWorks.map((work) => (
+              <WorkCard key={work.id} work={work} />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-8">
+              <Palette className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+              <p className="text-gray-600">おすすめのイラスト作品がありません</p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -221,9 +215,28 @@ const IllustrationsPage: React.FC = () => {
           </Link>
         </div>
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {trendingWorks.map((work) => (
-            <WorkCard key={work.id} work={work} />
-          ))}
+          {loading ? (
+            Array.from({ length: 2 }).map((_, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
+                <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded mb-2"></div>
+                <div className="flex space-x-2">
+                  <div className="h-3 w-12 bg-gray-200 rounded"></div>
+                  <div className="h-3 w-16 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            ))
+          ) : trendingWorks.length > 0 ? (
+            trendingWorks.map((work) => (
+              <WorkCard key={work.id} work={work} />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-8">
+              <TrendingUp className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+              <p className="text-gray-600">急上昇のイラスト作品がありません</p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -243,9 +256,28 @@ const IllustrationsPage: React.FC = () => {
           </Link>
         </div>
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {latestWorks.map((work) => (
-            <WorkCard key={work.id} work={work} />
-          ))}
+          {loading ? (
+            Array.from({ length: 2 }).map((_, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
+                <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded mb-2"></div>
+                <div className="flex space-x-2">
+                  <div className="h-3 w-12 bg-gray-200 rounded"></div>
+                  <div className="h-3 w-16 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            ))
+          ) : latestWorks.length > 0 ? (
+            latestWorks.map((work) => (
+              <WorkCard key={work.id} work={work} />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-8">
+              <Clock className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+              <p className="text-gray-600">新着のイラスト作品がありません</p>
+            </div>
+          )}
         </div>
       </section>
     </div>

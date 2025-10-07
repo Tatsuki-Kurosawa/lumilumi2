@@ -1,144 +1,81 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Heart, Eye, Share2, Flag, User, Calendar, Tag, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { LikeService } from '../lib/likeService';
-import { PageViewService } from '../lib/pageViewService';
+
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
+import { PostsService } from '../lib/postsService';
+import { PostWithDetails } from '../types';
 
 const WorkDetailPage: React.FC = () => {
   const { id } = useParams();
-  const { isAuthenticated, user } = useAuth();
+  const { user } = useSupabaseAuth();
+  const [work, setWork] = useState<PostWithDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [likeCount, setLikeCount] = useState(0);
   const [viewCount, setViewCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  // ダミーデータ
-  const work = {
-    id: id || '1',
-    title: '夏の思い出',
-    images: [
-      'https://images.pexels.com/photos/1266810/pexels-photo-1266810.jpeg?auto=compress&cs=tinysrgb&w=800',
-      'https://images.pexels.com/photos/1266808/pexels-photo-1266808.jpeg?auto=compress&cs=tinysrgb&w=800',
-      'https://images.pexels.com/photos/2422915/pexels-photo-2422915.jpeg?auto=compress&cs=tinysrgb&w=800',
-    ],
-    author: {
-      id: 'user1',
-      name: '太郎@東京大学',
-      avatar: 'https://images.pexels.com/photos/1266810/pexels-photo-1266810.jpeg?auto=compress&cs=tinysrgb&w=100',
-      worksCount: 45,
-      followersCount: 234,
-      isFollowing: false,
-    },
-    likes: 245,
-    views: 1520,
-    tags: ['イラスト', '夏', '青春', 'デジタル', '風景'],
-    createdAt: '2024-01-15',
-    isR18: false,
-  };
-
-  const relatedWorks = [
-    {
-      id: '2',
-      title: '都市の夜景',
-      thumbnail: 'https://images.pexels.com/photos/2422915/pexels-photo-2422915.jpeg?auto=compress&cs=tinysrgb&w=300',
-      author: '花子@京都大学og',
-      likes: 189,
-      views: 892,
-    },
-    {
-      id: '3',
-      title: 'キャラクターデザイン',
-      thumbnail: 'https://images.pexels.com/photos/1266808/pexels-photo-1266808.jpeg?auto=compress&cs=tinysrgb&w=300',
-      author: '次郎@大阪大学',
-      likes: 312,
-      views: 2140,
-    },
-  ];
-
-  // 初期データの読み込み
+  // 投稿データを取得
   useEffect(() => {
-    const loadData = async () => {
+    const fetchWork = async () => {
       if (!id) return;
-      
-      const postId = parseInt(id);
-      
-      try {
-        // PV数を記録
-        await PageViewService.recordPageView(postId, user?.id);
-        
-        // いいね数とPV数を取得
-        const [likeCountResult, viewCountResult] = await Promise.all([
-          LikeService.getLikeCount(postId),
-          PageViewService.getViewCount(postId)
-        ]);
-        
-        if (likeCountResult.error) {
-          console.error('いいね数取得エラー:', likeCountResult.error);
-        } else {
-          setLikeCount(likeCountResult.count);
+
+      setLoading(true);
+      const { post, error } = await PostsService.getPostById(id);
+
+
+      if (error) {
+        setError(error);
+      } else if (post) {
+        setWork(post);
+
+        // いいね数を取得
+        const { count } = await PostsService.getLikeCount(post.id);
+        setLikeCount(count);
+
+        // ログインユーザーがいいねしているか確認
+        if (user) {
+          const { liked } = await PostsService.checkUserLiked(user.id, post.id);
+          setIsLiked(liked);
         }
-        
-        if (viewCountResult.error) {
-          console.error('PV数取得エラー:', viewCountResult.error);
-        } else {
-          setViewCount(viewCountResult.count);
-        }
-        
-        // ユーザーがいいねしているかチェック
-        if (user?.id) {
-          const likeStatus = await LikeService.checkUserLike(postId, user.id);
-          if (likeStatus.error) {
-            console.error('いいね状態取得エラー:', likeStatus.error);
-          } else {
-            setIsLiked(likeStatus.isLiked);
-          }
-        }
-        
-      } catch (error) {
-        console.error('データ読み込みエラー:', error);
-      } finally {
-        setIsLoading(false);
       }
+
+      setLoading(false);
     };
-    
-    loadData();
-  }, [id, user?.id]);
+
+    fetchWork();
+  }, [id, user]);
 
   const handleLike = async () => {
-    if (!isAuthenticated || !user?.id || !id) {
-      // ログインモーダルを表示する処理
+    if (!user || !work) {
+      console.log('ログインしていないためいいねできません');
       return;
     }
-    
-    const postId = parseInt(id);
-    
+
     try {
       if (isLiked) {
         // いいねを削除
-        const result = await LikeService.removeLike(postId, user.id);
-        if (result.success) {
+        const { success } = await PostsService.removeLike(user.id, work.id);
+        if (success) {
           setIsLiked(false);
           setLikeCount(prev => Math.max(0, prev - 1));
-        } else {
-          console.error('いいね削除エラー:', result.error);
-          alert('いいねの削除に失敗しました');
         }
       } else {
         // いいねを追加
-        const result = await LikeService.addLike(postId, user.id);
-        if (result.success) {
+        const { success } = await PostsService.addLike(user.id, work.id);
+        if (success) {
           setIsLiked(true);
           setLikeCount(prev => prev + 1);
-        } else {
-          console.error('いいね追加エラー:', result.error);
-          alert(result.error || 'いいねの追加に失敗しました');
         }
       }
     } catch (error) {
-      console.error('いいね処理エラー:', error);
-      alert('いいねの処理に失敗しました');
+      console.error('いいね処理でエラーが発生:', error);
+
     }
   };
 
@@ -157,12 +94,30 @@ const WorkDetailPage: React.FC = () => {
   };
 
   const nextImage = () => {
+    if (!work) return;
     setCurrentImageIndex((prev) => (prev + 1) % work.images.length);
   };
 
   const prevImage = () => {
+    if (!work) return;
     setCurrentImageIndex((prev) => (prev - 1 + work.images.length) % work.images.length);
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="text-center">読み込み中...</div>
+      </div>
+    );
+  }
+
+  if (error || !work) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="text-center text-red-600">{error || '投稿が見つかりませんでした'}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -173,7 +128,7 @@ const WorkDetailPage: React.FC = () => {
             {/* 画像表示 */}
             <div className="relative aspect-square bg-gray-100">
               <img
-                src={work.images[currentImageIndex]}
+                src={work.images[currentImageIndex]?.image_url || work.thumbnail_url}
                 alt={work.title}
                 className="w-full h-full object-contain"
               />
@@ -196,9 +151,9 @@ const WorkDetailPage: React.FC = () => {
                   
                   {/* 画像インジケーター */}
                   <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                    {work.images.map((_, index) => (
+                    {work.images.map((image, index) => (
                       <button
-                        key={index}
+                        key={image.id}
                         onClick={() => setCurrentImageIndex(index)}
                         className={`w-2 h-2 rounded-full transition-all ${
                           index === currentImageIndex ? 'bg-white' : 'bg-white bg-opacity-50'
@@ -216,14 +171,14 @@ const WorkDetailPage: React.FC = () => {
                 <div className="flex space-x-2 overflow-x-auto">
                   {work.images.map((image, index) => (
                     <button
-                      key={index}
+                      key={image.id}
                       onClick={() => setCurrentImageIndex(index)}
                       className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
                         index === currentImageIndex ? 'border-blue-500' : 'border-gray-200'
                       }`}
                     >
                       <img
-                        src={image}
+                        src={image.image_url}
                         alt={`${work.title} ${index + 1}`}
                         className="w-full h-full object-cover"
                       />
@@ -244,18 +199,22 @@ const WorkDetailPage: React.FC = () => {
             {/* 作者情報 */}
             <div className="flex items-center space-x-3 mb-6">
               <Link to={`/user/${work.author.id}`} className="flex items-center space-x-3 hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors">
-                <div className="w-12 h-12 rounded-full overflow-hidden">
-                  <img
-                    src={work.author.avatar}
-                    alt={work.author.name}
-                    className="w-full h-full object-cover"
-                  />
+                <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200">
+                  {work.author.avatar_url ? (
+                    <img
+                      src={work.author.avatar_url}
+                      alt={work.author.display_name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <User className="h-6 w-6 text-gray-400" />
+                    </div>
+                  )}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">{work.author.name}</h3>
-                  <p className="text-sm text-gray-600">
-                    {work.author.worksCount} 作品 • {work.author.followersCount} フォロワー
-                  </p>
+                  <h3 className="font-semibold text-gray-900">{work.author.display_name}@{work.author.university}</h3>
+                  <p className="text-sm text-gray-600">{work.author.status === 'student' ? '在学生' : work.author.status.toUpperCase()}</p>
                 </div>
               </Link>
             </div>
@@ -288,7 +247,7 @@ const WorkDetailPage: React.FC = () => {
             </div>
 
             {/* フォローボタン */}
-            {isAuthenticated && (
+            {user && (
               <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium mb-6">
                 フォローする
               </button>
@@ -298,11 +257,13 @@ const WorkDetailPage: React.FC = () => {
             <div className="flex items-center space-x-6 text-sm text-gray-600 mb-6">
               <div className="flex items-center">
                 <Eye className="h-4 w-4 mr-1" />
-                <span>{viewCount.toLocaleString()} 回閲覧</span>
+
+                <span>{work.view_count.toLocaleString()} 回閲覧</span>
+
               </div>
               <div className="flex items-center">
                 <Calendar className="h-4 w-4 mr-1" />
-                <span>{work.createdAt}</span>
+                <span>{new Date(work.created_at).toLocaleDateString('ja-JP')}</span>
               </div>
             </div>
 
@@ -313,48 +274,20 @@ const WorkDetailPage: React.FC = () => {
                 <span className="text-sm font-medium text-gray-700">タグ</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {work.tags.map((tag, index) => (
+                {work.tags.map((tag) => (
                   <Link
-                    key={index}
-                    to={`/works?tag=${tag}`}
+                    key={tag.id}
+                    to={`/works?tag=${tag.name}`}
                     className="inline-block px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors"
                   >
-                    #{tag}
+                    #{tag.name}
                   </Link>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* 関連作品 */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">関連作品</h2>
-            <div className="space-y-4">
-              {relatedWorks.map((relatedWork) => (
-                <Link
-                  key={relatedWork.id}
-                  to={`/works/${relatedWork.id}`}
-                  className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                    <img
-                      src={relatedWork.thumbnail}
-                      alt={relatedWork.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-900 truncate">{relatedWork.title}</h3>
-                    <p className="text-sm text-gray-600 truncate">{relatedWork.author}</p>
-                    <div className="flex items-center space-x-3 text-xs text-gray-500">
-                      <span>❤️ {relatedWork.likes}</span>
-                      <span>👁️ {relatedWork.views}</span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
+          {/* 関連作品 - 今後実装予定 */}
         </div>
       </div>
     </div>
