@@ -14,11 +14,10 @@ const WorkDetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [likeCount, setLikeCount] = useState(0);
-  const [viewCount, setViewCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  //const [viewCount, setViewCount] = useState(0);
+  //const [isLoading, setIsLoading] = useState(true);
 
   // 投稿データを取得
   useEffect(() => {
@@ -80,10 +79,12 @@ const WorkDetailPage: React.FC = () => {
   };
 
   const handleShare = () => {
+    if (!work) return;
+    
     if (navigator.share) {
       navigator.share({
         title: work.title,
-        text: `${work.author.name}の作品「${work.title}」をチェック！`,
+        text: `${work.author.display_name}の作品「${work.title}」をチェック！`,
         url: window.location.href,
       });
     } else {
