@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { User, MapPin, Calendar, Heart, Eye, Send, CheckCircle, XCircle } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 import WorkCard from '../components/WorkCard';
 import RequestModal from '../components/RequestModal';
 
 const UserProfilePage: React.FC = () => {
   const { id } = useParams();
-  const { isAuthenticated } = useAuth();
+  const { user } = useSupabaseAuth();
+  const isAuthenticated = !!user;
   const [isFollowing, setIsFollowing] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
 

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { User, Heart, Upload, Settings, Edit } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 import WorkCard from '../components/WorkCard';
 
 const MyPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, profile } = useSupabaseAuth();
   const [activeTab, setActiveTab] = useState<'works' | 'likes' | 'following'>('works');
 
   // ダミーデータ
@@ -13,7 +13,7 @@ const MyPage: React.FC = () => {
       id: '1',
       title: '夏の思い出',
       thumbnail: 'https://images.pexels.com/photos/1266810/pexels-photo-1266810.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: user?.displayName || 'ユーザー',
+      author: profile?.display_name || 'ユーザー',
       likes: 245,
       views: 1520,
       tags: ['イラスト', '夏', '青春'],
@@ -22,7 +22,7 @@ const MyPage: React.FC = () => {
       id: '2',
       title: 'キャラクターデザイン',
       thumbnail: 'https://images.pexels.com/photos/1266808/pexels-photo-1266808.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: user?.displayName || 'ユーザー',
+      author: profile?.display_name || 'ユーザー',
       likes: 189,
       views: 892,
       tags: ['キャラデザ', 'オリジナル'],
@@ -76,8 +76,8 @@ const MyPage: React.FC = () => {
       <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
         <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
           <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-            {user.avatar ? (
-              <img src={user.avatar} alt={user.displayName} className="w-24 h-24 rounded-full object-cover" />
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt={profile.display_name} className="w-24 h-24 rounded-full object-cover" />
             ) : (
               <User className="h-12 w-12 text-white" />
             )}
@@ -85,14 +85,14 @@ const MyPage: React.FC = () => {
           
           <div className="flex-1">
             <div className="flex items-center space-x-4 mb-2">
-              <h1 className="text-2xl font-bold text-gray-900">{user.displayName}</h1>
+              <h1 className="text-2xl font-bold text-gray-900">{profile?.display_name}</h1>
               <button className="flex items-center px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
                 <Edit className="h-4 w-4 mr-1" />
                 編集
               </button>
             </div>
             <p className="text-gray-600 mb-4">
-              {user.university} {user.isOB ? 'OB' : user.isOG ? 'OG' : '在学中'}
+              {profile?.university} {profile?.status === 'ob' ? 'OB' : profile?.status === 'og' ? 'OG' : '在学中'}
             </p>
             
             <div className="flex items-center space-x-6 text-sm text-gray-600">
