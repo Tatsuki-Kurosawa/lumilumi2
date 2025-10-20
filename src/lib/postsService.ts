@@ -80,7 +80,7 @@ export class PostsService {
         .from('posts')
         .select(`
           *,
-          author:profiles(
+          author:profiles!posts_author_id_fkey(
             id,
             username,
             display_name,
@@ -161,7 +161,8 @@ export class PostsService {
     limit = 8,
     offset = 0
   ): Promise<{ posts: PostWithDetails[]; error?: string }> {
-    return this.getPostsByCategory(category, limit, offset);
+    // おすすめは8件目以降から取得（新着の次の投稿群）
+    return this.getPostsByCategory(category, limit, offset + 8);
   }
 
   // 特定のカテゴリのトレンド投稿を取得
@@ -170,7 +171,8 @@ export class PostsService {
     limit = 8,
     offset = 0
   ): Promise<{ posts: PostWithDetails[]; error?: string }> {
-    return this.getPostsByCategory(category, limit, offset);
+    // 急上昇は16件目以降から取得（新着とおすすめの次の投稿群）
+    return this.getPostsByCategory(category, limit, offset + 16);
   }
 
   // 特定のカテゴリの新着投稿を取得
@@ -179,6 +181,7 @@ export class PostsService {
     limit = 8,
     offset = 0
   ): Promise<{ posts: PostWithDetails[]; error?: string }> {
+    // 新着は最新の投稿から取得
     return this.getPostsByCategory(category, limit, offset);
   }
 
