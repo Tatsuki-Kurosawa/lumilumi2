@@ -20,7 +20,9 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Search:', searchQuery);
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
   };
 
   const handleSignOut = async () => {

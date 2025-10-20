@@ -1,7 +1,7 @@
 
 // スペース作りました
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import HomePage from './pages/HomePage';
@@ -20,6 +20,7 @@ import WorkDetailPage from './pages/WorkDetailPage';
 import SupabaseTest from './components/SupabaseTest';
 import EmailConfirmationPage from './pages/EmailConfirmationPage';
 import ProfileSetupPage from './pages/ProfileSetupPage';
+import SearchResultsPage from './pages/SearchResultsPage';
 
 import AuthModals from './components/AuthModals';
 import { SupabaseAuthProvider, useSupabaseAuth } from './contexts/SupabaseAuthContext';
@@ -42,7 +43,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   if (!user) {
     return <Navigate to="/" replace />;
   }
- 
+
   return <>{children}</>;
 };
 
@@ -51,67 +52,8 @@ function AppContent() {
   const [showSignUpModal, setShowSignUpModal] = useState(false);
   const { user, profile, loading } = useSupabaseAuth();
 
-  const prevUserRef = useRef(user);
-  const prevProfileRef = useRef(profile);
-  const prevLoadingRef = useRef(loading);
-
-  // 差分を出力するヘルパー関数
-  const logDifference = (label: string, prevValue: any, newValue: any) => {
-    console.log(`✅ ${label}が変更されました:`);
-    console.log('  前の値:', prevValue);
-    console.log('  新しい値:', newValue);
-    
-    // オブジェクトの場合は詳細な差分を表示
-    if (prevValue && newValue && typeof prevValue === 'object' && typeof newValue === 'object') {
-      const changes: string[] = [];
-      
-      // 新しく追加されたプロパティ
-      Object.keys(newValue).forEach(key => {
-        if (!(key in prevValue)) {
-          changes.push(`+ ${key}: ${newValue[key]}`);
-        }
-      });
-      
-      // 削除されたプロパティ
-      Object.keys(prevValue).forEach(key => {
-        if (!(key in newValue)) {
-          changes.push(`- ${key}: ${prevValue[key]}`);
-        }
-      });
-      
-      // 変更されたプロパティ
-      Object.keys(newValue).forEach(key => {
-        if (key in prevValue && prevValue[key] !== newValue[key]) {
-          changes.push(`~ ${key}: ${prevValue[key]} → ${newValue[key]}`);
-        }
-      });
-      
-      if (changes.length > 0) {
-        console.log('  詳細な変更:');
-        changes.forEach(change => console.log('    ', change));
-      }
-    }
-  };
-
   // ログイン状態の変更を監視
   useEffect(() => {
-
-    // （レンダリングの前後で値が変わらないcurrentと、値が変わるuserを比較している）
-    // レンダリングを引き起こさないcurrentと、引き起こすuserを比較している
-    // 常に比較を行うのであれば、currentを更新する必要があるのでは？
-    if (prevUserRef.current !== user) {
-      logDifference('ユーザー', prevUserRef.current, user);
-      prevUserRef.current = user;
-    }
-    if (prevProfileRef.current !== profile) {
-      logDifference('プロフィール', prevProfileRef.current, profile);
-      prevProfileRef.current = profile;
-    }
-    if (prevLoadingRef.current !== loading) {
-      logDifference('ローディング', prevLoadingRef.current, loading);
-      prevLoadingRef.current = loading;
-    }
-    
     console.log('✅ ユーザー:', user);
     console.log('✅ ユーザーのプロフィール:', profile);
     console.log('✅ ユーザーのローディング:', loading);
@@ -126,6 +68,18 @@ function AppContent() {
       }
     }
   }, [user, profile, loading]);
+
+  // 認証状態の初期化中はローディング画面を表示（これは、useEffectの中ではなく、AppContentの中で行う必要がある）
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleCloseAuthModals = () => {
     setShowSignUpModal(false);
@@ -149,6 +103,7 @@ function AppContent() {
         <main>
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/search" element={<SearchResultsPage />} />
             <Route path="/works" element={<WorksPage />} />
             <Route path="/manga" element={<MangaPage />} />
             <Route path="/illustrations" element={<IllustrationsPage />} />

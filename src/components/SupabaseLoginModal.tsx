@@ -1,3 +1,5 @@
+// 今は使われていない. 不要説.
+
 import React, { useState } from 'react';
 import { X, Mail, Lock, User, GraduationCap, Eye, EyeOff, Plus, Edit3 } from 'lucide-react';
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
