@@ -100,7 +100,7 @@ function AppContent() {
     <Router>
       <div className="min-h-screen bg-gray-50">
         <Header onLoginClick={handleLoginClick} onSignUpClick={handleSignUpClick} />
-        <main>
+        <main className="pt-16">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/search" element={<SearchResultsPage />} />
