@@ -140,43 +140,46 @@ export class PostsService {
   }
 
   // おすすめ投稿を取得（仮実装：最新順）
-  static async getRecommendedPosts(limit = 8): Promise<{ posts: PostWithDetails[]; error?: string }> {
+  static async getRecommendedPosts(limit = 8, offset = 0): Promise<{ posts: PostWithDetails[]; error?: string }> {
     console.log('getRecommendedPostsが呼ばれたよ');
-    return this.getAllPosts(limit, 0);
+    return this.getAllPosts(limit, offset);
   }
 
   // トレンド投稿を取得（仮実装：最新順）
-  static async getTrendingPosts(limit = 8): Promise<{ posts: PostWithDetails[]; error?: string }> {
-    return this.getAllPosts(limit, 0);
+  static async getTrendingPosts(limit = 8, offset = 0): Promise<{ posts: PostWithDetails[]; error?: string }> {
+    return this.getAllPosts(limit, offset);
   }
 
   // 新着投稿を取得
-  static async getLatestPosts(limit = 8): Promise<{ posts: PostWithDetails[]; error?: string }> {
-    return this.getAllPosts(limit, 0);
+  static async getLatestPosts(limit = 8, offset = 0): Promise<{ posts: PostWithDetails[]; error?: string }> {
+    return this.getAllPosts(limit, offset);
   }
 
   // 特定のカテゴリのおすすめ投稿を取得
   static async getRecommendedPostsByCategory(
     category: 'manga' | 'illustration',
-    limit = 8
+    limit = 8,
+    offset = 0
   ): Promise<{ posts: PostWithDetails[]; error?: string }> {
-    return this.getPostsByCategory(category, limit, 0);
+    return this.getPostsByCategory(category, limit, offset);
   }
 
   // 特定のカテゴリのトレンド投稿を取得
   static async getTrendingPostsByCategory(
     category: 'manga' | 'illustration',
-    limit = 8
+    limit = 8,
+    offset = 0
   ): Promise<{ posts: PostWithDetails[]; error?: string }> {
-    return this.getPostsByCategory(category, limit, 0);
+    return this.getPostsByCategory(category, limit, offset);
   }
 
   // 特定のカテゴリの新着投稿を取得
   static async getLatestPostsByCategory(
     category: 'manga' | 'illustration',
-    limit = 8
+    limit = 8,
+    offset = 0
   ): Promise<{ posts: PostWithDetails[]; error?: string }> {
-    return this.getPostsByCategory(category, limit, 0);
+    return this.getPostsByCategory(category, limit, offset);
   }
 
   // 特定の投稿を取得
