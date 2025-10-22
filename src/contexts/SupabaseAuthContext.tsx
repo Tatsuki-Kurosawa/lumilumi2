@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
-import { supabase, testSupabaseConnection } from '../lib/supabaseClient';
+import { supabase } from '../lib/supabaseClient';
+import { checkEnvironmentVariables } from '../lib/supabaseClient'
 
 // ユーザープロフィールの型定義
 interface UserProfile {
@@ -58,10 +59,6 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
 
   // セッションとユーザーの監視
   useEffect(() => {
-    // useEffect実行回数をカウント
-    if (!window.authEffectCounter) window.authEffectCounter = 0;
-    window.authEffectCounter++;
-    console.log(`🔄 SupabaseAuthContext useEffect実行回数: ${window.authEffectCounter}`);
 
     // 現在のセッションを取得
     const getSession = async () => {
@@ -70,21 +67,8 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        console.log("useEffect,getSession内で呼ばれている");
         await fetchProfile(session.user.id);
-        console.log('fetchProfile完了');
       }
-
-      // JWTのexpクレーム確認
-      // if (session?.access_token)
-      // {
-      //   const payload = session.access_token.split('.')[1];
-      //   const decodedPayload = JSON.parse(atob(payload));
-      //   console.log('decodedPayload', decodedPayload);
-      //   console.log('decodedPayload.exp', decodedPayload.exp);
-      //   const expiry = new Date(decodedPayload.exp * 1000);
-      //   console.log('expiry', expiry.toISOString());
-      // }
       
       setLoading(false);
     };
@@ -94,32 +78,21 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
     // 認証状態の変更を監視
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: string, session: Session | null) => {
-        console.log('onAuthStateChange内で呼ばれているevent', event);
-        // console.log('onAuthStateChange内で呼ばれているsession情報', session);
         setSession(session);
         setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          console.log("useEffect,async内で呼ばれている");
-          console.log("session.user.id", session.user.id);
-          await fetchProfile(session.user.id);
-          console.log('fetchProfile後のprofile', profile);
-        } else {
+
+        // うまくいかなかった原因
+        // if (session?.user) {
+        //   await fetchProfile(session.user.id);
+        // } else {
+        //   console.log('sessionがnullの場合に発動した');
+        //   setProfile(null);
+        // }
+        if (!session?.user) {
           console.log('sessionがnullの場合に発動した');
           setProfile(null);
         }
 
-        // JWTのexpクレーム確認
-        // if (session?.access_token)
-        // {
-        //   const payload = session.access_token.split('.')[1];
-        //   const decodedPayload = JSON.parse(atob(payload));
-        //   console.log('decodedPayload', decodedPayload);
-        //   console.log('decodedPayload.exp', decodedPayload.exp);
-        //   const expiry = new Date(decodedPayload.exp * 1000);
-        //   console.log('expiry', expiry.toISOString());
-        // }
-        
         setLoading(false);
       }
     );
@@ -131,13 +104,11 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
   // ユーザープロフィールの取得
   const fetchProfile = async (userId: string) => {
     try {
-      console.log('fetchProfile呼ばれた');
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
-      console.log('取得完了');
       
       if (error) {
         // プロフィールが存在しない場合は正常な状態として扱う
@@ -149,10 +120,8 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
         console.error('プロフィール取得エラー:', error);
         return;
       }
-      
-      console.log('dataの値', data);
+
       if (data) {
-        console.log('fetchProfile内でプロフィール取得成功:', data);
         setProfile(data);
         return;
       }
@@ -196,9 +165,6 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
         password
       });
 
-      console.log('email:', email);
-      console.log('password:', password);
-
       if (error) {
         return { error };
       }
@@ -220,13 +186,13 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
   // サインアウト
   const signOut = async () => {
     try {
-      console.log('signOut呼ばれた');
       await supabase.auth.signOut();
     } catch (error) {
       console.error('サインアウト中にエラーが発生:', error);
     }
   };
 
+  // ここはSupabaseクライアント利用に戻す
   // 初期プロフィール設定
   const registerProfile = async (profileData: Partial<UserProfile>) => {
     try {

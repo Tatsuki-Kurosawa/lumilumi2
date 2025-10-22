@@ -20,9 +20,9 @@ const MangaPage: React.FC = () => {
       try {
         // 各セクションのマンガ作品を並行して取得
         const [recommended, trending, latest] = await Promise.all([
-          PostsService.getRecommendedPostsByCategory('manga', 3),
-          PostsService.getTrendingPostsByCategory('manga', 2),
-          PostsService.getLatestPostsByCategory('manga', 2)
+          PostsService.getRecommendedPostsByCategory('manga', 8),
+          PostsService.getTrendingPostsByCategory('manga', 8),
+          PostsService.getLatestPostsByCategory('manga', 8)
         ]);
 
         if (recommended.error) {
@@ -158,6 +158,47 @@ const MangaPage: React.FC = () => {
         </div>
       </div>
 
+      {/* 新着作品セクション */}
+      <section className="mb-12">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center">
+            <Clock className="h-6 w-6 text-green-500 mr-2" />
+            <h2 className="text-2xl font-bold text-gray-900">新着</h2>
+          </div>
+          <Link
+            to="/works"
+            className="flex items-center text-blue-600 hover:text-blue-700 font-medium"
+          >
+            もっと見る
+            <ArrowRight className="ml-1 h-4 w-4" />
+          </Link>
+        </div>
+        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {loading ? (
+            Array.from({ length: 8 }).map((_, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
+                <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded mb-2"></div>
+                <div className="flex space-x-2">
+                  <div className="h-3 w-12 bg-gray-200 rounded"></div>
+                  <div className="h-3 w-16 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            ))
+          ) : latestWorks.length > 0 ? (
+            latestWorks.map((work) => (
+              <WorkCard key={work.id} work={work} />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-8">
+              <Clock className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+              <p className="text-gray-600">新着のマンガ作品がありません</p>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* おすすめ作品セクション */}
       <section className="mb-12">
         <div className="flex items-center justify-between mb-6">
@@ -175,7 +216,7 @@ const MangaPage: React.FC = () => {
         </div>
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {loading ? (
-            Array.from({ length: 3 }).map((_, index) => (
+            Array.from({ length: 8 }).map((_, index) => (
               <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
                 <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
                 <div className="h-4 bg-gray-200 rounded mb-2"></div>
@@ -216,7 +257,7 @@ const MangaPage: React.FC = () => {
         </div>
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {loading ? (
-            Array.from({ length: 2 }).map((_, index) => (
+            Array.from({ length: 8 }).map((_, index) => (
               <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
                 <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
                 <div className="h-4 bg-gray-200 rounded mb-2"></div>
@@ -235,47 +276,6 @@ const MangaPage: React.FC = () => {
             <div className="col-span-full text-center py-8">
               <TrendingUp className="h-12 w-12 text-gray-300 mx-auto mb-2" />
               <p className="text-gray-600">急上昇のマンガ作品がありません</p>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* 新着作品セクション */}
-      <section className="mb-12">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            <Clock className="h-6 w-6 text-green-500 mr-2" />
-            <h2 className="text-2xl font-bold text-gray-900">新着</h2>
-          </div>
-          <Link
-            to="/works"
-            className="flex items-center text-blue-600 hover:text-blue-700 font-medium"
-          >
-            もっと見る
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </Link>
-        </div>
-        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {loading ? (
-            Array.from({ length: 2 }).map((_, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
-                <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded mb-2"></div>
-                <div className="flex space-x-2">
-                  <div className="h-3 w-12 bg-gray-200 rounded"></div>
-                  <div className="h-3 w-16 bg-gray-200 rounded"></div>
-                </div>
-              </div>
-            ))
-          ) : latestWorks.length > 0 ? (
-            latestWorks.map((work) => (
-              <WorkCard key={work.id} work={work} />
-            ))
-          ) : (
-            <div className="col-span-full text-center py-8">
-              <Clock className="h-12 w-12 text-gray-300 mx-auto mb-2" />
-              <p className="text-gray-600">新着のマンガ作品がありません</p>
             </div>
           )}
         </div>

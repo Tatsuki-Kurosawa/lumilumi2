@@ -80,7 +80,7 @@ export class PostsService {
         .from('posts')
         .select(`
           *,
-          author:profiles(
+          author:profiles!posts_author_id_fkey(
             id,
             username,
             display_name,
@@ -140,43 +140,49 @@ export class PostsService {
   }
 
   // おすすめ投稿を取得（仮実装：最新順）
-  static async getRecommendedPosts(limit = 8): Promise<{ posts: PostWithDetails[]; error?: string }> {
+  static async getRecommendedPosts(limit = 8, offset = 0): Promise<{ posts: PostWithDetails[]; error?: string }> {
     console.log('getRecommendedPostsが呼ばれたよ');
-    return this.getAllPosts(limit, 0);
+    return this.getAllPosts(limit, offset);
   }
 
   // トレンド投稿を取得（仮実装：最新順）
-  static async getTrendingPosts(limit = 8): Promise<{ posts: PostWithDetails[]; error?: string }> {
-    return this.getAllPosts(limit, 0);
+  static async getTrendingPosts(limit = 8, offset = 0): Promise<{ posts: PostWithDetails[]; error?: string }> {
+    return this.getAllPosts(limit, offset);
   }
 
   // 新着投稿を取得
-  static async getLatestPosts(limit = 8): Promise<{ posts: PostWithDetails[]; error?: string }> {
-    return this.getAllPosts(limit, 0);
+  static async getLatestPosts(limit = 8, offset = 0): Promise<{ posts: PostWithDetails[]; error?: string }> {
+    return this.getAllPosts(limit, offset);
   }
 
   // 特定のカテゴリのおすすめ投稿を取得
   static async getRecommendedPostsByCategory(
     category: 'manga' | 'illustration',
-    limit = 8
+    limit = 8,
+    offset = 0
   ): Promise<{ posts: PostWithDetails[]; error?: string }> {
-    return this.getPostsByCategory(category, limit, 0);
+    // おすすめは8件目以降から取得（新着の次の投稿群）
+    return this.getPostsByCategory(category, limit, offset + 8);
   }
 
   // 特定のカテゴリのトレンド投稿を取得
   static async getTrendingPostsByCategory(
     category: 'manga' | 'illustration',
-    limit = 8
+    limit = 8,
+    offset = 0
   ): Promise<{ posts: PostWithDetails[]; error?: string }> {
-    return this.getPostsByCategory(category, limit, 0);
+    // 急上昇は16件目以降から取得（新着とおすすめの次の投稿群）
+    return this.getPostsByCategory(category, limit, offset + 16);
   }
 
   // 特定のカテゴリの新着投稿を取得
   static async getLatestPostsByCategory(
     category: 'manga' | 'illustration',
-    limit = 8
+    limit = 8,
+    offset = 0
   ): Promise<{ posts: PostWithDetails[]; error?: string }> {
-    return this.getPostsByCategory(category, limit, 0);
+    // 新着は最新の投稿から取得
+    return this.getPostsByCategory(category, limit, offset);
   }
 
   // 特定の投稿を取得

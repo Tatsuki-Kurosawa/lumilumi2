@@ -47,7 +47,7 @@ const NewLoginModal: React.FC<NewLoginModalProps> = ({ onClose, onSwitchToSignUp
           setError(error.message);
         }
       } else if (success) {
-        console.log('✅ ログイン成功');
+        console.log('✅ ログイン成功atNewLoginModal');
         onClose();
         navigate('/');
       }

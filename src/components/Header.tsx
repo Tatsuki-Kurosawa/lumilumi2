@@ -20,7 +20,9 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Search:', searchQuery);
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
   };
 
   const handleSignOut = async () => {
@@ -49,10 +51,12 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
         <div className="flex items-center justify-between h-16">
           {/* ロゴ */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">M</span>
-            </div>
-            <span className="text-xl font-bold text-gray-900 hidden sm:block">MangaHub</span>
+            <img
+              src="/mangaumaretaro.jpg"
+              alt="MangaBirth Logo"
+              className="w-8 h-8 rounded-lg object-cover"
+            />
+            <span className="text-xl font-bold text-gray-900 hidden sm:block">MangaBirth</span>
           </Link>
 
           {/* 検索バー */}
