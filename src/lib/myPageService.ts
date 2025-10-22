@@ -1,0 +1,329 @@
+import { supabase } from './supabaseClient';
+import { PostWithDetails, User } from '../types';
+
+// MyPage用のサービス関数
+export class MyPageService {
+  // ユーザーの投稿作品を取得
+  static async getUserPosts(userId: string, limit = 20, offset = 0): Promise<{ posts: PostWithDetails[]; error?: string }> {
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          author:profiles!posts_author_id_fkey(
+            id,
+            username,
+            display_name,
+            university,
+            status,
+            avatar_url,
+            bio,
+            is_creator,
+            created_at
+          ),
+          images:post_images(
+            id,
+            post_id,
+            image_url,
+            display_order
+          ),
+          tags:post_tags(
+            tag:tags(
+              id,
+              name
+            )
+          )
+        `)
+        .eq('author_id', userId)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        console.error('ユーザー投稿取得エラー:', error);
+        return { posts: [], error: error.message };
+      }
+
+      // データを整形
+      const formattedPosts: PostWithDetails[] = (data || []).map(post => ({
+        id: post.id,
+        author_id: post.author_id,
+        type: post.type,
+        title: post.title,
+        thumbnail_url: post.thumbnail_url,
+        is_r18: post.is_r18,
+        created_at: post.created_at,
+        author: post.author,
+        images: (post.images || []).sort((a, b) => a.display_order - b.display_order),
+        tags: (post.tags || []).map(tag => tag.tag).filter(Boolean),
+        like_count: 0, // 後で実装
+        view_count: 0  // 後で実装
+      }));
+
+      return { posts: formattedPosts };
+    } catch (error) {
+      console.error('ユーザー投稿取得中にエラーが発生:', error);
+      return {
+        posts: [],
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // ユーザーがいいねした作品を取得
+  static async getUserLikedPosts(userId: string, limit = 20, offset = 0): Promise<{ posts: PostWithDetails[]; error?: string }> {
+    try {
+      const { data, error } = await supabase
+        .from('likes')
+        .select(`
+          post_id,
+          posts!likes_post_id_fkey(
+            *,
+            author:profiles!posts_author_id_fkey(
+              id,
+              username,
+              display_name,
+              university,
+              status,
+              avatar_url,
+              bio,
+              is_creator,
+              created_at
+            ),
+            images:post_images(
+              id,
+              post_id,
+              image_url,
+              display_order
+            ),
+            tags:post_tags(
+              tag:tags(
+                id,
+                name
+              )
+            )
+          )
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        console.error('いいね作品取得エラー:', error);
+        return { posts: [], error: error.message };
+      }
+
+      // データを整形
+      const formattedPosts: PostWithDetails[] = (data || [])
+        .map(like => like.posts)
+        .filter(Boolean)
+        .map(post => ({
+          id: post.id,
+          author_id: post.author_id,
+          type: post.type,
+          title: post.title,
+          thumbnail_url: post.thumbnail_url,
+          is_r18: post.is_r18,
+          created_at: post.created_at,
+          author: post.author,
+          images: (post.images || []).sort((a, b) => a.display_order - b.display_order),
+          tags: (post.tags || []).map(tag => tag.tag).filter(Boolean),
+          like_count: 0, // 後で実装
+          view_count: 0  // 後で実装
+        }));
+
+      return { posts: formattedPosts };
+    } catch (error) {
+      console.error('いいね作品取得中にエラーが発生:', error);
+      return {
+        posts: [],
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // フォロー中のユーザーを取得
+  static async getFollowingUsers(userId: string, limit = 20, offset = 0): Promise<{ users: User[]; error?: string }> {
+    try {
+      const { data, error } = await supabase
+        .from('follows')
+        .select(`
+          following_id,
+          following:profiles!follows_following_id_fkey(
+            id,
+            username,
+            display_name,
+            university,
+            status,
+            avatar_url,
+            bio,
+            is_creator,
+            created_at
+          )
+        `)
+        .eq('follower_id', userId)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        console.error('フォロー中ユーザー取得エラー:', error);
+        return { users: [], error: error.message };
+      }
+
+      // データを整形
+      const formattedUsers: User[] = (data || [])
+        .map(follow => follow.following)
+        .filter(Boolean);
+
+      return { users: formattedUsers };
+    } catch (error) {
+      console.error('フォロー中ユーザー取得中にエラーが発生:', error);
+      return {
+        users: [],
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // フォロワー数を取得
+  static async getFollowerCount(userId: string): Promise<{ count: number; error?: string }> {
+    try {
+      const { count, error } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('following_id', userId);
+
+      if (error) {
+        console.error('フォロワー数取得エラー:', error);
+        return { count: 0, error: error.message };
+      }
+
+      return { count: count || 0 };
+    } catch (error) {
+      console.error('フォロワー数取得中にエラーが発生:', error);
+      return {
+        count: 0,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // フォロー数を取得
+  static async getFollowingCount(userId: string): Promise<{ count: number; error?: string }> {
+    try {
+      const { count, error } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('follower_id', userId);
+
+      if (error) {
+        console.error('フォロー数取得エラー:', error);
+        return { count: 0, error: error.message };
+      }
+
+      return { count: count || 0 };
+    } catch (error) {
+      console.error('フォロー数取得中にエラーが発生:', error);
+      return {
+        count: 0,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // ユーザーの作品数を取得
+  static async getUserPostCount(userId: string): Promise<{ count: number; error?: string }> {
+    try {
+      const { count, error } = await supabase
+        .from('posts')
+        .select('*', { count: 'exact', head: true })
+        .eq('author_id', userId);
+
+      if (error) {
+        console.error('作品数取得エラー:', error);
+        return { count: 0, error: error.message };
+      }
+
+      return { count: count || 0 };
+    } catch (error) {
+      console.error('作品数取得中にエラーが発生:', error);
+      return {
+        count: 0,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // フォロー機能
+  static async followUser(followerId: string, followingId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { error } = await supabase
+        .from('follows')
+        .insert({
+          follower_id: followerId,
+          following_id: followingId
+        });
+
+      if (error) {
+        console.error('フォローエラー:', error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('フォロー中にエラーが発生:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // アンフォロー機能
+  static async unfollowUser(followerId: string, followingId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { error } = await supabase
+        .from('follows')
+        .delete()
+        .eq('follower_id', followerId)
+        .eq('following_id', followingId);
+
+      if (error) {
+        console.error('アンフォローエラー:', error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('アンフォロー中にエラーが発生:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // フォロー状態を確認
+  static async checkFollowStatus(followerId: string, followingId: string): Promise<{ isFollowing: boolean; error?: string }> {
+    try {
+      const { data, error } = await supabase
+        .from('follows')
+        .select('follower_id')
+        .eq('follower_id', followerId)
+        .eq('following_id', followingId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('フォロー状態確認エラー:', error);
+        return { isFollowing: false, error: error.message };
+      }
+
+      return { isFollowing: !!data };
+    } catch (error) {
+      console.error('フォロー状態確認中にエラーが発生:', error);
+      return {
+        isFollowing: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+}
