@@ -43,10 +43,14 @@ const UserProfilePage: React.FC = () => {
     setError(null);
     
     try {
+      console.log('URLパラメータ (username):', username);
+      
       const { user: profileData, error } = await UserProfileService.getUserProfileByUsername(username);
       if (error) {
+        console.log('プロフィール取得エラー:', error);
         setError(error);
       } else {
+        console.log('プロフィール取得成功:', profileData);
         setProfileUser(profileData);
       }
     } catch (error) {

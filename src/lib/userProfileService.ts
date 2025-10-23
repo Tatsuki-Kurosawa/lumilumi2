@@ -6,6 +6,8 @@ export class UserProfileService {
   // 特定のユーザーのプロフィール情報を取得（usernameベース）
   static async getUserProfileByUsername(username: string): Promise<{ user: User | null; error?: string }> {
     try {
+      console.log('getUserProfileByUsername 呼び出し:', username);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -17,6 +19,7 @@ export class UserProfileService {
         return { user: null, error: error.message };
       }
 
+      console.log('プロフィール取得成功:', data);
       return { user: data };
     } catch (error) {
       console.error('ユーザープロフィール取得中にエラーが発生:', error);

@@ -44,7 +44,7 @@ export class PostsService {
       }
 
       // データを整形
-      const formattedPosts: PostWithDetails[] = (data || []).map(post => ({
+      const formattedPosts: PostWithDetails[] = (data || []).map((post: any) => ({
         id: post.id,
         author_id: post.author_id,
         type: post.type,
@@ -53,8 +53,8 @@ export class PostsService {
         is_r18: post.is_r18,
         created_at: post.created_at,
         author: post.author,
-        images: (post.images || []).sort((a, b) => a.display_order - b.display_order),
-        tags: (post.tags || []).map(tag => tag.tag).filter(Boolean),
+        images: (post.images || []).sort((a: any, b: any) => a.display_order - b.display_order),
+        tags: (post.tags || []).map((tag: any) => tag.tag).filter(Boolean),
         like_count: 0, // 後で実装
         view_count: 0  // 後で実装
       }));
@@ -114,7 +114,7 @@ export class PostsService {
       }
 
       // データを整形
-      const formattedPosts: PostWithDetails[] = (data || []).map(post => ({
+      const formattedPosts: PostWithDetails[] = (data || []).map((post: any) => ({
         id: post.id,
         author_id: post.author_id,
         type: post.type,
@@ -123,8 +123,8 @@ export class PostsService {
         is_r18: post.is_r18,
         created_at: post.created_at,
         author: post.author,
-        images: (post.images || []).sort((a, b) => a.display_order - b.display_order),
-        tags: (post.tags || []).map(tag => tag.tag).filter(Boolean),
+        images: (post.images || []).sort((a: any, b: any) => a.display_order - b.display_order),
+        tags: (post.tags || []).map((tag: any) => tag.tag).filter(Boolean),
         like_count: 0, // 後で実装
         view_count: 0  // 後で実装
       }));
@@ -238,8 +238,8 @@ export class PostsService {
         is_r18: data.is_r18,
         created_at: data.created_at,
         author: data.author,
-        images: (data.images || []).sort((a, b) => a.display_order - b.display_order),
-        tags: (data.tags || []).map(tag => tag.tag).filter(Boolean),
+        images: (data.images || []).sort((a: any, b: any) => a.display_order - b.display_order),
+        tags: (data.tags || []).map((tag: any) => tag.tag).filter(Boolean),
         like_count: 0, // 後で実装
         view_count: 0  // 後で実装
       };
@@ -256,11 +256,23 @@ export class PostsService {
 
   // 投稿データをWorkCardコンポーネント用に変換
   static formatPostForWorkCard(post: PostWithDetails) {
+    const authorDisplayName = `${post.author.display_name}@${post.author.university}`;
+    const authorUsername = post.author.username;
+
+    console.log('formatPostForWorkCard - 元データ:', {
+      username: post.author.username,
+      display_name: post.author.display_name,
+      university: post.author.university
+    });
+    console.log('formatPostForWorkCard - 生成されたauthorDisplayName:', authorDisplayName);
+    console.log('formatPostForWorkCard - 生成されたauthorUsername (for link):', authorUsername);
+
     return {
       id: post.id.toString(),
       title: post.title,
       thumbnail: post.thumbnail_url,
-      author: `${post.author.display_name}@${post.author.university}`,
+      authorDisplayName: authorDisplayName, // 表示用
+      authorUsername: authorUsername,       // リンク用
       likes: post.like_count,
       views: post.view_count,
       tags: post.tags.map(tag => tag.name)

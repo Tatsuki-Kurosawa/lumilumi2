@@ -6,7 +6,8 @@ interface Work {
   id: string;
   title: string;
   thumbnail: string;
-  author: string;
+  authorDisplayName: string; // 表示用
+  authorUsername: string;   // リンク用
   likes: number;
   views: number;
   tags: string[];
@@ -17,6 +18,10 @@ interface WorkCardProps {
 }
 
 const WorkCard: React.FC<WorkCardProps> = ({ work }) => {
+  console.log('WorkCard - work.authorDisplayName:', work.authorDisplayName);
+  console.log('WorkCard - work.authorUsername (for link):', work.authorUsername);
+  console.log('WorkCard - 生成されるリンク:', `/user/${encodeURIComponent(work.authorUsername)}`);
+  
   return (
     <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden group">
       <Link to={`/works/${work.id}`} className="block">
@@ -39,8 +44,8 @@ const WorkCard: React.FC<WorkCardProps> = ({ work }) => {
         
         <div className="flex items-center text-sm text-gray-600 mb-3">
           <User className="h-4 w-4 mr-1" />
-          <Link to={`/user/${work.author}`} className="hover:text-blue-600 transition-colors">
-            {work.author}
+          <Link to={`/user/${encodeURIComponent(work.authorUsername)}`} className="hover:text-blue-600 transition-colors">
+            {work.authorDisplayName}
           </Link>
         </div>
         
