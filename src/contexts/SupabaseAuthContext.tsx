@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
-import { checkEnvironmentVariables } from '../lib/supabaseClient'
 
 // ユーザープロフィールの型定義
 interface UserProfile {
@@ -80,6 +79,7 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
       async (event: string, session: Session | null) => {
         setSession(session);
         setUser(session?.user ?? null);
+        console.log(event);
 
         // うまくいかなかった原因
         // if (session?.user) {
