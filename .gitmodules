@@ -1,0 +1,3 @@
+[submodule "mcp-servers/alexander-supabase-mcp"]
+	path = mcp-servers/alexander-supabase-mcp
+	url = https://github.com/alexander-zuev/supabase-mcp-server.git

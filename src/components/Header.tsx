@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, User, Heart, Upload, Menu, X } from 'lucide-react';
+import { Search, User, Menu, X } from 'lucide-react';
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 
 interface HeaderProps {
@@ -16,7 +16,6 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const isActive = (path: string) => location.pathname === path;
-  const isMainContentPage = ['/manga', '/illustrations', '/works', '/contests', '/direct-requests'].includes(location.pathname);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,10 +52,10 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
           <Link to="/" className="flex items-center space-x-2">
             <img
               src="/mangaumaretaro.jpg"
-              alt="MangaBirth Logo"
+              alt="イラストーク大学 Logo"
               className="w-8 h-8 rounded-lg object-cover"
             />
-            <span className="text-xl font-bold text-gray-900 hidden sm:block">MangaBirth</span>
+            <span className="text-xl font-bold text-gray-900 hidden sm:block">イラストーク大学</span>
           </Link>
 
           {/* 検索バー */}
