@@ -17,6 +17,7 @@ import MyPage from './pages/MyPage';
 import R18Page from './pages/R18Page';
 import UploadPage from './pages/UploadPage';
 import WorkDetailPage from './pages/WorkDetailPage';
+import UserProfilePage from './pages/UserProfilePage';
 import SupabaseTest from './components/SupabaseTest';
 import EmailConfirmationPage from './pages/EmailConfirmationPage';
 import ProfileSetupPage from './pages/ProfileSetupPage';
@@ -116,6 +117,7 @@ function AppContent() {
             <Route path="/r18" element={<R18Page />} />
             <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
             <Route path="/works/:id" element={<WorkDetailPage />} />
+            <Route path="/user/:id" element={<UserProfilePage />} />
             <Route path="/supabase-test" element={<SupabaseTest />} />
             <Route path="/email-confirmation" element={<EmailConfirmationPage />} />
             <Route path="/profile-setup" element={<ProtectedRoute><ProfileSetupPage /></ProtectedRoute>} />
