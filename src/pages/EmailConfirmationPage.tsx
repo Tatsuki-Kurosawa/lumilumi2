@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
+import { supabase } from '../lib/supabaseClient';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
 const EmailConfirmationPage: React.FC = () => {
@@ -31,18 +32,31 @@ const EmailConfirmationPage: React.FC = () => {
         // Supabaseからのリダイレクトの場合
         if (hashAccessToken && hashRefreshToken) {
           console.log('✅ Supabaseからの認証リダイレクトを検出');
-          
-          // 認証状態を更新
-          const result = await refreshAuthState();
 
-          console.log('result:', result);
-          console.log('result.success:', result.success);
-          console.log('result.user:', result.user);
+          // トークンを使ってセッションを明示的に設定
+          const { data, error } = await supabase.auth.setSession({
+            access_token: hashAccessToken,
+            refresh_token: hashRefreshToken
+          });
 
-          if (result.success && result.user) {
+          console.log('setSession result:', { data, error });
+
+          if (error) {
+            console.error('セッション設定エラー:', error);
+            setStatus('error');
+            setMessage('メール確認の処理中にエラーが発生しました。再度ログインをお試しください。');
+            return;
+          }
+
+          if (data.session && data.user) {
+            console.log('✅ セッション設定成功:', data.user.email);
+
+            // 認証状態を更新（ローカル状態の同期）
+            await refreshAuthState();
+
             setStatus('success');
             setMessage('メール確認が完了しました！');
-            
+
             // プロフィール情報が不完全な場合はプロフィール設定ページへ
             setTimeout(() => {
               navigate('/profile-setup');
@@ -54,28 +68,9 @@ const EmailConfirmationPage: React.FC = () => {
           return;
         }
 
-        // // 従来のトークンベースの確認
-        // if (!token || hashType !== 'signup') {
-        //   setStatus('error');
-        //   setMessage('無効な確認リンクです。');
-        //   return;
-        // }
-
-        // // 認証状態を更新
-        // const result = await refreshAuthState();
-        
-        // if (result.success && result.user) {
-        //   setStatus('success');
-        //   setMessage('メール確認が完了しました！');
-          
-        //   // プロフィール設定ページにリダイレクト
-        //   setTimeout(() => {
-        //     navigate('/profile-setup');
-        //   }, 2000);
-        // } else {
-        //   setStatus('error');
-        //   setMessage('メール確認の処理中にエラーが発生しました。再度ログインをお試しください。');
-        // }
+        // トークンが見つからない場合
+        setStatus('error');
+        setMessage('無効な確認リンクです。メールのリンクから再度アクセスしてください。');
       } catch (error) {
         console.error('メール確認処理中にエラーが発生:', error);
         setStatus('error');
