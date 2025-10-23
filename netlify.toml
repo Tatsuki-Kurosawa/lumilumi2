@@ -1,0 +1,11 @@
+[build]
+  # ビルドコマンド
+  command = "npm run build"
+  # 公開するディレクトリ
+  publish = "dist"
+
+# SPAのリダイレクト設定
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
