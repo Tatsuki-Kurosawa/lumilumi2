@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
 const EmailConfirmationPage: React.FC = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { refreshAuthState } = useSupabaseAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
@@ -15,62 +14,46 @@ const EmailConfirmationPage: React.FC = () => {
   useEffect(() => {
     const handleEmailConfirmation = async () => {
       if (isProcessed) return; // 既に処理済みの場合は実行しない
-      
+
       try {
         setIsProcessed(true);
 
-        // URLフラグメント（#の後）もチェック
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const hashAccessToken = hashParams.get('access_token');
-        const hashRefreshToken = hashParams.get('refresh_token');
-        const hashType = hashParams.get('type');
-        
-        console.log('フラグメント - access_token:', hashAccessToken);
-        console.log('フラグメント - refresh_token:', hashRefreshToken);
-        console.log('フラグメント - type:', hashType);
+        // detectSessionInUrl: trueの設定により、Supabaseが自動的にURLフラグメントを処理する
+        // そのため、セッションが存在するかチェックする
+        console.log('メール確認処理を開始');
 
-        // Supabaseからのリダイレクトの場合
-        if (hashAccessToken && hashRefreshToken) {
-          console.log('✅ Supabaseからの認証リダイレクトを検出');
+        // 少し待ってからセッションをチェック（Supabaseの自動処理を待つ）
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-          // トークンを使ってセッションを明示的に設定
-          const { data, error } = await supabase.auth.setSession({
-            access_token: hashAccessToken,
-            refresh_token: hashRefreshToken
-          });
+        const { data: { session }, error } = await supabase.auth.getSession();
 
-          console.log('setSession result:', { data, error });
+        console.log('セッション取得結果:', { session, error });
 
-          if (error) {
-            console.error('セッション設定エラー:', error);
-            setStatus('error');
-            setMessage('メール確認の処理中にエラーが発生しました。再度ログインをお試しください。');
-            return;
-          }
-
-          if (data.session && data.user) {
-            console.log('✅ セッション設定成功:', data.user.email);
-
-            // 認証状態を更新（ローカル状態の同期）
-            await refreshAuthState();
-
-            setStatus('success');
-            setMessage('メール確認が完了しました！');
-
-            // プロフィール情報が不完全な場合はプロフィール設定ページへ
-            setTimeout(() => {
-              navigate('/profile-setup');
-            }, 2000);
-          } else {
-            setStatus('error');
-            setMessage('メール確認の処理中にエラーが発生しました。再度ログインをお試しください。');
-          }
+        if (error) {
+          console.error('セッション取得エラー:', error);
+          setStatus('error');
+          setMessage('メール確認の処理中にエラーが発生しました。再度ログインをお試しください。');
           return;
         }
 
-        // トークンが見つからない場合
-        setStatus('error');
-        setMessage('無効な確認リンクです。メールのリンクから再度アクセスしてください。');
+        if (session && session.user) {
+          console.log('✅ セッション確認成功:', session.user.email);
+
+          // 認証状態を更新（ローカル状態の同期）
+          await refreshAuthState();
+
+          setStatus('success');
+          setMessage('メール確認が完了しました！');
+
+          // プロフィール設定ページへリダイレクト
+          setTimeout(() => {
+            navigate('/profile-setup');
+          }, 2000);
+        } else {
+          console.log('セッションが見つかりません');
+          setStatus('error');
+          setMessage('メール確認の処理中にエラーが発生しました。再度メールのリンクからアクセスしてください。');
+        }
       } catch (error) {
         console.error('メール確認処理中にエラーが発生:', error);
         setStatus('error');
@@ -79,7 +62,7 @@ const EmailConfirmationPage: React.FC = () => {
     };
 
     handleEmailConfirmation();
-  }, [searchParams, refreshAuthState, navigate]);
+  }, [refreshAuthState, navigate]);
 
   const renderContent = () => {
     switch (status) {
