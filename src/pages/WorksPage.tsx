@@ -27,7 +27,7 @@ const WorksPage: React.FC = () => {
           .limit(20);
 
         if (error) throw error;
-        setPopularTags(data?.map(tag => tag.name) || []);
+        setPopularTags(data?.map((tag: any) => tag.name) || []);
       } catch (error) {
         console.error('タグ取得エラー:', error);
       }
@@ -81,13 +81,11 @@ const WorksPage: React.FC = () => {
               .eq('post_id', post.id)
               .single();
 
-            return {
-              ...PostsService.formatPostForWorkCard({
-                ...post,
-                like_count: likesCount,
-                view_count: viewData?.total_views || 0
-              })
-            };
+            return PostsService.formatPostForWorkCard({
+              ...post,
+              like_count: likesCount,
+              view_count: viewData?.total_views || 0
+            });
           })
         );
 
@@ -127,7 +125,8 @@ const WorksPage: React.FC = () => {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(work =>
         work.title.toLowerCase().includes(query) ||
-        work.author.toLowerCase().includes(query) ||
+        work.authorDisplayName.toLowerCase().includes(query) ||
+        work.authorUsername.toLowerCase().includes(query) ||
         work.tags.some((tag: string) => tag.toLowerCase().includes(query))
       );
     }

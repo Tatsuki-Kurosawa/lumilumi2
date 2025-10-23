@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { Search, Filter, User, Tag, FileText } from 'lucide-react';
 import WorkCard from '../components/WorkCard';
 import { supabase } from '../lib/supabaseClient';
@@ -7,17 +7,14 @@ import { supabase } from '../lib/supabaseClient';
 interface Post {
   id: string;
   title: string;
-  thumbnail_url: string;
-  type: string;
-  created_at: string;
-  author: {
-    display_name: string;
-    username: string;
-    university: string;
-  };
+  thumbnail: string;
+  authorDisplayName: string;
+  authorUsername: string;
   tags: string[];
   likes: number;
   views: number;
+  type: string;
+  created_at: string;
 }
 
 interface Profile {
@@ -93,7 +90,7 @@ const SearchResultsPage: React.FC = () => {
 
       let postsByTag: any[] = [];
       if (tagData && tagData.length > 0) {
-        const tagIds = tagData.map(tag => tag.id);
+        const tagIds = tagData.map((tag: any) => tag.id);
 
         const { data: postTagData, error: postTagError } = await supabase
           .from('post_tags')
@@ -154,7 +151,8 @@ const SearchResultsPage: React.FC = () => {
             id: post.id.toString(),
             title: post.title,
             thumbnail: post.thumbnail_url,
-            author: `${post.profiles?.display_name}@${post.profiles?.university}`,
+            authorDisplayName: `${post.profiles?.display_name}@${post.profiles?.university}`,
+            authorUsername: post.profiles?.username || '',
             likes: likesCount || 0,
             views: viewData?.total_views || 0,
             tags: tags,
@@ -196,7 +194,7 @@ const SearchResultsPage: React.FC = () => {
         .limit(20);
 
       if (error) throw error;
-      setTags(data?.map(tag => tag.name) || []);
+      setTags(data?.map((tag: any) => tag.name) || []);
     } catch (error) {
       console.error('タグ検索エラー:', error);
       setTags([]);
@@ -323,9 +321,10 @@ const SearchResultsPage: React.FC = () => {
                 </h2>
                 <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                   {results.profiles.map((profile) => (
-                    <div
+                    <Link
                       key={profile.id}
-                      className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow"
+                      to={`/user/${profile.username}`}
+                      className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow block"
                     >
                       <div className="flex items-center space-x-3">
                         <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full flex items-center justify-center">
@@ -342,7 +341,7 @@ const SearchResultsPage: React.FC = () => {
                       {profile.bio && (
                         <p className="mt-3 text-sm text-gray-600 line-clamp-2">{profile.bio}</p>
                       )}
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>
