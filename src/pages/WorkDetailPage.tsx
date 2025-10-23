@@ -4,6 +4,7 @@ import { Heart, Eye, Share2, Flag, User, Calendar, Tag, ChevronLeft, ChevronRigh
 
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 import { PostsService } from '../lib/postsService';
+import { UserProfileService } from '../lib/userProfileService';
 import { PostWithDetails } from '../types';
 
 const WorkDetailPage: React.FC = () => {
@@ -16,6 +17,8 @@ const WorkDetailPage: React.FC = () => {
   const [isLiked, setIsLiked] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [likeCount, setLikeCount] = useState(0);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
   //const [viewCount, setViewCount] = useState(0);
   //const [isLoading, setIsLoading] = useState(true);
 
@@ -41,6 +44,10 @@ const WorkDetailPage: React.FC = () => {
         if (user) {
           const { liked } = await PostsService.checkUserLiked(user.id, post.id);
           setIsLiked(liked);
+          
+          // フォロー状態を確認
+          const { isFollowing: followStatus } = await UserProfileService.checkFollowStatusByUsername(user.id, post.author.username);
+          setIsFollowing(followStatus);
         }
       }
 
@@ -75,6 +82,35 @@ const WorkDetailPage: React.FC = () => {
     } catch (error) {
       console.error('いいね処理でエラーが発生:', error);
 
+    }
+  };
+
+  const handleFollow = async () => {
+    if (!user || !work) {
+      console.log('ログインしていないためフォローできません');
+      return;
+    }
+
+    setFollowLoading(true);
+    
+    try {
+      if (isFollowing) {
+        // アンフォロー
+        const { success } = await UserProfileService.unfollowUserByUsername(user.id, work.author.username);
+        if (success) {
+          setIsFollowing(false);
+        }
+      } else {
+        // フォロー
+        const { success } = await UserProfileService.followUserByUsername(user.id, work.author.username);
+        if (success) {
+          setIsFollowing(true);
+        }
+      }
+    } catch (error) {
+      console.error('フォロー処理でエラーが発生:', error);
+    } finally {
+      setFollowLoading(false);
     }
   };
 
@@ -199,7 +235,7 @@ const WorkDetailPage: React.FC = () => {
             
             {/* 作者情報 */}
             <div className="flex items-center space-x-3 mb-6">
-              <Link to={`/user/${work.author.id}`} className="flex items-center space-x-3 hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors">
+              <Link to={`/user/${work.author.username}`} className="flex items-center space-x-3 hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors">
                 <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200">
                   {work.author.avatar_url ? (
                     <img
@@ -248,9 +284,17 @@ const WorkDetailPage: React.FC = () => {
             </div>
 
             {/* フォローボタン */}
-            {user && (
-              <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium mb-6">
-                フォローする
+            {user && work.author.id !== user.id && (
+              <button 
+                onClick={handleFollow}
+                disabled={followLoading}
+                className={`w-full px-4 py-2 rounded-lg font-medium transition-colors mb-6 ${
+                  isFollowing
+                    ? 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                } ${followLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {followLoading ? '処理中...' : isFollowing ? 'フォロー解除' : 'フォローする'}
               </button>
             )}
 
