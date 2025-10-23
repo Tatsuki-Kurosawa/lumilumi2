@@ -117,7 +117,7 @@ function AppContent() {
             <Route path="/r18" element={<R18Page />} />
             <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
             <Route path="/works/:id" element={<WorkDetailPage />} />
-            <Route path="/user/:id" element={<UserProfilePage />} />
+            <Route path="/user/:username" element={<UserProfilePage />} />
             <Route path="/supabase-test" element={<SupabaseTest />} />
             <Route path="/email-confirmation" element={<EmailConfirmationPage />} />
             <Route path="/profile-setup" element={<ProtectedRoute><ProfileSetupPage /></ProtectedRoute>} />
