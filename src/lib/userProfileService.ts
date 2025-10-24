@@ -54,6 +54,29 @@ export class UserProfileService {
     }
   }
 
+  // 特定のユーザーの投稿数を取得
+  static async getUserPostCount(userId: string): Promise<{ count: number; error?: string }> {
+    try {
+      const { count, error } = await supabase
+        .from('posts')
+        .select('*', { count: 'exact', head: true })
+        .eq('author_id', userId);
+
+      if (error) {
+        console.error('投稿数取得エラー:', error);
+        return { count: 0, error: error.message };
+      }
+
+      return { count: count || 0 };
+    } catch (error) {
+      console.error('投稿数取得中にエラーが発生:', error);
+      return {
+        count: 0,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
   // 特定のユーザーの投稿作品を取得
   static async getUserPosts(userId: string, limit = 20, offset = 0): Promise<{ posts: PostWithDetails[]; error?: string }> {
     try {

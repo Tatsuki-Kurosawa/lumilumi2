@@ -24,6 +24,11 @@ const UserProfilePage: React.FC = () => {
     totalViews: 0
   });
   
+  // ページネーション状態
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const ITEMS_PER_PAGE = 12;
+  
   // ローディング状態
   const [loading, setLoading] = useState({
     profile: false,
@@ -67,11 +72,20 @@ const UserProfilePage: React.FC = () => {
     setLoading(prev => ({ ...prev, works: true }));
     
     try {
-      const { posts, error } = await UserProfileService.getUserPosts(profileUser.id);
+      const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+      const { posts, error } = await UserProfileService.getUserPosts(profileUser.id, ITEMS_PER_PAGE, offset);
       if (error) {
         console.error('ユーザー作品取得エラー:', error);
       } else {
         setUserWorks(posts);
+        
+        // 総作品数を取得してページ数を計算
+        const { count: totalCount } = await UserProfileService.getUserPostCount(profileUser.id);
+        if (totalCount) {
+          setTotalPages(Math.ceil(totalCount / ITEMS_PER_PAGE));
+        } else {
+          setTotalPages(1);
+        }
       }
     } catch (error) {
       console.error('ユーザー作品取得中にエラーが発生:', error);
@@ -121,6 +135,37 @@ const UserProfilePage: React.FC = () => {
       checkFollowStatus();
     }
   }, [profileUser, user]);
+
+  // ページが変更されたときに作品を再取得
+  useEffect(() => {
+    if (profileUser) {
+      fetchUserWorks();
+    }
+  }, [currentPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // ページネーション用のページ番号配列を生成
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxPagesToShow = 5;
+
+    let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+    let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+    if (endPage - startPage < maxPagesToShow - 1) {
+      startPage = Math.max(1, endPage - maxPagesToShow + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  };
 
   const handleFollow = async () => {
     if (!isAuthenticated || !username || !user) {
@@ -388,17 +433,27 @@ const UserProfilePage: React.FC = () => {
         )}
 
         {/* ページネーション */}
-        {!loading.works && userWorks.length > 0 && (
+        {!loading.works && userWorks.length > 0 && totalPages > 1 && (
           <div className="mt-8 flex justify-center">
             <nav className="flex items-center space-x-2">
-              <button className="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`px-3 py-2 rounded-md transition-colors ${
+                  currentPage === 1
+                    ? 'text-gray-400 cursor-not-allowed'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                }`}
+              >
                 前へ
               </button>
-              {[1, 2, 3].map((page) => (
+
+              {getPageNumbers().map((page) => (
                 <button
                   key={page}
+                  onClick={() => handlePageChange(page)}
                   className={`px-3 py-2 rounded-md transition-colors ${
-                    page === 1
+                    page === currentPage
                       ? 'bg-blue-600 text-white'
                       : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
                   }`}
@@ -406,7 +461,16 @@ const UserProfilePage: React.FC = () => {
                   {page}
                 </button>
               ))}
-              <button className="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`px-3 py-2 rounded-md transition-colors ${
+                  currentPage === totalPages
+                    ? 'text-gray-400 cursor-not-allowed'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                }`}
+              >
                 次へ
               </button>
             </nav>
