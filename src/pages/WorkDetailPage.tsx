@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Heart, Eye, Share2, Flag, User, Calendar, Tag, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, Share2, Flag, User, Calendar, Tag, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 import { PostsService } from '../lib/postsService';
 import { UserProfileService } from '../lib/userProfileService';
 import { PostWithDetails } from '../types';
+import LikeButton from '../components/LikeButton';
 
 const WorkDetailPage: React.FC = () => {
   const { id } = useParams();
@@ -14,13 +15,9 @@ const WorkDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [isLiked, setIsLiked] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [likeCount, setLikeCount] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
-  //const [viewCount, setViewCount] = useState(0);
-  //const [isLoading, setIsLoading] = useState(true);
 
   // 投稿データを取得
   useEffect(() => {
@@ -36,16 +33,8 @@ const WorkDetailPage: React.FC = () => {
       } else if (post) {
         setWork(post);
 
-        // いいね数を取得
-        const { count } = await PostsService.getLikeCount(post.id);
-        setLikeCount(count);
-
-        // ログインユーザーがいいねしているか確認
+        // フォロー状態を確認
         if (user) {
-          const { liked } = await PostsService.checkUserLiked(user.id, post.id);
-          setIsLiked(liked);
-          
-          // フォロー状態を確認
           const { isFollowing: followStatus } = await UserProfileService.checkFollowStatusByUsername(user.id, post.author.username);
           setIsFollowing(followStatus);
         }
@@ -56,34 +45,6 @@ const WorkDetailPage: React.FC = () => {
 
     fetchWork();
   }, [id, user]);
-
-  const handleLike = async () => {
-    if (!user || !work) {
-      console.log('ログインしていないためいいねできません');
-      return;
-    }
-
-    try {
-      if (isLiked) {
-        // いいねを削除
-        const { success } = await PostsService.removeLike(user.id, work.id);
-        if (success) {
-          setIsLiked(false);
-          setLikeCount(prev => Math.max(0, prev - 1));
-        }
-      } else {
-        // いいねを追加
-        const { success } = await PostsService.addLike(user.id, work.id);
-        if (success) {
-          setIsLiked(true);
-          setLikeCount(prev => prev + 1);
-        }
-      }
-    } catch (error) {
-      console.error('いいね処理でエラーが発生:', error);
-
-    }
-  };
 
   const handleFollow = async () => {
     if (!user || !work) {
@@ -258,18 +219,8 @@ const WorkDetailPage: React.FC = () => {
 
             {/* アクションボタン */}
             <div className="flex space-x-3 mb-6">
-              <button
-                onClick={handleLike}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                  isLiked
-                    ? 'bg-red-50 text-red-600 border border-red-200'
-                    : 'bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100'
-                }`}
-              >
-                <Heart className={`h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
-                <span>{likeCount}</span>
-              </button>
-              
+              <LikeButton postId={work.id} />
+
               <button
                 onClick={handleShare}
                 className="flex items-center space-x-2 px-4 py-2 bg-gray-50 text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"

@@ -18,9 +18,6 @@ interface WorkCardProps {
 }
 
 const WorkCard: React.FC<WorkCardProps> = ({ work }) => {
-  console.log('WorkCard - work.authorDisplayName:', work.authorDisplayName);
-  console.log('WorkCard - work.authorUsername (for link):', work.authorUsername);
-  console.log('WorkCard - 生成されるリンク:', `/user/${encodeURIComponent(work.authorUsername)}`);
   
   return (
     <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden group">

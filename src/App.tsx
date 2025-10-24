@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header';
+import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import WorksPage from './pages/WorksPage';
 import MangaPage from './pages/MangaPage';
@@ -22,6 +23,13 @@ import SupabaseTest from './components/SupabaseTest';
 import EmailConfirmationPage from './pages/EmailConfirmationPage';
 import ProfileSetupPage from './pages/ProfileSetupPage';
 import SearchResultsPage from './pages/SearchResultsPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
+import CommercialTransactionsPage from './pages/CommercialTransactionsPage';
+import CompanyPage from './pages/CompanyPage';
+import HelpPage from './pages/HelpPage';
+import GuidelinesPage from './pages/GuidelinesPage';
+import ContactPage from './pages/ContactPage';
 
 import AuthModals from './components/AuthModals';
 import { SupabaseAuthProvider, useSupabaseAuth } from './contexts/SupabaseAuthContext';
@@ -55,9 +63,6 @@ function AppContent() {
 
   // ログイン状態の変更を監視
   useEffect(() => {
-    console.log('✅ ユーザー:', user);
-    console.log('✅ ユーザーのプロフィール:', profile);
-    console.log('✅ ユーザーのローディング:', loading);
 
     if (user && !loading) {
       console.log('✅ ユーザーがログインしました:', user.email);
@@ -99,9 +104,9 @@ function AppContent() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
         <Header onLoginClick={handleLoginClick} onSignUpClick={handleSignUpClick} />
-        <main className="pt-16">
+        <main className="pt-16 flex-grow">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/search" element={<SearchResultsPage />} />
@@ -121,9 +126,21 @@ function AppContent() {
             <Route path="/supabase-test" element={<SupabaseTest />} />
             <Route path="/email-confirmation" element={<EmailConfirmationPage />} />
             <Route path="/profile-setup" element={<ProtectedRoute><ProfileSetupPage /></ProtectedRoute>} />
+
+            {/* 法的ページ */}
+            <Route path="/privacy" element={<PrivacyPolicyPage />} />
+            <Route path="/terms" element={<TermsOfServicePage />} />
+            <Route path="/commercial-transactions" element={<CommercialTransactionsPage />} />
+            <Route path="/company" element={<CompanyPage />} />
+
+            {/* サポートページ */}
+            <Route path="/help" element={<HelpPage />} />
+            <Route path="/guidelines" element={<GuidelinesPage />} />
+            <Route path="/contact" element={<ContactPage />} />
           </Routes>
         </main>
-        <AuthModals 
+        <Footer />
+        <AuthModals
           showLogin={showLoginModal}
           showSignUp={showSignUpModal}
           onClose={handleCloseAuthModals}

@@ -6,7 +6,6 @@ export class PostsService {
   // 全ての投稿を取得（最新順）
   static async getAllPosts(limit = 20, offset = 0): Promise<{ posts: PostWithDetails[]; error?: string }> {
     try {
-      console.log('getAllPostsが呼ばれたよ');
       const { data, error } = await supabase
         .from('posts')
         .select(`
@@ -141,7 +140,6 @@ export class PostsService {
 
   // おすすめ投稿を取得（仮実装：最新順）
   static async getRecommendedPosts(limit = 8, offset = 0): Promise<{ posts: PostWithDetails[]; error?: string }> {
-    console.log('getRecommendedPostsが呼ばれたよ');
     return this.getAllPosts(limit, offset);
   }
 
@@ -258,14 +256,6 @@ export class PostsService {
   static formatPostForWorkCard(post: PostWithDetails) {
     const authorDisplayName = `${post.author.display_name}@${post.author.university}`;
     const authorUsername = post.author.username;
-
-    console.log('formatPostForWorkCard - 元データ:', {
-      username: post.author.username,
-      display_name: post.author.display_name,
-      university: post.author.university
-    });
-    console.log('formatPostForWorkCard - 生成されたauthorDisplayName:', authorDisplayName);
-    console.log('formatPostForWorkCard - 生成されたauthorUsername (for link):', authorUsername);
 
     return {
       id: post.id.toString(),

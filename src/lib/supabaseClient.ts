@@ -23,8 +23,6 @@ let supabase: any = null;
 
 try {
   if (supabaseUrl && supabaseAnonKey) {
-    console.log('supabaseUrl', supabaseUrl);
-    console.log('supabaseAnonKey', supabaseAnonKey);
     supabase = createClient(supabaseUrl || '', supabaseAnonKey || '', {
       auth: {
         persistSession: true,
@@ -42,8 +40,6 @@ try {
 
 console.log('✅ Supabaseクライアント作成完了');
 console.log('クライアントの型:', typeof supabase);
-console.log('from関数存在:', typeof supabase.from);
-console.log('auth存在:', typeof supabase.auth);
 
 // クライアントの状態を確認する関数
 export const isSupabaseReady = (): boolean => {

@@ -104,16 +104,12 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
             >
               作品一覧
             </Link>
-            <Link
-              to="/contests"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive('/contests')
-                  ? 'text-cyan-600 bg-cyan-50'
-                  : 'text-gray-700 hover:text-cyan-600 hover:bg-gray-50'
-              }`}
+            <span
+              className="px-3 py-2 rounded-md text-sm font-medium text-gray-400 cursor-not-allowed"
+              title="近日公開予定"
             >
               コンテスト
-            </Link>
+            </span>
             <Link
               to="/r18"
               className={`px-3 py-2 rounded-md text-sm font-medium transition-colors bg-red-50 text-red-600 hover:bg-red-100 ${
@@ -121,16 +117,6 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
               }`}
             >
               R-18
-            </Link>
-            <Link
-              to="/supabase-test"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive('/supabase-test')
-                  ? 'text-green-600 bg-green-50'
-                  : 'text-gray-700 hover:text-green-600 hover:bg-green-50'
-              }`}
-            >
-              DBテスト
             </Link>
           </nav>
 
@@ -207,13 +193,12 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
               >
                 作品一覧
               </Link>
-              <Link
-                to="/contests"
-                className="px-3 py-2 text-gray-700 hover:text-cyan-600 hover:bg-gray-50 rounded-md"
-                onClick={() => setIsMenuOpen(false)}
+              <span
+                className="px-3 py-2 text-gray-400 cursor-not-allowed rounded-md"
+                title="近日公開予定"
               >
                 コンテスト
-              </Link>
+              </span>
               <Link
                 to="/r18"
                 className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-md"
@@ -221,14 +206,7 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
               >
                 R-18
               </Link>
-              <Link
-                to="/supabase-test"
-                className="px-3 py-2 text-green-600 hover:bg-green-50 rounded-md"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                DBテスト
-              </Link>
-              
+
               {/* ナビゲーション */}
               <div className="pt-4 border-t border-gray-200">
                 <h3 className="px-3 py-2 text-sm font-medium text-gray-500">ナビゲーション</h3>
