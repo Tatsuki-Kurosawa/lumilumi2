@@ -102,6 +102,8 @@ function AppContent() {
     setShowLoginModal(false);
   };
 
+  console.log("developブランチ反映");
+
   return (
     <Router>
       <div className="min-h-screen bg-gray-50 flex flex-col">
