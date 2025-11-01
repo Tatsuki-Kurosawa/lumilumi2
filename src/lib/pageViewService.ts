@@ -1,5 +1,13 @@
 import { supabase } from './supabaseClient';
 
+// 期間別のPV数を取得する型定義
+export interface ViewCountsByPeriod {
+  daily: number;
+  weekly: number;
+  monthly: number;
+  total: number;
+}
+
 // PV数カウント機能のサービス
 export class PageViewService {
   // PV数を記録
@@ -128,6 +136,87 @@ export class PageViewService {
       return viewCountsMap;
     } catch (error) {
       console.error('PV数一括取得中にエラーが発生:', error);
+      postIds.forEach(id => viewCountsMap.set(id, 0));
+      return viewCountsMap;
+    }
+  }
+
+  // 特定の投稿の期間別PV数を取得
+  static async getViewCountsByPeriod(postId: number): Promise<{ counts: ViewCountsByPeriod | null; error?: string }> {
+    try {
+      const { data, error } = await supabase
+        .from('post_view_counts')
+        .select('daily_views, weekly_views, monthly_views, total_views')
+        .eq('post_id', postId)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // レコードが存在しない場合は全て0を返す
+          return { counts: { daily: 0, weekly: 0, monthly: 0, total: 0 } };
+        }
+        console.error('期間別PV数取得エラー:', error);
+        return { counts: null, error: error.message };
+      }
+
+      return {
+        counts: {
+          daily: data?.daily_views || 0,
+          weekly: data?.weekly_views || 0,
+          monthly: data?.monthly_views || 0,
+          total: data?.total_views || 0
+        }
+      };
+    } catch (error) {
+      console.error('期間別PV数取得中にエラーが発生:', error);
+      return { counts: null, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  }
+
+  // 複数の投稿の期間別PV数を一括取得
+  static async getViewCountsByPeriodForPosts(
+    postIds: number[],
+    period: 'daily' | 'weekly' | 'monthly' | 'total' = 'total'
+  ): Promise<Map<number, number>> {
+    const viewCountsMap = new Map<number, number>();
+    
+    if (postIds.length === 0) {
+      return viewCountsMap;
+    }
+
+    try {
+      const fieldName = period === 'daily' ? 'daily_views' :
+                        period === 'weekly' ? 'weekly_views' :
+                        period === 'monthly' ? 'monthly_views' :
+                        'total_views';
+
+      const { data, error } = await supabase
+        .from('post_view_counts')
+        .select(`post_id, ${fieldName}`)
+        .in('post_id', postIds);
+
+      if (error) {
+        console.error(`期間別PV数一括取得エラー (${period}):`, error);
+        postIds.forEach(id => viewCountsMap.set(id, 0));
+        return viewCountsMap;
+      }
+
+      // Mapに変換
+      (data || []).forEach((item: any) => {
+        const count = item[fieldName] || 0;
+        viewCountsMap.set(item.post_id, count);
+      });
+
+      // データが存在しない投稿は0を設定
+      postIds.forEach(id => {
+        if (!viewCountsMap.has(id)) {
+          viewCountsMap.set(id, 0);
+        }
+      });
+
+      return viewCountsMap;
+    } catch (error) {
+      console.error(`期間別PV数一括取得中にエラーが発生 (${period}):`, error);
       postIds.forEach(id => viewCountsMap.set(id, 0));
       return viewCountsMap;
     }

@@ -6,6 +6,14 @@ export interface LikeStats {
   remaining: number;
 }
 
+// 期間別のいいね数を取得する型定義
+export interface LikeCountsByPeriod {
+  daily: number;
+  weekly: number;
+  monthly: number;
+  total: number;
+}
+
 // いいね機能のサービス
 export class LikeService {
   // ユーザーのいいね権限を取得
@@ -247,6 +255,87 @@ export class LikeService {
       return { count: data?.total_likes || 0 };
     } catch (error) {
       return { count: 0, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  }
+
+  // 特定の投稿の期間別いいね数を取得
+  static async getLikeCountsByPeriod(postId: number): Promise<{ counts: LikeCountsByPeriod | null; error?: string }> {
+    try {
+      const { data, error } = await supabase
+        .from('post_like_counts')
+        .select('daily_likes, weekly_likes, monthly_likes, total_likes')
+        .eq('post_id', postId)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // レコードが存在しない場合は全て0を返す
+          return { counts: { daily: 0, weekly: 0, monthly: 0, total: 0 } };
+        }
+        console.error('期間別いいね数取得エラー:', error);
+        return { counts: null, error: error.message };
+      }
+
+      return {
+        counts: {
+          daily: data?.daily_likes || 0,
+          weekly: data?.weekly_likes || 0,
+          monthly: data?.monthly_likes || 0,
+          total: data?.total_likes || 0
+        }
+      };
+    } catch (error) {
+      console.error('期間別いいね数取得中にエラーが発生:', error);
+      return { counts: null, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  }
+
+  // 複数の投稿の期間別いいね数を一括取得
+  static async getLikeCountsByPeriodForPosts(
+    postIds: number[],
+    period: 'daily' | 'weekly' | 'monthly' | 'total' = 'total'
+  ): Promise<Map<number, number>> {
+    const likeCountsMap = new Map<number, number>();
+    
+    if (postIds.length === 0) {
+      return likeCountsMap;
+    }
+
+    try {
+      const fieldName = period === 'daily' ? 'daily_likes' :
+                        period === 'weekly' ? 'weekly_likes' :
+                        period === 'monthly' ? 'monthly_likes' :
+                        'total_likes';
+
+      const { data, error } = await supabase
+        .from('post_like_counts')
+        .select(`post_id, ${fieldName}`)
+        .in('post_id', postIds);
+
+      if (error) {
+        console.error(`期間別いいね数一括取得エラー (${period}):`, error);
+        postIds.forEach(id => likeCountsMap.set(id, 0));
+        return likeCountsMap;
+      }
+
+      // Mapに変換
+      (data || []).forEach((item: any) => {
+        const count = item[fieldName] || 0;
+        likeCountsMap.set(item.post_id, count);
+      });
+
+      // データが存在しない投稿は0を設定
+      postIds.forEach(id => {
+        if (!likeCountsMap.has(id)) {
+          likeCountsMap.set(id, 0);
+        }
+      });
+
+      return likeCountsMap;
+    } catch (error) {
+      console.error(`期間別いいね数一括取得中にエラーが発生 (${period}):`, error);
+      postIds.forEach(id => likeCountsMap.set(id, 0));
+      return likeCountsMap;
     }
   }
 }
