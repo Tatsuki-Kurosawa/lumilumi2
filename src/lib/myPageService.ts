@@ -1,5 +1,7 @@
 import { supabase } from './supabaseClient';
 import { PostWithDetails, User } from '../types';
+import { PostsService } from './postsService';
+import { PageViewService } from './pageViewService';
 
 // MyPage用のサービス関数
 export class MyPageService {
@@ -43,8 +45,17 @@ export class MyPageService {
         return { posts: [], error: error.message };
       }
 
+      // 投稿IDリストを取得
+      const postIds = (data || []).map((post: any) => post.id);
+      
+      // いいね数とPV数を一括取得
+      const [likeCountsMap, viewCountsMap] = await Promise.all([
+        PostsService.getLikeCountsForPosts(postIds),
+        PageViewService.getViewCountsForPosts(postIds)
+      ]);
+
       // データを整形
-      const formattedPosts: PostWithDetails[] = (data || []).map(post => ({
+      const formattedPosts: PostWithDetails[] = (data || []).map((post: any) => ({
         id: post.id,
         author_id: post.author_id,
         type: post.type,
@@ -53,10 +64,10 @@ export class MyPageService {
         is_r18: post.is_r18,
         created_at: post.created_at,
         author: post.author,
-        images: (post.images || []).sort((a, b) => a.display_order - b.display_order),
-        tags: (post.tags || []).map(tag => tag.tag).filter(Boolean),
-        like_count: 0, // 後で実装
-        view_count: 0  // 後で実装
+        images: (post.images || []).sort((a: any, b: any) => a.display_order - b.display_order),
+        tags: (post.tags || []).map((tag: any) => tag.tag).filter(Boolean),
+        like_count: likeCountsMap.get(post.id) || 0,
+        view_count: viewCountsMap.get(post.id) || 0
       }));
 
       return { posts: formattedPosts };
@@ -112,24 +123,35 @@ export class MyPageService {
         return { posts: [], error: error.message };
       }
 
+      // データを整形（最初にpostsを抽出）
+      const posts = (data || [])
+        .map((like: any) => like.posts)
+        .filter(Boolean);
+
+      // 投稿IDリストを取得
+      const postIds = posts.map((post: any) => post.id);
+      
+      // いいね数とPV数を一括取得
+      const [likeCountsMap, viewCountsMap] = await Promise.all([
+        PostsService.getLikeCountsForPosts(postIds),
+        PageViewService.getViewCountsForPosts(postIds)
+      ]);
+
       // データを整形
-      const formattedPosts: PostWithDetails[] = (data || [])
-        .map(like => like.posts)
-        .filter(Boolean)
-        .map(post => ({
-          id: post.id,
-          author_id: post.author_id,
-          type: post.type,
-          title: post.title,
-          thumbnail_url: post.thumbnail_url,
-          is_r18: post.is_r18,
-          created_at: post.created_at,
-          author: post.author,
-          images: (post.images || []).sort((a, b) => a.display_order - b.display_order),
-          tags: (post.tags || []).map(tag => tag.tag).filter(Boolean),
-          like_count: 0, // 後で実装
-          view_count: 0  // 後で実装
-        }));
+      const formattedPosts: PostWithDetails[] = posts.map((post: any) => ({
+        id: post.id,
+        author_id: post.author_id,
+        type: post.type,
+        title: post.title,
+        thumbnail_url: post.thumbnail_url,
+        is_r18: post.is_r18,
+        created_at: post.created_at,
+        author: post.author,
+        images: (post.images || []).sort((a: any, b: any) => a.display_order - b.display_order),
+        tags: (post.tags || []).map((tag: any) => tag.tag).filter(Boolean),
+        like_count: likeCountsMap.get(post.id) || 0,
+        view_count: viewCountsMap.get(post.id) || 0
+      }));
 
       return { posts: formattedPosts };
     } catch (error) {

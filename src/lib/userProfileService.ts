@@ -1,5 +1,7 @@
 import { supabase } from './supabaseClient';
 import { PostWithDetails, User } from '../types';
+import { PostsService } from './postsService';
+import { PageViewService } from './pageViewService';
 
 // UserProfilePage用のサービス関数
 export class UserProfileService {
@@ -117,6 +119,15 @@ export class UserProfileService {
         return { posts: [], error: error.message };
       }
 
+      // 投稿IDリストを取得
+      const postIds = (data || []).map((post: any) => post.id);
+      
+      // いいね数とPV数を一括取得
+      const [likeCountsMap, viewCountsMap] = await Promise.all([
+        PostsService.getLikeCountsForPosts(postIds),
+        PageViewService.getViewCountsForPosts(postIds)
+      ]);
+
       // データを整形
       const formattedPosts: PostWithDetails[] = (data || []).map((post: any) => ({
         id: post.id,
@@ -129,8 +140,8 @@ export class UserProfileService {
         author: post.author,
         images: (post.images || []).sort((a: any, b: any) => a.display_order - b.display_order),
         tags: (post.tags || []).map((tag: any) => tag.tag).filter(Boolean),
-        like_count: 0, // 後で実装
-        view_count: 0  // 後で実装
+        like_count: likeCountsMap.get(post.id) || 0,
+        view_count: viewCountsMap.get(post.id) || 0
       }));
 
       return { posts: formattedPosts };

@@ -1,8 +1,51 @@
 import { supabase } from './supabaseClient';
 import { PostWithDetails } from '../types';
+import { PageViewService } from './pageViewService';
 
 // 投稿データを取得するサービス
 export class PostsService {
+  // 複数の投稿のいいね数を一括取得
+  static async getLikeCountsForPosts(postIds: number[]): Promise<Map<number, number>> {
+    const likeCountsMap = new Map<number, number>();
+    
+    if (postIds.length === 0) {
+      return likeCountsMap;
+    }
+
+    try {
+      // post_like_countsテーブルから一括取得
+      const { data, error } = await supabase
+        .from('post_like_counts')
+        .select('post_id, total_likes')
+        .in('post_id', postIds);
+
+      if (error) {
+        console.error('いいね数一括取得エラー:', error);
+        // エラー時は0を返す
+        postIds.forEach(id => likeCountsMap.set(id, 0));
+        return likeCountsMap;
+      }
+
+      // Mapに変換
+      (data || []).forEach((item: any) => {
+        likeCountsMap.set(item.post_id, item.total_likes || 0);
+      });
+
+      // データが存在しない投稿は0を設定
+      postIds.forEach(id => {
+        if (!likeCountsMap.has(id)) {
+          likeCountsMap.set(id, 0);
+        }
+      });
+
+      return likeCountsMap;
+    } catch (error) {
+      console.error('いいね数一括取得中にエラーが発生:', error);
+      // エラー時は0を返す
+      postIds.forEach(id => likeCountsMap.set(id, 0));
+      return likeCountsMap;
+    }
+  }
   // 全ての投稿を取得（最新順）
   static async getAllPosts(limit = 20, offset = 0): Promise<{ posts: PostWithDetails[]; error?: string }> {
     try {
@@ -42,6 +85,15 @@ export class PostsService {
         return { posts: [], error: error.message };
       }
 
+      // 投稿IDリストを取得
+      const postIds = (data || []).map((post: any) => post.id);
+      
+      // いいね数とPV数を一括取得
+      const [likeCountsMap, viewCountsMap] = await Promise.all([
+        this.getLikeCountsForPosts(postIds),
+        PageViewService.getViewCountsForPosts(postIds)
+      ]);
+
       // データを整形
       const formattedPosts: PostWithDetails[] = (data || []).map((post: any) => ({
         id: post.id,
@@ -54,8 +106,8 @@ export class PostsService {
         author: post.author,
         images: (post.images || []).sort((a: any, b: any) => a.display_order - b.display_order),
         tags: (post.tags || []).map((tag: any) => tag.tag).filter(Boolean),
-        like_count: 0, // 後で実装
-        view_count: 0  // 後で実装
+        like_count: likeCountsMap.get(post.id) || 0,
+        view_count: viewCountsMap.get(post.id) || 0
       }));
 
       return { posts: formattedPosts };
@@ -112,6 +164,15 @@ export class PostsService {
         return { posts: [], error: error.message };
       }
 
+      // 投稿IDリストを取得
+      const postIds = (data || []).map((post: any) => post.id);
+      
+      // いいね数とPV数を一括取得
+      const [likeCountsMap, viewCountsMap] = await Promise.all([
+        this.getLikeCountsForPosts(postIds),
+        PageViewService.getViewCountsForPosts(postIds)
+      ]);
+
       // データを整形
       const formattedPosts: PostWithDetails[] = (data || []).map((post: any) => ({
         id: post.id,
@@ -124,8 +185,8 @@ export class PostsService {
         author: post.author,
         images: (post.images || []).sort((a: any, b: any) => a.display_order - b.display_order),
         tags: (post.tags || []).map((tag: any) => tag.tag).filter(Boolean),
-        like_count: 0, // 後で実装
-        view_count: 0  // 後で実装
+        like_count: likeCountsMap.get(post.id) || 0,
+        view_count: viewCountsMap.get(post.id) || 0
       }));
 
       return { posts: formattedPosts };
@@ -226,6 +287,14 @@ export class PostsService {
         return { post: null, error: '投稿が見つかりません' };
       }
 
+      // いいね数とPV数を取得
+      const [likeCountsMap, viewCountsMap] = await Promise.all([
+        this.getLikeCountsForPosts([data.id]),
+        PageViewService.getViewCountsForPosts([data.id])
+      ]);
+      const likeCount = likeCountsMap.get(data.id) || 0;
+      const viewCount = viewCountsMap.get(data.id) || 0;
+
       // データを整形
       const formattedPost: PostWithDetails = {
         id: data.id,
@@ -238,8 +307,8 @@ export class PostsService {
         author: data.author,
         images: (data.images || []).sort((a: any, b: any) => a.display_order - b.display_order),
         tags: (data.tags || []).map((tag: any) => tag.tag).filter(Boolean),
-        like_count: 0, // 後で実装
-        view_count: 0  // 後で実装
+        like_count: likeCount,
+        view_count: viewCount
       };
 
       return { post: formattedPost };

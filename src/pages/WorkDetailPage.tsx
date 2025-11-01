@@ -5,6 +5,7 @@ import { Eye, Share2, Flag, User, Calendar, Tag, ChevronLeft, ChevronRight } fro
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 import { PostsService } from '../lib/postsService';
 import { UserProfileService } from '../lib/userProfileService';
+import { PageViewService } from '../lib/pageViewService';
 import { PostWithDetails } from '../types';
 import LikeButton from '../components/LikeButton';
 
@@ -38,6 +39,9 @@ const WorkDetailPage: React.FC = () => {
           const { isFollowing: followStatus } = await UserProfileService.checkFollowStatusByUsername(user.id, post.author.username);
           setIsFollowing(followStatus);
         }
+
+        // PVを記録（非同期で実行、エラーは無視）
+        recordPageView(post.id);
       }
 
       setLoading(false);
@@ -45,6 +49,31 @@ const WorkDetailPage: React.FC = () => {
 
     fetchWork();
   }, [id, user]);
+
+  // PVを記録する関数
+  const recordPageView = async (postId: number) => {
+    try {
+      // IPアドレスを取得（非同期で実行、失敗しても続行）
+      const ipAddress = await PageViewService.getUserIP().catch(() => null);
+
+      // PVを記録
+      const result = await PageViewService.recordPageView(
+        postId,
+        user?.id,
+        ipAddress || undefined,
+        typeof navigator !== 'undefined' ? navigator.userAgent : undefined
+      );
+
+      if (result.success && result.isUnique) {
+        // ユニークなPVが記録された場合、表示中のPV数を更新
+        const { count } = await PageViewService.getViewCount(postId);
+        setWork(prevWork => prevWork ? { ...prevWork, view_count: count } : null);
+      }
+    } catch (error) {
+      // PV記録のエラーは静かに無視（ユーザー体験を損なわないため）
+      console.error('PV記録エラー:', error);
+    }
+  };
 
   const handleFollow = async () => {
     if (!user || !work) {
