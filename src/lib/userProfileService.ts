@@ -164,7 +164,7 @@ export class UserProfileService {
     error?: string 
   }> {
     try {
-      const [worksResult, followersResult, followingResult, likeAggregate, viewAggregate] = await Promise.all([
+      const [worksResult, followersResult, followingResult, profileTotals] = await Promise.all([
         supabase
           .from('posts')
           .select('*', { count: 'exact', head: true })
@@ -178,49 +178,20 @@ export class UserProfileService {
           .select('*', { count: 'exact', head: true })
           .eq('follower_id', userId),
         supabase
-          .from('post_likes_summary')
-          .select('total_likes')
-          .eq('author_id', userId)
-          .maybeSingle(),
-        supabase
-          .from('post_views_summary')
-          .select('total_views')
-          .eq('author_id', userId)
+          .from('profiles')
+          .select('total_like_counts, total_view_counts')
+          .eq('id', userId)
           .maybeSingle()
       ]);
+ 
+      const totalLikes = profileTotals?.total_like_counts !== undefined && profileTotals?.total_like_counts !== null
+        ? Number(profileTotals.total_like_counts)
+        : 0;
 
-      let totalLikes = 0;
-      if (likeAggregate?.total_likes !== undefined && likeAggregate?.total_likes !== null) {
-        totalLikes = Number(likeAggregate.total_likes);
-      } else {
-        const { data: likeData, error: likeError } = await supabase
-          .from('post_like_counts')
-          .select('like_count')
-          .eq('author_id', userId);
-
-        if (likeError) {
-          console.error('いいね集計取得エラー:', likeError);
-        } else {
-          totalLikes = (likeData || []).reduce((acc: number, row: { like_count: number }) => acc + (Number(row.like_count) || 0), 0);
-        }
-      }
-
-      let totalViews = 0;
-      if (viewAggregate?.total_views !== undefined && viewAggregate?.total_views !== null) {
-        totalViews = Number(viewAggregate.total_views);
-      } else {
-        const { data: viewData, error: viewError } = await supabase
-          .from('post_view_counts')
-          .select('view_count')
-          .eq('author_id', userId);
-
-        if (viewError) {
-          console.error('閲覧数集計取得エラー:', viewError);
-        } else {
-          totalViews = (viewData || []).reduce((acc: number, row: { view_count: number }) => acc + (Number(row.view_count) || 0), 0);
-        }
-      }
-
+      const totalViews = profileTotals?.total_view_counts !== undefined && profileTotals?.total_view_counts !== null
+        ? Number(profileTotals.total_view_counts)
+        : 0;
+ 
       return {
         worksCount: worksResult.count || 0,
         followersCount: followersResult.count || 0,
