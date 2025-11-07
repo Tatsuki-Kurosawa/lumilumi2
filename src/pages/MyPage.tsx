@@ -171,6 +171,7 @@ const MyPage: React.FC = () => {
                 <Edit className="h-4 w-4 mr-1" />
                 編集
               </button>
+            </div>
             <p className="text-gray-600 mb-4">
               {profile?.university} {profile?.status === 'ob' ? 'OB' : profile?.status === 'og' ? 'OG' : '在学中'}
             </p>
