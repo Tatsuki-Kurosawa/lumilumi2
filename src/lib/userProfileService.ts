@@ -184,12 +184,12 @@ export class UserProfileService {
           .maybeSingle()
       ]);
  
-      const totalLikes = profileTotals?.total_like_counts !== undefined && profileTotals?.total_like_counts !== null
-        ? Number(profileTotals.total_like_counts)
+      const totalLikes = profileTotals?.data?.total_like_counts !== undefined && profileTotals?.data?.total_like_counts !== null
+        ? Number(profileTotals.data.total_like_counts)
         : 0;
 
-      const totalViews = profileTotals?.total_view_counts !== undefined && profileTotals?.total_view_counts !== null
-        ? Number(profileTotals.total_view_counts)
+      const totalViews = profileTotals?.data?.total_view_counts !== undefined && profileTotals?.data?.total_view_counts !== null
+        ? Number(profileTotals.data.total_view_counts)
         : 0;
  
       return {
