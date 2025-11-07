@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Upload, User } from 'lucide-react';
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
+import { supabase } from '../lib/supabaseClient';
 
 interface ProfileEditModalProps {
   isOpen: boolean;
@@ -20,6 +21,22 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string>('');
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const AVATAR_BUCKET = 'avatars';
+  const MAX_FILE_SIZE_MB = 5;
+  const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+  const updateAvatarPreview = (newPreview: string) => {
+    setAvatarPreview(prev => {
+      if (prev && prev.startsWith('blob:')) {
+        URL.revokeObjectURL(prev);
+      }
+      return newPreview;
+    });
+  };
 
   // プロフィールデータをフォームに設定
   useEffect(() => {
@@ -32,8 +49,27 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
         bio: profile.bio || '',
         avatar_url: profile.avatar_url || ''
       });
+      updateAvatarPreview(profile.avatar_url || '');
+      setAvatarFile(null);
     }
   }, [profile]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setAvatarFile(null);
+      updateAvatarPreview(profile?.avatar_url || '');
+      setError(null);
+      setSuccess(false);
+    }
+  }, [isOpen, profile?.avatar_url]);
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreview && avatarPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(avatarPreview);
+      }
+    };
+  }, [avatarPreview]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -43,17 +79,87 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
     }));
   };
 
+  const handleAvatarButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setError(null);
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      setError('対応している画像形式は JPEG / PNG / WEBP です');
+      return;
+    }
+
+    const fileSizeMb = file.size / (1024 * 1024);
+    if (fileSizeMb > MAX_FILE_SIZE_MB) {
+      setError(`ファイルサイズは ${MAX_FILE_SIZE_MB}MB 以下にしてください`);
+      return;
+    }
+
+    setAvatarFile(file);
+    updateAvatarPreview(URL.createObjectURL(file));
+    event.target.value = '';
+  };
+
+  const uploadAvatarIfNeeded = async (): Promise<string | null> => {
+    if (!avatarFile) {
+      return formData.avatar_url || null;
+    }
+
+    if (!profile?.id) {
+      throw new Error('プロフィール情報が取得できませんでした。再度ログインしてください');
+    }
+
+    const fileExt = avatarFile.name.split('.').pop() || 'png';
+    const fileName = `avatar-${Date.now()}.${fileExt}`;
+    const filePath = `${profile.id}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(AVATAR_BUCKET)
+      .upload(filePath, avatarFile, {
+        cacheControl: '3600',
+        upsert: true,
+        contentType: avatarFile.type
+      });
+
+    if (uploadError) {
+      throw new Error(uploadError.message);
+    }
+
+    const { data } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(filePath);
+    if (!data?.publicUrl) {
+      throw new Error('アップロードした画像の公開URLを取得できませんでした');
+    }
+
+    return data.publicUrl;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      const { error } = await updateProfile(formData);
+      const uploadedAvatarUrl = await uploadAvatarIfNeeded();
+
+      const updates = {
+        ...formData,
+        avatar_url: uploadedAvatarUrl || ''
+      };
+
+      const { error } = await updateProfile(updates);
       
       if (error) {
         setError(error.message);
       } else {
+        if (uploadedAvatarUrl) {
+          setFormData(prev => ({ ...prev, avatar_url: uploadedAvatarUrl }));
+          updateAvatarPreview(uploadedAvatarUrl);
+        }
+        setAvatarFile(null);
         setSuccess(true);
         setTimeout(() => {
           setSuccess(false);
@@ -61,7 +167,11 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
         }, 1500);
       }
     } catch (err) {
-      setError('プロフィールの更新中にエラーが発生しました');
+      if (err instanceof Error) {
+        setError(err.message || 'プロフィールの更新中にエラーが発生しました');
+      } else {
+        setError('プロフィールの更新中にエラーが発生しました');
+      }
     } finally {
       setLoading(false);
     }
@@ -88,9 +198,9 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
           {/* アバター */}
           <div className="flex flex-col items-center space-y-4">
             <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-              {formData.avatar_url ? (
+              {avatarPreview ? (
                 <img 
-                  src={formData.avatar_url} 
+                  src={avatarPreview} 
                   alt="アバター" 
                   className="w-24 h-24 rounded-full object-cover" 
                 />
@@ -101,10 +211,19 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
             <button
               type="button"
               className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              onClick={handleAvatarButtonClick}
             >
               <Upload className="h-4 w-4 mr-2" />
               アバターを変更
             </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="hidden"
+              onChange={handleAvatarChange}
+            />
+            <p className="text-xs text-gray-500">JPEG / PNG / WEBP ・ {MAX_FILE_SIZE_MB}MB以内</p>
           </div>
 
           {/* 表示名 */}
