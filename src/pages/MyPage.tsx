@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { User, Heart, Upload, Edit } from 'lucide-react';
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 import WorkCard from '../components/WorkCard';
@@ -10,13 +10,15 @@ import { PostWithDetails, User as UserType } from '../types';
 
 const MyPage: React.FC = () => {
   const { user, profile } = useSupabaseAuth();
-  const [activeTab, setActiveTab] = useState<'works' | 'likes' | 'following'>('works');
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<'works' | 'likes' | 'following' | 'followers'>('works');
   const [isProfileEditOpen, setIsProfileEditOpen] = useState(false);
   
   // データ状態
   const [myWorks, setMyWorks] = useState<PostWithDetails[]>([]);
   const [likedWorks, setLikedWorks] = useState<PostWithDetails[]>([]);
-  const [followingUsers, setFollowingUsers] = useState<UserType[]>([]);
+  const [followingUsers, setFollowingUsers] = useState<(UserType & { isFollowingBack: boolean })[]>([]);
+  const [followerUsers, setFollowerUsers] = useState<(UserType & { isFollowingBack: boolean })[]>([]);
   
   // 統計データ
   const [stats, setStats] = useState({
@@ -30,6 +32,7 @@ const MyPage: React.FC = () => {
     works: false,
     likes: false,
     following: false,
+    followers: false,
     stats: false
   });
 
@@ -88,6 +91,98 @@ const MyPage: React.FC = () => {
     }
   };
 
+  const fetchFollowerUsers = async () => {
+    if (!user) return;
+    
+    setLoading(prev => ({ ...prev, followers: true }));
+    try {
+      const { users, error } = await MyPageService.getFollowerUsers(user.id);
+      if (error) {
+        console.error('フォロワー取得エラー:', error);
+      } else {
+        setFollowerUsers(users);
+      }
+    } catch (error) {
+      console.error('フォロワー取得中にエラーが発生:', error);
+    } finally {
+      setLoading(prev => ({ ...prev, followers: false }));
+    }
+  };
+  const handleUnfollow = async (followingId: string) => {
+    if (!user) return;
+    const { success, error } = await MyPageService.unfollowUser(user.id, followingId);
+    if (!success) {
+      console.error('フォロー解除に失敗しました:', error);
+      alert('フォロー解除に失敗しました。時間をおいて再度お試しください。');
+      return;
+    }
+
+    setFollowingUsers(prev => prev.filter(followUser => followUser.id !== followingId));
+    setFollowerUsers(prev =>
+      prev.map(follower =>
+        follower.id === followingId ? { ...follower, isFollowingBack: false } : follower
+      )
+    );
+    setStats(prev => ({
+      ...prev,
+      followingCount: Math.max(0, prev.followingCount - 1)
+    }));
+  };
+
+  const handleToggleFollowFromFollowers = async (followerId: string, isFollowingBack: boolean) => {
+    if (!user) return;
+
+    if (isFollowingBack) {
+      const { success, error } = await MyPageService.unfollowUser(user.id, followerId);
+      if (!success) {
+        console.error('フォロー解除に失敗しました:', error);
+        alert('フォロー解除に失敗しました。時間をおいて再度お試しください。');
+        return;
+      }
+
+      setFollowerUsers(prev =>
+        prev.map(follower =>
+          follower.id === followerId ? { ...follower, isFollowingBack: false } : follower
+        )
+      );
+      setFollowingUsers(prev => prev.filter(followUser => followUser.id !== followerId));
+      setStats(prev => ({
+        ...prev,
+        followingCount: Math.max(0, prev.followingCount - 1)
+      }));
+    } else {
+      const { success, error } = await MyPageService.followUser(user.id, followerId);
+      if (!success) {
+        console.error('フォローに失敗しました:', error);
+        alert('フォローに失敗しました。時間をおいて再度お試しください。');
+        return;
+      }
+
+      setFollowerUsers(prev =>
+        prev.map(follower =>
+          follower.id === followerId ? { ...follower, isFollowingBack: true } : follower
+        )
+      );
+      setFollowingUsers(prev => {
+        const existing = prev.find(followUser => followUser.id === followerId);
+        const followerProfile = followerUsers.find(follower => follower.id === followerId);
+        if (existing) {
+          return prev.map(followUser =>
+            followUser.id === followerId ? { ...followUser, isFollowingBack: true } : followUser
+          );
+        }
+        return followerProfile
+          ? [...prev, { ...followerProfile, isFollowingBack: true }]
+          : prev;
+      });
+      setStats(prev => ({
+        ...prev,
+        followingCount: prev.followingCount + 1
+      }));
+    }
+  };
+
+
   const fetchStats = async () => {
     if (!user) return;
     
@@ -131,6 +226,9 @@ const MyPage: React.FC = () => {
           break;
         case 'following':
           if (followingUsers.length === 0) fetchFollowingUsers();
+          break;
+        case 'followers':
+          if (followerUsers.length === 0) fetchFollowerUsers();
           break;
       }
     }
@@ -243,6 +341,16 @@ const MyPage: React.FC = () => {
           >
             フォロー中 ({loading.following ? '...' : followingUsers.length})
           </button>
+          <button
+            onClick={() => setActiveTab('followers')}
+            className={`px-4 py-2 rounded-md font-medium transition-colors ${
+              activeTab === 'followers'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            フォロワー ({loading.followers ? '...' : followerUsers.length})
+          </button>
         </div>
 
       </div>
@@ -345,12 +453,97 @@ const MyPage: React.FC = () => {
                         <p className="text-sm text-gray-500">{followUser.university}</p>
                       </div>
                 </div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${followUser.isFollowingBack ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                    {followUser.isFollowingBack ? 'フォローされています' : 'フォローされていません'}
+                  </span>
+                </div>
                 <div className="flex space-x-2">
-                  <button className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                  <button
+                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                    onClick={() => navigate(`/user/${followUser.username}`)}
+                  >
                     プロフィール
                   </button>
-                  <button className="flex-1 px-3 py-2 text-sm bg-red-50 text-red-600 border border-red-200 rounded-md hover:bg-red-100 transition-colors">
+                  <button
+                    className="flex-1 px-3 py-2 text-sm bg-red-50 text-red-600 border border-red-200 rounded-md hover:bg-red-100 transition-colors"
+                    onClick={() => handleUnfollow(followUser.id)}
+                  >
                     フォロー解除
+                  </button>
+                </div>
+              </div>
+            ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'followers' && (
+          <div>
+            {loading.followers ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <div key={index} className="bg-white rounded-lg shadow-sm p-6 animate-pulse">
+                    <div className="flex items-center space-x-4 mb-4">
+                      <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+                      <div className="flex-1">
+                        <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded"></div>
+                      </div>
+                    </div>
+                    <div className="flex space-x-2">
+                      <div className="flex-1 h-8 bg-gray-200 rounded"></div>
+                      <div className="flex-1 h-8 bg-gray-200 rounded"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {followerUsers.map((follower) => (
+              <div key={follower.id} className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="w-12 h-12 rounded-full overflow-hidden">
+                        {follower.avatar_url ? (
+                    <img
+                            src={follower.avatar_url}
+                            alt={follower.display_name}
+                      className="w-full h-full object-cover"
+                    />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                            <User className="h-6 w-6 text-white" />
+                          </div>
+                        )}
+                  </div>
+                  <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900">{follower.display_name}</h3>
+                        <p className="text-sm text-gray-600">@{follower.username}</p>
+                        <p className="text-sm text-gray-500">{follower.university}</p>
+                      </div>
+                </div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${follower.isFollowingBack ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                    {follower.isFollowingBack ? 'フォロー中' : 'フォローしていません'}
+                  </span>
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                    onClick={() => navigate(`/user/${follower.username}`)}
+                  >
+                    プロフィール
+                  </button>
+                  <button
+                    className={`flex-1 px-3 py-2 text-sm border rounded-md transition-colors ${
+                      follower.isFollowingBack
+                        ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
+                        : 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100'
+                    }`}
+                    onClick={() => handleToggleFollowFromFollowers(follower.id, follower.isFollowingBack)}
+                  >
+                    {follower.isFollowingBack ? 'フォロー解除' : 'フォローする'}
                   </button>
                 </div>
               </div>
@@ -362,25 +555,29 @@ const MyPage: React.FC = () => {
       </div>
 
       {/* 空の状態 */}
-      {!loading.works && !loading.likes && !loading.following && 
+      {!loading.works && !loading.likes && !loading.following && !loading.followers &&
        ((activeTab === 'works' && myWorks.length === 0) ||
         (activeTab === 'likes' && likedWorks.length === 0) ||
-        (activeTab === 'following' && followingUsers.length === 0)) && (
+        (activeTab === 'following' && followingUsers.length === 0) ||
+        (activeTab === 'followers' && followerUsers.length === 0)) && (
         <div className="text-center py-12">
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             {activeTab === 'works' && <Upload className="h-8 w-8 text-gray-400" />}
             {activeTab === 'likes' && <Heart className="h-8 w-8 text-gray-400" />}
             {activeTab === 'following' && <User className="h-8 w-8 text-gray-400" />}
+            {activeTab === 'followers' && <User className="h-8 w-8 text-gray-400" />}
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             {activeTab === 'works' && 'まだ作品を投稿していません'}
             {activeTab === 'likes' && 'まだいいねした作品がありません'}
             {activeTab === 'following' && 'まだ誰もフォローしていません'}
+            {activeTab === 'followers' && 'まだフォロワーがいません'}
           </h3>
           <p className="text-gray-600 mb-4">
             {activeTab === 'works' && '最初の作品を投稿してみましょう'}
             {activeTab === 'likes' && '気に入った作品にいいねしてみましょう'}
             {activeTab === 'following' && '気になるクリエイターをフォローしてみましょう'}
+            {activeTab === 'followers' && 'フォロワーが増えるとここに表示されます'}
           </p>
           {activeTab === 'works' && (
             <Link

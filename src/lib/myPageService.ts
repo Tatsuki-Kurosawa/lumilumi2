@@ -164,7 +164,7 @@ export class MyPageService {
   }
 
   // フォロー中のユーザーを取得
-  static async getFollowingUsers(userId: string, limit = 20, offset = 0): Promise<{ users: User[]; error?: string }> {
+  static async getFollowingUsers(userId: string, limit = 20, offset = 0): Promise<{ users: (User & { isFollowingBack: boolean })[]; error?: string }> {
     try {
       const { data, error } = await supabase
         .from('follows')
@@ -191,14 +191,99 @@ export class MyPageService {
         return { users: [], error: error.message };
       }
 
-      // データを整形
-      const formattedUsers: User[] = (data || [])
+      const followingProfiles: User[] = (data || [])
         .map(follow => follow.following)
         .filter(Boolean);
+
+      const followingIds = followingProfiles.map(profile => profile.id);
+      let followBackSet = new Set<string>();
+
+      if (followingIds.length > 0) {
+        const { data: followBackData, error: followBackError } = await supabase
+          .from('follows')
+          .select('follower_id')
+          .eq('following_id', userId)
+          .in('follower_id', followingIds);
+
+        if (followBackError) {
+          console.error('フォロー相互状態取得エラー:', followBackError);
+        } else if (followBackData) {
+          followBackSet = new Set(followBackData.map(record => record.follower_id));
+        }
+      }
+
+      // データを整形
+      const formattedUsers: (User & { isFollowingBack: boolean })[] = followingProfiles.map(profile => ({
+        ...profile,
+        isFollowingBack: followBackSet.has(profile.id)
+      }));
 
       return { users: formattedUsers };
     } catch (error) {
       console.error('フォロー中ユーザー取得中にエラーが発生:', error);
+      return {
+        users: [],
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  static async getFollowerUsers(userId: string, limit = 20, offset = 0): Promise<{ users: (User & { isFollowingBack: boolean })[]; error?: string }> {
+    try {
+      const { data, error } = await supabase
+        .from('follows')
+        .select(`
+          follower_id,
+          follower:profiles!follows_follower_id_fkey(
+            id,
+            username,
+            display_name,
+            university,
+            status,
+            avatar_url,
+            bio,
+            is_creator,
+            created_at
+          )
+        `)
+        .eq('following_id', userId)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        console.error('フォロワー取得エラー:', error);
+        return { users: [], error: error.message };
+      }
+
+      const followerProfiles: User[] = (data || [])
+        .map(follow => follow.follower)
+        .filter(Boolean);
+
+      const followerIds = followerProfiles.map(profile => profile.id);
+      let followBackSet = new Set<string>();
+
+      if (followerIds.length > 0) {
+        const { data: followBackData, error: followBackError } = await supabase
+          .from('follows')
+          .select('following_id')
+          .eq('follower_id', userId)
+          .in('following_id', followerIds);
+
+        if (followBackError) {
+          console.error('フォロー相互状態取得エラー:', followBackError);
+        } else if (followBackData) {
+          followBackSet = new Set(followBackData.map(record => record.following_id));
+        }
+      }
+
+      const formattedUsers: (User & { isFollowingBack: boolean })[] = followerProfiles.map(profile => ({
+        ...profile,
+        isFollowingBack: followBackSet.has(profile.id)
+      }));
+
+      return { users: formattedUsers };
+    } catch (error) {
+      console.error('フォロワー取得中にエラーが発生:', error);
       return {
         users: [],
         error: error instanceof Error ? error.message : 'Unknown error'
