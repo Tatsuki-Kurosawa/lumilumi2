@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { User, Heart, Upload, Settings } from 'lucide-react';
+import { User, Heart, Upload, Edit } from 'lucide-react';
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 import WorkCard from '../components/WorkCard';
 import ProfileEditModal from '../components/ProfileEditModal';
@@ -164,7 +164,13 @@ const MyPage: React.FC = () => {
           <div className="flex-1">
             <div className="flex items-center space-x-4 mb-2">
               <h1 className="text-2xl font-bold text-gray-900">{profile?.display_name}</h1>
-            </div>
+              <button 
+                onClick={() => setIsProfileEditOpen(true)}
+                className="flex items-center px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                <Edit className="h-4 w-4 mr-1" />
+                編集
+              </button>
             <p className="text-gray-600 mb-4">
               {profile?.university} {profile?.status === 'ob' ? 'OB' : profile?.status === 'og' ? 'OG' : '在学中'}
             </p>
@@ -199,9 +205,6 @@ const MyPage: React.FC = () => {
               <Upload className="h-4 w-4 mr-2" />
               作品を投稿
             </Link>
-            <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-              <Settings className="h-5 w-5" />
-            </button>
           </div>
         </div>
       </div>
