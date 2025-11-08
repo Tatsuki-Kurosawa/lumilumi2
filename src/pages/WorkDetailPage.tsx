@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Eye, Share2, Flag, User, Calendar, Tag, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, Share2, Flag, User, Calendar, Tag } from 'lucide-react';
 
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 import { PostsService } from '../lib/postsService';
@@ -16,7 +16,6 @@ const WorkDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
 
@@ -106,7 +105,7 @@ const WorkDetailPage: React.FC = () => {
 
   const handleShare = () => {
     if (!work) return;
-    
+
     if (navigator.share) {
       navigator.share({
         title: work.title,
@@ -118,16 +117,6 @@ const WorkDetailPage: React.FC = () => {
       navigator.clipboard.writeText(window.location.href);
       alert('URLをクリップボードにコピーしました');
     }
-  };
-
-  const nextImage = () => {
-    if (!work) return;
-    setCurrentImageIndex((prev) => (prev + 1) % work.images.length);
-  };
-
-  const prevImage = () => {
-    if (!work) return;
-    setCurrentImageIndex((prev) => (prev - 1 + work.images.length) % work.images.length);
   };
 
   if (loading) {
@@ -152,73 +141,23 @@ const WorkDetailPage: React.FC = () => {
         {/* メイン画像エリア */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            {/* 画像表示 */}
-            <div className="relative aspect-square bg-gray-100">
-              <img
-                src={work.images[currentImageIndex]?.image_url || work.thumbnail_url}
-                alt={work.title}
-                className="w-full h-full object-contain"
-              />
-              
-              {/* 画像ナビゲーション */}
-              {work.images.length > 1 && (
-                <>
-                  <button
-                    onClick={prevImage}
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 p-2 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-70 transition-all"
-                  >
-                    <ChevronLeft className="h-6 w-6" />
-                  </button>
-                  <button
-                    onClick={nextImage}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 p-2 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-70 transition-all"
-                  >
-                    <ChevronRight className="h-6 w-6" />
-                  </button>
-                  
-                  {/* 画像インジケーター */}
-                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                    {work.images.map((image, index) => (
-                      <button
-                        key={image.id}
-                        onClick={() => setCurrentImageIndex(index)}
-                        className={`w-2 h-2 rounded-full transition-all ${
-                          index === currentImageIndex ? 'bg-white' : 'bg-white bg-opacity-50'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* サムネイル一覧 */}
-            {work.images.length > 1 && (
-              <div className="p-4 border-t">
-                <div className="flex space-x-2 overflow-x-auto">
-                  {work.images.map((image, index) => (
-                    <button
-                      key={image.id}
-                      onClick={() => setCurrentImageIndex(index)}
-                      className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                        index === currentImageIndex ? 'border-blue-500' : 'border-gray-200'
-                      }`}
-                    >
-                      <img
-                        src={image.image_url}
-                        alt={`${work.title} ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
+            {/* 画像を縦に並べて表示 */}
+            <div className="space-y-4 p-4">
+              {work.images.map((image, index) => (
+                <div key={image.id} className="bg-gray-100 rounded-lg overflow-hidden">
+                  <img
+                    src={image.image_url}
+                    alt={`${work.title} - ${index + 1}/${work.images.length}`}
+                    className="w-full h-auto object-contain"
+                  />
                 </div>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
         </div>
 
         {/* サイドバー */}
-        <div className="space-y-6">
+        <div className="space-y-6 lg:sticky lg:top-20 lg:self-start">
           {/* 作品情報 */}
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">{work.title}</h1>
