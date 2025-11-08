@@ -12,39 +12,35 @@ const CommercialTransactionsPage: React.FC = () => {
             <h1 className="text-3xl font-bold text-gray-900">特定商取引法に基づく表記</h1>
           </div>
 
-          <p className="text-sm text-gray-500 mb-8">最終更新日: 2025年1月1日</p>
+          <p className="text-sm text-gray-500 mb-8">最終更新日: 2025年11月8日</p>
 
           <div className="prose max-w-none">
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8">
-              <p className="text-sm text-yellow-800">
-                <strong>注意:</strong> 以下は参考例です。実際の運営情報に置き換えてください。
-              </p>
-            </div>
 
             <section className="mb-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-2">販売事業者</h2>
-              <p className="text-gray-700">イラストーク大学運営事務局</p>
+              <p className="text-gray-700">合同会社LUMiTOON</p>
             </section>
 
             <section className="mb-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-2">運営責任者</h2>
-              <p className="text-gray-700">[運営責任者名]</p>
+              <p className="text-gray-700">秦　啓明</p>
             </section>
 
             <section className="mb-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-2">所在地</h2>
-              <p className="text-gray-700">〒xxx-xxxx</p>
-              <p className="text-gray-700">[住所]</p>
+              <p className="text-gray-700">〒112-0015</p>
+              <p className="text-gray-700">東京都文京区目白台1-21-2</p>
             </section>
 
             <section className="mb-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-2">お問い合わせ</h2>
-              <p className="text-gray-700">
+              <p className="text-gray-700">（例）
                 <Link to="/contact" className="text-cyan-600 hover:underline">
                   お問い合わせフォーム
                 </Link>
                 よりご連絡ください
               </p>
+              <p className="text-gray-700">（例）Eメール:info@mangabirth.com</p>
               <p className="text-sm text-gray-500 mt-2">
                 ※電話でのお問い合わせは受け付けておりません
               </p>
@@ -56,15 +52,24 @@ const CommercialTransactionsPage: React.FC = () => {
                 当サービスは基本無料でご利用いただけます。
               </p>
               <p className="text-gray-700">
-                有料サービスを提供する場合は、各サービスのページに表示します。
+                有料サービスを提供する場合は、各作品ページに表示します。
               </p>
+            </section>
+
+            <section className="mb-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">商品代金以外の必要料金</h2>
+              <ul className="list-disc list-inside text-gray-700 space-y-2 mb-4">
+                <li>インターネット接続にかかる通信料金等はお客様のご負担となります</li>
+                <li>銀行振込をご利用の場合は振込手数料</li>
+              </ul>
             </section>
 
             <section className="mb-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-2">支払方法</h2>
               <p className="text-gray-700">
-                有料サービスを提供する場合に別途定めます。
+              クレジットカード決済／銀行振込／コンビニ決済／各種決済サービス（PayPay等）
               </p>
+              <p className="text-gray-700">※導入している決済方法に応じて記載</p>
             </section>
 
             <section className="mb-6">
@@ -72,6 +77,10 @@ const CommercialTransactionsPage: React.FC = () => {
               <p className="text-gray-700">
                 有料サービスを提供する場合に別途定めます。
               </p>
+              <ul className="list-disc list-inside text-gray-700 space-y-2 mb-4">
+                <li>商品購入時に即時決済されます</li>
+                <li>銀行振込の場合は前払いとなります</li>
+              </ul>
             </section>
 
             <section className="mb-6">
@@ -82,12 +91,19 @@ const CommercialTransactionsPage: React.FC = () => {
             </section>
 
             <section className="mb-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">商品の引き渡し時期</h2>
+              <p className="text-gray-700">
+                決済完了後、マイページまたは購入完了ページから即時閲覧・ダウンロードが可能です
+              </p>
+            </section>
+
+            <section className="mb-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-2">返品・キャンセルについて</h2>
               <p className="text-gray-700">
-                サービスの性質上、原則として返品・キャンセルはお受けできません。
+                商品の性質上（デジタルコンテンツ）、購入後の返品・返金・キャンセルは原則としてお受けしておりません
               </p>
               <p className="text-gray-700 mt-2">
-                ただし、有料サービスについては、各サービスの利用規約に従います。
+                ただし、閲覧不具合やダウンロード不能など、当方に原因がある場合は速やかに対応いたします
               </p>
             </section>
 
@@ -103,11 +119,13 @@ const CommercialTransactionsPage: React.FC = () => {
 
             <section className="mb-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-2">その他</h2>
-              <p className="text-gray-700">
-                サービスの詳細については、
+              <ul className="list-disc list-inside text-gray-700 space-y-1">
+                <li>本サイトで提供する作品の著作権はすべて著作権者に帰属します</li>
+                <li>無断転載、二次配布を禁止します</li>
+                <li>サービスの詳細については、
                 <Link to="/terms" className="text-cyan-600 hover:underline">利用規約</Link>
-                をご確認ください。
-              </p>
+                をご確認ください。</li>
+              </ul>
             </section>
           </div>
 
