@@ -146,6 +146,8 @@ function AppContent() {
           showLogin={showLoginModal}
           showSignUp={showSignUpModal}
           onClose={handleCloseAuthModals}
+          onSwitchToLogin={handleLoginClick}
+          onSwitchToSignUp={handleSignUpClick}
         />
       </div>
     </Router>

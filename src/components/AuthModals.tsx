@@ -6,12 +6,16 @@ interface AuthModalsProps {
   showLogin: boolean;
   showSignUp: boolean;
   onClose: () => void;
+  onSwitchToLogin?: () => void;
+  onSwitchToSignUp?: () => void;
 }
 
-const AuthModals: React.FC<AuthModalsProps> = ({ 
-  showLogin, 
-  showSignUp, 
-  onClose 
+const AuthModals: React.FC<AuthModalsProps> = ({
+  showLogin,
+  showSignUp,
+  onClose,
+  onSwitchToLogin,
+  onSwitchToSignUp
 }) => {
   const [currentModal, setCurrentModal] = useState<'login' | 'signup' | null>(
     showLogin ? 'login' : showSignUp ? 'signup' : null
@@ -24,10 +28,16 @@ const AuthModals: React.FC<AuthModalsProps> = ({
 
   const switchToLogin = () => {
     setCurrentModal('login');
+    if (onSwitchToLogin) {
+      onSwitchToLogin();
+    }
   };
 
   const switchToSignUp = () => {
     setCurrentModal('signup');
+    if (onSwitchToSignUp) {
+      onSwitchToSignUp();
+    }
   };
 
   // 外部から状態が変更された場合の同期
