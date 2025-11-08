@@ -9,7 +9,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
-  const { user, profile, signOut } = useSupabaseAuth();
+  const { user, profile, loading, signOut } = useSupabaseAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -131,7 +131,13 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
             </button>
 
             {/* ユーザーメニュー */}
-            {user && profile ? (
+            {loading ? (
+              <div className="flex items-center space-x-2">
+                {/* ローディング中のスケルトン */}
+                <div className="w-24 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+                <div className="w-24 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+              </div>
+            ) : user && profile ? (
               <div className="flex items-center space-x-2">
                 <Link
                   to="/my-page"

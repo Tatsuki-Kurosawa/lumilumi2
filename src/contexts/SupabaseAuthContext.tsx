@@ -58,46 +58,54 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
 
   // セッションとユーザーの監視
   useEffect(() => {
+    let isMounted = true;
+    let subscription: { unsubscribe: () => void } | null = null;
 
-    // 現在のセッションを取得
-    const getSession = async () => {
+    // 認証初期化処理
+    const initAuth = async () => {
+      // 現在のセッションを取得（最優先で実行）
       const { data: { session } } = await supabase.auth.getSession();
+
+      if (!isMounted) return;
+
       setSession(session);
       setUser(session?.user ?? null);
-      
+
       if (session?.user) {
         await fetchProfile(session.user.id);
       }
-      
+
+      // セッション取得が完了してからローディングを終了
       setLoading(false);
+
+      // その後で認証状態の変更を監視開始
+      const { data } = supabase.auth.onAuthStateChange(
+        async (event: string, session: Session | null) => {
+          console.log('Auth state changed:', event);
+
+          if (!isMounted) return;
+
+          setSession(session);
+          setUser(session?.user ?? null);
+
+          if (session?.user) {
+            await fetchProfile(session.user.id);
+          } else {
+            console.log('sessionがnullの場合に発動した');
+            setProfile(null);
+          }
+        }
+      );
+
+      subscription = data.subscription;
     };
 
-    getSession();
+    initAuth();
 
-    // 認証状態の変更を監視
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: string, session: Session | null) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        console.log(event);
-
-        // うまくいかなかった原因
-        // if (session?.user) {
-        //   await fetchProfile(session.user.id);
-        // } else {
-        //   console.log('sessionがnullの場合に発動した');
-        //   setProfile(null);
-        // }
-        if (!session?.user) {
-          console.log('sessionがnullの場合に発動した');
-          setProfile(null);
-        }
-
-        setLoading(false);
-      }
-    );
-
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription?.unsubscribe();
+    };
   }, []);
 
   // ログイン処理のために作る必要あり
