@@ -32,6 +32,7 @@ import GuidelinesPage from './pages/GuidelinesPage';
 import ContactPage from './pages/ContactPage';
 
 import AuthModals from './components/AuthModals';
+import ScrollToTop from './components/ScrollToTop';
 import { SupabaseAuthProvider, useSupabaseAuth } from './contexts/SupabaseAuthContext';
 
 // 認証が必要なページのラッパーコンポーネント
@@ -106,6 +107,7 @@ function AppContent() {
 
   return (
     <Router>
+      <ScrollToTop />
       <div className="min-h-screen bg-gray-50 flex flex-col">
         <Header onLoginClick={handleLoginClick} onSignUpClick={handleSignUpClick} />
         <main className="pt-16 flex-grow">
