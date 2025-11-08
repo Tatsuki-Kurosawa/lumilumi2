@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { TrendingUp, Users, Palette, Star, ArrowRight } from 'lucide-react';
 import WorkCard from '../components/WorkCard';
 import { PostsService } from '../lib/postsService';
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 // import { PostWithDetails } from '../types';
 
-const HomePage: React.FC = () => {
+interface HomePageProps {
+  onLoginClick: () => void;
+}
+
+const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
+  const navigate = useNavigate();
+  const { user } = useSupabaseAuth();
   const [featuredWorks, setFeaturedWorks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -52,6 +59,14 @@ const HomePage: React.FC = () => {
     { icon: TrendingUp, label: '月間PV', value: '2.1M+' },
   ];
 
+  const handleUploadClick = () => {
+    if (user) {
+      navigate('/upload');
+    } else {
+      onLoginClick();
+    }
+  };
+
   return (
     <div className="min-h-screen">
       {/* ヒーローセクション */}
@@ -77,12 +92,12 @@ const HomePage: React.FC = () => {
                 作品を見る
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
-              <Link
-                to="/upload"
+              <button
+                onClick={handleUploadClick}
                 className="inline-flex items-center px-8 py-3 bg-transparent border-2 border-white text-white rounded-full font-semibold hover:bg-white hover:text-blue-600 transition-colors"
               >
                 作品を投稿
-              </Link>
+              </button>
             </div>
           </div>
         </div>
@@ -142,12 +157,12 @@ const HomePage: React.FC = () => {
                 <Palette className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">投稿作品がありません</h3>
                 <p className="text-gray-600 mb-4">まだ作品が投稿されていません。最初の作品を投稿してみませんか？</p>
-                <Link
-                  to="/upload"
+                <button
+                  onClick={handleUploadClick}
                   className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   作品を投稿する
-                </Link>
+                </button>
               </div>
             )}
           </div>

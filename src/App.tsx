@@ -112,7 +112,7 @@ function AppContent() {
         <Header onLoginClick={handleLoginClick} onSignUpClick={handleSignUpClick} />
         <main className="pt-16 flex-grow">
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<HomePage onLoginClick={handleLoginClick} />} />
             <Route path="/search" element={<SearchResultsPage />} />
             <Route path="/works" element={<WorksPage />} />
             <Route path="/manga" element={<MangaPage />} />
