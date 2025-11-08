@@ -53,12 +53,33 @@ const UploadPage: React.FC = () => {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const validFiles = files.filter(file => 
-      file.type.startsWith('image/') && file.size <= 10 * 1024 * 1024
-    );
+    const MAX_FILE_SIZE = 10 * 1000 * 1000; // 10MB (基数10)
+    const MAX_TOTAL_SIZE = 200 * 1000 * 1000; // 200MB (基数10)
+
+    const validFiles = files.filter(file => {
+      if (!file.type.startsWith('image/')) {
+        return false;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        alert(`${file.name} は10MBを超えているため、アップロードできません`);
+        return false;
+      }
+      return true;
+    });
 
     if (validFiles.length + images.length > 50) {
       alert('画像は最大50枚までアップロードできます');
+      return;
+    }
+
+    // 既存の画像の合計サイズを計算
+    const currentTotalSize = images.reduce((sum, img) => sum + img.size, 0);
+    const newFilesSize = validFiles.reduce((sum, file) => sum + file.size, 0);
+    const totalSize = currentTotalSize + newFilesSize;
+
+    if (totalSize > MAX_TOTAL_SIZE) {
+      const totalSizeMB = (totalSize / (1000 * 1000)).toFixed(2);
+      alert(`画像の総量が200MBを超えています（現在: ${totalSizeMB}MB）。一部の画像を削除してください。`);
       return;
     }
 
@@ -374,7 +395,7 @@ const UploadPage: React.FC = () => {
                     画像をドラッグ&ドロップするか、クリックして選択
                   </p>
                   <p className="text-sm text-gray-500">
-                    JPEG, PNG形式、最大10MB、最大50枚
+                    JPEG, PNG形式、最大10MB/枚、最大50枚、総量200MBまで
                   </p>
                   <button
                     type="button"
