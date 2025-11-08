@@ -13,20 +13,15 @@ const CompanyPage: React.FC = () => {
           </div>
 
           <div className="prose max-w-none">
-            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-8">
-              <p className="text-sm text-blue-800">
-                <strong>注意:</strong> 以下は参考例です。実際の運営情報に置き換えてください。
-              </p>
-            </div>
 
             <section className="mb-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-2">サービス名</h2>
-              <p className="text-gray-700">イラストーク大学 (LumiLumi)</p>
+              <p className="text-gray-700">イラストーク大学</p>
             </section>
 
             <section className="mb-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-2">運営組織</h2>
-              <p className="text-gray-700">イラストーク大学運営事務局</p>
+              <p className="text-gray-700">合同会社LUMiTOON</p>
             </section>
 
             <section className="mb-6">
