@@ -1,16 +1,27 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Search, Filter, Palette } from 'lucide-react';
 import WorkCard from '../components/WorkCard';
 import { PostsService } from '../lib/postsService';
 import { supabase } from '../lib/supabaseClient';
 
+type WorkType = 'all' | 'manga' | 'illustration';
+
 const WorksPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [works, setWorks] = useState<any[]>([]);
   const [filteredWorks, setFilteredWorks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [activeCategory, setActiveCategory] = useState('latest');
+  const [activeWorkType, setActiveWorkType] = useState<WorkType>(() => {
+    const typeParam = searchParams.get('type');
+    return (typeParam === 'manga' || typeParam === 'illustration') ? typeParam : 'all';
+  });
+  const [activeCategory, setActiveCategory] = useState(() => {
+    const categoryParam = searchParams.get('category');
+    return categoryParam || 'latest';
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [popularTags, setPopularTags] = useState<string[]>([]);
@@ -39,12 +50,12 @@ const WorksPage: React.FC = () => {
   // 投稿データを取得
   useEffect(() => {
     fetchWorks();
-  }, [activeCategory, currentPage]);
+  }, [activeCategory, currentPage, activeWorkType]);
 
   // フィルタリング処理
   useEffect(() => {
     filterWorks();
-  }, [works, selectedTags, searchQuery]);
+  }, [works, selectedTags, searchQuery, activeWorkType]);
 
   const fetchWorks = async () => {
     setLoading(true);
@@ -70,9 +81,15 @@ const WorksPage: React.FC = () => {
         console.error('作品取得エラー:', result.error);
         setWorks([]);
       } else {
+        // 作品タイプでフィルタリング
+        let filteredPosts = result.posts;
+        if (activeWorkType !== 'all') {
+          filteredPosts = result.posts.filter(post => post.type === activeWorkType);
+        }
+
         // いいね数と閲覧数を取得して追加
         const worksWithStats = await Promise.all(
-          result.posts.map(async (post) => {
+          filteredPosts.map(async (post) => {
             const { count: likesCount } = await PostsService.getLikeCount(post.id);
 
             const { data: viewData } = await supabase
@@ -91,10 +108,16 @@ const WorksPage: React.FC = () => {
 
         setWorks(worksWithStats);
 
-        // 総投稿数を取得してページ数を計算
-        const { count: totalCount } = await supabase
+        // 総投稿数を取得してページ数を計算（作品タイプでフィルタリング）
+        let countQuery = supabase
           .from('posts')
           .select('*', { count: 'exact', head: true });
+
+        if (activeWorkType !== 'all') {
+          countQuery = countQuery.eq('type', activeWorkType);
+        }
+
+        const { count: totalCount } = await countQuery;
 
         if (totalCount) {
           setTotalPages(Math.ceil(totalCount / ITEMS_PER_PAGE));
@@ -148,13 +171,39 @@ const WorksPage: React.FC = () => {
   };
 
   const getCategoryTitle = () => {
+    const typePrefix = activeWorkType === 'manga' ? 'マンガ - ' : activeWorkType === 'illustration' ? 'イラスト - ' : '';
+
     switch (activeCategory) {
-      case 'recommended': return 'おすすめ作品';
-      case 'trending': return '急上昇作品';
-      case 'latest': return '新着作品';
-      case 'popular': return '人気作品';
-      default: return '全作品';
+      case 'recommended': return `${typePrefix}おすすめ作品`;
+      case 'trending': return `${typePrefix}急上昇作品`;
+      case 'latest': return `${typePrefix}新着作品`;
+      case 'popular': return `${typePrefix}人気作品`;
+      default: return `${typePrefix}全作品`;
     }
+  };
+
+  const handleWorkTypeChange = (type: WorkType) => {
+    setActiveWorkType(type);
+    setCurrentPage(1);
+
+    // URLパラメータを更新
+    const newParams = new URLSearchParams(searchParams);
+    if (type === 'all') {
+      newParams.delete('type');
+    } else {
+      newParams.set('type', type);
+    }
+    setSearchParams(newParams);
+  };
+
+  const handleCategoryChange = (category: string) => {
+    setActiveCategory(category);
+    setCurrentPage(1);
+
+    // URLパラメータを更新
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('category', category);
+    setSearchParams(newParams);
   };
 
   // ページネーション用のページ番号配列を生成
@@ -183,10 +232,44 @@ const WorksPage: React.FC = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">{getCategoryTitle()}</h1>
 
+          {/* 作品タイプタブ（マンガ/イラスト） */}
+          <div className="mb-4 flex space-x-2 overflow-x-auto border-b border-gray-200">
+            <button
+              onClick={() => handleWorkTypeChange('all')}
+              className={`px-6 py-3 font-medium whitespace-nowrap transition-colors border-b-2 ${
+                activeWorkType === 'all'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              すべて
+            </button>
+            <button
+              onClick={() => handleWorkTypeChange('manga')}
+              className={`px-6 py-3 font-medium whitespace-nowrap transition-colors border-b-2 ${
+                activeWorkType === 'manga'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              マンガ
+            </button>
+            <button
+              onClick={() => handleWorkTypeChange('illustration')}
+              className={`px-6 py-3 font-medium whitespace-nowrap transition-colors border-b-2 ${
+                activeWorkType === 'illustration'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              イラスト
+            </button>
+          </div>
+
           {/* カテゴリタブ */}
           <div className="mb-6 flex space-x-2 overflow-x-auto">
             <button
-              onClick={() => { setActiveCategory('latest'); setCurrentPage(1); }}
+              onClick={() => handleCategoryChange('latest')}
               className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
                 activeCategory === 'latest'
                   ? 'bg-blue-600 text-white'
@@ -196,7 +279,7 @@ const WorksPage: React.FC = () => {
               新着
             </button>
             <button
-              onClick={() => { setActiveCategory('recommended'); setCurrentPage(1); }}
+              onClick={() => handleCategoryChange('recommended')}
               className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
                 activeCategory === 'recommended'
                   ? 'bg-blue-600 text-white'
@@ -206,7 +289,7 @@ const WorksPage: React.FC = () => {
               おすすめ
             </button>
             <button
-              onClick={() => { setActiveCategory('trending'); setCurrentPage(1); }}
+              onClick={() => handleCategoryChange('trending')}
               className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
                 activeCategory === 'trending'
                   ? 'bg-blue-600 text-white'

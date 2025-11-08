@@ -166,7 +166,7 @@ const IllustrationsPage: React.FC = () => {
             <h2 className="text-2xl font-bold text-gray-900">新着</h2>
           </div>
           <Link
-            to="/works"
+            to="/works?type=illustration&category=latest"
             className="flex items-center text-blue-600 hover:text-blue-700 font-medium"
           >
             もっと見る
@@ -207,7 +207,7 @@ const IllustrationsPage: React.FC = () => {
             <h2 className="text-2xl font-bold text-gray-900">おすすめ</h2>
           </div>
           <Link
-            to="/works"
+            to="/works?type=illustration&category=recommended"
             className="flex items-center text-blue-600 hover:text-blue-700 font-medium"
           >
             もっと見る
@@ -248,7 +248,7 @@ const IllustrationsPage: React.FC = () => {
             <h2 className="text-2xl font-bold text-gray-900">急上昇</h2>
           </div>
           <Link
-            to="/works"
+            to="/works?type=illustration&category=trending"
             className="flex items-center text-blue-600 hover:text-blue-700 font-medium"
           >
             もっと見る
