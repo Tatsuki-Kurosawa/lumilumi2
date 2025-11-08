@@ -13,7 +13,6 @@ const WorksPage: React.FC = () => {
   const [filteredWorks, setFilteredWorks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [activeWorkType, setActiveWorkType] = useState<WorkType>(() => {
     const typeParam = searchParams.get('type');
     return (typeParam === 'manga' || typeParam === 'illustration') ? typeParam : 'all';
@@ -22,35 +21,63 @@ const WorksPage: React.FC = () => {
     const categoryParam = searchParams.get('category');
     return categoryParam || 'latest';
   });
+  const [selectedTags, setSelectedTags] = useState<string[]>(() => {
+    const tagParam = searchParams.get('tags');
+    return tagParam ? tagParam.split(',') : [];
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [popularTags, setPopularTags] = useState<string[]>([]);
 
   const ITEMS_PER_PAGE = 12;
 
-  // 人気タグを取得
+  // 人気タグを取得（作品タイプに応じて）
   useEffect(() => {
     const fetchPopularTags = async () => {
       try {
-        const { data, error } = await supabase
-          .from('tags')
-          .select('name')
-          .limit(20);
+        let query = supabase
+          .from('post_tags')
+          .select(`
+            tag:tags(name),
+            post:posts!inner(type)
+          `);
 
+        // 作品タイプでフィルタリング
+        if (activeWorkType !== 'all') {
+          query = query.eq('post.type', activeWorkType);
+        }
+
+        const { data, error } = await query;
         if (error) throw error;
-        setPopularTags(data?.map((tag: any) => tag.name) || []);
+
+        // タグ名の出現回数をカウント
+        const tagCounts = new Map<string, number>();
+        data?.forEach((item: any) => {
+          const tagName = item.tag?.name;
+          if (tagName) {
+            tagCounts.set(tagName, (tagCounts.get(tagName) || 0) + 1);
+          }
+        });
+
+        // 出現回数の多い順にソートして上位20件を取得
+        const sortedTags = Array.from(tagCounts.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 20)
+          .map(([name]) => name);
+
+        setPopularTags(sortedTags);
       } catch (error) {
         console.error('タグ取得エラー:', error);
       }
     };
 
     fetchPopularTags();
-  }, []);
+  }, [activeWorkType]);
 
   // 投稿データを取得
   useEffect(() => {
     fetchWorks();
-  }, [activeCategory, currentPage, activeWorkType]);
+  }, [activeCategory, currentPage, activeWorkType, selectedTags]);
 
   // フィルタリング処理
   useEffect(() => {
@@ -136,10 +163,10 @@ const WorksPage: React.FC = () => {
   const filterWorks = () => {
     let filtered = [...works];
 
-    // タグフィルタリング
+    // タグフィルタリング（すべてのタグを含む作品を表示）
     if (selectedTags.length > 0) {
       filtered = filtered.filter(work =>
-        selectedTags.some(tag => work.tags.includes(tag))
+        selectedTags.every(selectedTag => work.tags.includes(selectedTag))
       );
     }
 
@@ -158,11 +185,36 @@ const WorksPage: React.FC = () => {
   };
 
   const handleTagClick = (tag: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    let newSelectedTags: string[];
+
     if (selectedTags.includes(tag)) {
-      setSelectedTags(selectedTags.filter(t => t !== tag));
+      // 既に選択されているタグをクリックしたら削除
+      newSelectedTags = selectedTags.filter(t => t !== tag);
     } else {
-      setSelectedTags([...selectedTags, tag]);
+      // 新しいタグを追加
+      newSelectedTags = [...selectedTags, tag];
     }
+
+    setSelectedTags(newSelectedTags);
+
+    // URLパラメータを更新
+    if (newSelectedTags.length > 0) {
+      newParams.set('tags', newSelectedTags.join(','));
+    } else {
+      newParams.delete('tags');
+    }
+
+    setSearchParams(newParams);
+    setCurrentPage(1); // ページをリセット
+  };
+
+  const handleClearAllTags = () => {
+    setSelectedTags([]);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete('tags');
+    setSearchParams(newParams);
+    setCurrentPage(1);
   };
 
   const handlePageChange = (page: number) => {
@@ -337,7 +389,7 @@ const WorksPage: React.FC = () => {
                 ))}
               </div>
               {selectedTags.length > 0 && (
-                <div className="mt-3 flex items-center space-x-2">
+                <div className="mt-3 flex items-center flex-wrap gap-2">
                   <span className="text-sm text-gray-600">選択中:</span>
                   {selectedTags.map((tag) => (
                     <span
@@ -354,7 +406,7 @@ const WorksPage: React.FC = () => {
                     </span>
                   ))}
                   <button
-                    onClick={() => setSelectedTags([])}
+                    onClick={handleClearAllTags}
                     className="text-sm text-gray-500 hover:text-gray-700"
                   >
                     すべてクリア
@@ -389,7 +441,7 @@ const WorksPage: React.FC = () => {
             </div>
 
             {/* ページネーション */}
-            {!selectedTags.length && !searchQuery && (
+            {selectedTags.length === 0 && !searchQuery && (
               <div className="mt-12 flex justify-center">
                 <nav className="flex items-center space-x-2">
                   <button

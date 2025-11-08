@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Search, Filter, Palette, TrendingUp, Clock, Star, ArrowRight } from 'lucide-react';
 import WorkCard from '../components/WorkCard';
 import { PostsService } from '../lib/postsService';
 import { PostWithDetails } from '../types';
+import { supabase } from '../lib/supabaseClient';
 
 const IllustrationsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [recommendedWorks, setRecommendedWorks] = useState<any[]>([]);
   const [trendingWorks, setTrendingWorks] = useState<any[]>([]);
   const [latestWorks, setLatestWorks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [popularTags, setPopularTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   // イラスト作品データを取得
   useEffect(() => {
@@ -55,10 +58,44 @@ const IllustrationsPage: React.FC = () => {
     fetchIllustrationWorks();
   }, []);
 
-  const popularTags = [
-    'イラスト', 'キャラクター', '風景', 'ファンタジー', 'ポートレート', 'アニメ',
-    'デジタル', 'アナログ', '水彩', '油絵', 'かわいい', 'リアル'
-  ];
+  // 人気タグを取得（イラストのみ）
+  useEffect(() => {
+    const fetchPopularTags = async () => {
+      try {
+        // イラスト作品で実際に使用されているタグを取得
+        const { data, error } = await supabase
+          .from('post_tags')
+          .select(`
+            tag:tags(name),
+            post:posts!inner(type)
+          `)
+          .eq('post.type', 'illustration');
+
+        if (error) throw error;
+
+        // タグ名の出現回数をカウント
+        const tagCounts = new Map<string, number>();
+        data?.forEach((item: any) => {
+          const tagName = item.tag?.name;
+          if (tagName) {
+            tagCounts.set(tagName, (tagCounts.get(tagName) || 0) + 1);
+          }
+        });
+
+        // 出現回数の多い順にソートして上位20件を取得
+        const sortedTags = Array.from(tagCounts.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 20)
+          .map(([name]) => name);
+
+        setPopularTags(sortedTags);
+      } catch (error) {
+        console.error('タグ取得エラー:', error);
+      }
+    };
+
+    fetchPopularTags();
+  }, []);
 
   const handleTagClick = (tag: string) => {
     if (selectedTags.includes(tag)) {
@@ -67,6 +104,24 @@ const IllustrationsPage: React.FC = () => {
       setSelectedTags([...selectedTags, tag]);
     }
   };
+
+  const handleClearAllTags = () => {
+    setSelectedTags([]);
+  };
+
+  // タグでフィルタリングされた作品を取得
+  const getFilteredWorks = (works: any[]) => {
+    if (selectedTags.length === 0) {
+      return works;
+    }
+    return works.filter(work =>
+      selectedTags.every(selectedTag => work.tags.includes(selectedTag))
+    );
+  };
+
+  const filteredRecommendedWorks = getFilteredWorks(recommendedWorks);
+  const filteredTrendingWorks = getFilteredWorks(trendingWorks);
+  const filteredLatestWorks = getFilteredWorks(latestWorks);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -123,7 +178,7 @@ const IllustrationsPage: React.FC = () => {
                 className={`px-3 py-1 rounded-full text-sm transition-colors ${
                   selectedTags.includes(tag)
                     ? 'bg-purple-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-gray-100 text-gray-700 hover:bg-purple-100 hover:text-purple-700'
                 }`}
               >
                 #{tag}
@@ -131,7 +186,7 @@ const IllustrationsPage: React.FC = () => {
             ))}
           </div>
           {selectedTags.length > 0 && (
-            <div className="mt-3 flex items-center space-x-2">
+            <div className="mt-3 flex items-center flex-wrap gap-2">
               <span className="text-sm text-gray-600">選択中:</span>
               {selectedTags.map((tag) => (
                 <span
@@ -148,7 +203,7 @@ const IllustrationsPage: React.FC = () => {
                 </span>
               ))}
               <button
-                onClick={() => setSelectedTags([])}
+                onClick={handleClearAllTags}
                 className="text-sm text-gray-500 hover:text-gray-700"
               >
                 すべてクリア
@@ -186,10 +241,15 @@ const IllustrationsPage: React.FC = () => {
                 </div>
               </div>
             ))
-          ) : latestWorks.length > 0 ? (
-            latestWorks.map((work) => (
+          ) : filteredLatestWorks.length > 0 ? (
+            filteredLatestWorks.map((work) => (
               <WorkCard key={work.id} work={work} />
             ))
+          ) : selectedTags.length > 0 ? (
+            <div className="col-span-full text-center py-8">
+              <Clock className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+              <p className="text-gray-600">選択されたタグに一致するイラスト作品がありません</p>
+            </div>
           ) : (
             <div className="col-span-full text-center py-8">
               <Clock className="h-12 w-12 text-gray-300 mx-auto mb-2" />
@@ -227,10 +287,15 @@ const IllustrationsPage: React.FC = () => {
                 </div>
               </div>
             ))
-          ) : recommendedWorks.length > 0 ? (
-            recommendedWorks.map((work) => (
+          ) : filteredRecommendedWorks.length > 0 ? (
+            filteredRecommendedWorks.map((work) => (
               <WorkCard key={work.id} work={work} />
             ))
+          ) : selectedTags.length > 0 ? (
+            <div className="col-span-full text-center py-8">
+              <Star className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+              <p className="text-gray-600">選択されたタグに一致するイラスト作品がありません</p>
+            </div>
           ) : (
             <div className="col-span-full text-center py-8">
               <Palette className="h-12 w-12 text-gray-300 mx-auto mb-2" />
@@ -268,10 +333,15 @@ const IllustrationsPage: React.FC = () => {
                 </div>
               </div>
             ))
-          ) : trendingWorks.length > 0 ? (
-            trendingWorks.map((work) => (
+          ) : filteredTrendingWorks.length > 0 ? (
+            filteredTrendingWorks.map((work) => (
               <WorkCard key={work.id} work={work} />
             ))
+          ) : selectedTags.length > 0 ? (
+            <div className="col-span-full text-center py-8">
+              <TrendingUp className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+              <p className="text-gray-600">選択されたタグに一致するイラスト作品がありません</p>
+            </div>
           ) : (
             <div className="col-span-full text-center py-8">
               <TrendingUp className="h-12 w-12 text-gray-300 mx-auto mb-2" />
