@@ -1,82 +1,39 @@
-import React, { useState } from 'react';
-import { Trophy, Medal, Star, Eye, Heart, TrendingUp, Calendar } from 'lucide-react';
-import WorkCard from '../components/WorkCard';
+import React, { useState, useEffect } from 'react';
+import { Trophy, Medal, Star, Eye, Heart, Calendar } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { RankingService, RankingItem } from '../lib/rankingService';
 
 const MangaRankingPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'weekly' | 'tags'>('weekly');
   const [selectedTag, setSelectedTag] = useState<string>('all');
+  const [weeklyRanking, setWeeklyRanking] = useState<RankingItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // ダミーデータ（マンガランキング）
-  const weeklyRanking = [
-    {
-      id: '1',
-      title: '青春学園物語 第1話',
-      thumbnail: 'https://images.pexels.com/photos/1266810/pexels-photo-1266810.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: '太郎@東京大学',
-      likes: 1245,
-      views: 8520,
-      totalPoints: 9765, // PV + いいね
-      tags: ['マンガ', '学園', '青春'],
-      rank: 1,
-      rankChange: 0, // 前週比
-    },
-    {
-      id: '2',
-      title: 'ファンタジー冒険記 第3話',
-      thumbnail: 'https://images.pexels.com/photos/1266808/pexels-photo-1266808.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: '花子@京都大学og',
-      likes: 989,
-      views: 7892,
-      totalPoints: 8881,
-      tags: ['マンガ', 'ファンタジー', '冒険'],
-      rank: 2,
-      rankChange: 1, // 上昇
-    },
-    {
-      id: '3',
-      title: '日常系4コマ集 vol.2',
-      thumbnail: 'https://images.pexels.com/photos/2422915/pexels-photo-2422915.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: '次郎@大阪大学',
-      likes: 812,
-      views: 6140,
-      totalPoints: 6952,
-      tags: ['マンガ', '4コマ', '日常'],
-      rank: 3,
-      rankChange: -1, // 下降
-    },
-    {
-      id: '4',
-      title: 'SF近未来物語',
-      thumbnail: 'https://images.pexels.com/photos/1266807/pexels-photo-1266807.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: '美咲@慶應義塾大学',
-      likes: 656,
-      views: 4743,
-      totalPoints: 5399,
-      tags: ['マンガ', 'SF', '近未来'],
-      rank: 4,
-      rankChange: 2,
-    },
-    {
-      id: '5',
-      title: 'ホラー短編集',
-      thumbnail: 'https://images.pexels.com/photos/1266810/pexels-photo-1266810.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: 'さくら@早稲田大学',
-      likes: 523,
-      views: 3890,
-      totalPoints: 4413,
-      tags: ['マンガ', 'ホラー', '短編'],
-      rank: 5,
-      rankChange: 0,
-    },
-  ];
+  // ランキングデータを取得
+  useEffect(() => {
+    const fetchRanking = async () => {
+      setLoading(true);
+      setError(null);
+      const { items, error: rankingError } = await RankingService.getMangaRanking(20);
+      if (rankingError) {
+        setError(rankingError);
+      } else {
+        setWeeklyRanking(items);
+      }
+      setLoading(false);
+    };
+
+    fetchRanking();
+  }, []);
 
   const popularTags = [
-    { name: '学園', count: 45, works: weeklyRanking.filter(w => w.tags.includes('学園')) },
-    { name: 'ファンタジー', count: 38, works: weeklyRanking.filter(w => w.tags.includes('ファンタジー')) },
-    { name: '4コマ', count: 32, works: weeklyRanking.filter(w => w.tags.includes('4コマ')) },
-    { name: 'SF', count: 28, works: weeklyRanking.filter(w => w.tags.includes('SF')) },
-    { name: '日常', count: 25, works: weeklyRanking.filter(w => w.tags.includes('日常')) },
-    { name: 'ホラー', count: 18, works: weeklyRanking.filter(w => w.tags.includes('ホラー')) },
+    { name: '学園', count: 45 },
+    { name: 'ファンタジー', count: 38 },
+    { name: '4コマ', count: 32 },
+    { name: 'SF', count: 28 },
+    { name: '日常', count: 25 },
+    { name: 'ホラー', count: 18 },
   ];
 
   const getRankIcon = (rank: number) => {
@@ -92,19 +49,20 @@ const MangaRankingPage: React.FC = () => {
     }
   };
 
-  const getRankChangeIcon = (change: number) => {
-    if (change > 0) {
-      return <TrendingUp className="h-4 w-4 text-green-500" />;
-    } else if (change < 0) {
-      return <TrendingUp className="h-4 w-4 text-red-500 transform rotate-180" />;
-    }
-    return <span className="text-gray-400">-</span>;
+  // ランクに応じてサイズを段階的に小さくする
+  const getRankSize = (rank: number) => {
+    if (rank <= 3) return 'text-2xl';
+    if (rank <= 10) return 'text-xl';
+    if (rank <= 15) return 'text-lg';
+    return 'text-base';
   };
 
   const getTagRanking = () => {
     if (selectedTag === 'all') return weeklyRanking;
-    const tag = popularTags.find(t => t.name === selectedTag);
-    return tag ? tag.works : [];
+    // タグでフィルタリング（簡易実装）
+    return weeklyRanking.filter(work => 
+      work.tags.some(tag => tag.name === selectedTag)
+    );
   };
 
   return (
@@ -116,7 +74,7 @@ const MangaRankingPage: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">マンガランキング</h1>
         </div>
         <p className="text-gray-600">
-          週間PV数といいね数を合計したポイントでランキングを算出しています
+          いいね数（×5pt）とPV数（×1pt）を合計したポイントでランキングを算出しています
         </p>
       </div>
 
@@ -149,92 +107,120 @@ const MangaRankingPage: React.FC = () => {
       {/* 週間ランキング */}
       {activeTab === 'weekly' && (
         <div className="space-y-6">
-          {/* トップ3の特別表示 */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {weeklyRanking.slice(0, 3).map((work) => (
-              <div key={work.id} className="bg-white rounded-lg shadow-sm border-2 border-yellow-200 p-6 text-center">
-                <div className="flex justify-center mb-4">
-                  {getRankIcon(work.rank)}
-                </div>
-                <div className="aspect-square mb-4 rounded-lg overflow-hidden">
-                  <img
-                    src={work.thumbnail}
-                    alt={work.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <h3 className="font-bold text-gray-900 mb-2">{work.title}</h3>
-                <p className="text-sm text-gray-600 mb-3">{work.author}</p>
-                <div className="bg-yellow-50 rounded-lg p-3">
-                  <div className="text-2xl font-bold text-yellow-600 mb-1">
-                    {work.totalPoints.toLocaleString()}pt
-                  </div>
-                  <div className="flex justify-center space-x-4 text-sm text-gray-600">
-                    <div className="flex items-center">
-                      <Eye className="h-4 w-4 mr-1" />
-                      {work.views.toLocaleString()}
+          {loading ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">ランキングを読み込み中...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-red-600">エラー: {error}</p>
+            </div>
+          ) : weeklyRanking.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">ランキングデータがありません</p>
+            </div>
+          ) : (
+            <>
+              {/* トップ3の特別表示 */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {weeklyRanking.slice(0, 3).map((work) => (
+                  <div key={work.id} className="bg-white rounded-lg shadow-sm border-2 border-yellow-200 p-6 text-center">
+                    <div className="flex justify-center mb-4">
+                      {getRankIcon(work.rank)}
                     </div>
-                    <div className="flex items-center">
-                      <Heart className="h-4 w-4 mr-1" />
-                      {work.likes.toLocaleString()}
+                    <Link to={`/works/${work.id}`}>
+                      <div className="aspect-square mb-4 rounded-lg overflow-hidden cursor-pointer">
+                        <img
+                          src={work.thumbnail_url}
+                          alt={work.title}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform"
+                        />
+                      </div>
+                    </Link>
+                    <Link to={`/works/${work.id}`}>
+                      <h3 className="font-bold text-gray-900 mb-2 hover:text-blue-600 transition-colors">{work.title}</h3>
+                    </Link>
+                    <Link to={`/user/${work.author.username}`}>
+                      <p className="text-sm text-gray-600 mb-3 hover:text-blue-600 transition-colors">
+                        {work.author.display_name}@{work.author.university}
+                      </p>
+                    </Link>
+                    <div className="bg-yellow-50 rounded-lg p-3">
+                      <div className="text-2xl font-bold text-yellow-600 mb-1">
+                        {work.points.toLocaleString()}pt
+                      </div>
+                      <div className="flex justify-center space-x-4 text-sm text-gray-600">
+                        <div className="flex items-center">
+                          <Eye className="h-4 w-4 mr-1" />
+                          {work.views.toLocaleString()}
+                        </div>
+                        <div className="flex items-center">
+                          <Heart className="h-4 w-4 mr-1" />
+                          {work.likes.toLocaleString()}
+                        </div>
+                      </div>
                     </div>
                   </div>
+                ))}
+              </div>
+
+              {/* 4位以下のリスト表示 */}
+              <div className="bg-white rounded-lg shadow-sm">
+                <div className="p-6 border-b border-gray-200">
+                  <h2 className="text-xl font-semibold text-gray-900">4位以下</h2>
+                </div>
+                <div className="divide-y divide-gray-200">
+                  {weeklyRanking.slice(3).map((work) => (
+                    <div key={work.id} className="p-6 flex items-center space-x-4 hover:bg-gray-50 transition-colors">
+                      <div className={`flex items-center justify-center bg-gray-100 rounded-full ${work.rank <= 10 ? 'w-12 h-12' : work.rank <= 15 ? 'w-10 h-10' : 'w-8 h-8'}`}>
+                        <span className={`font-bold text-gray-600 ${getRankSize(work.rank)}`}>
+                          #{work.rank}
+                        </span>
+                      </div>
+                      
+                      <Link to={`/works/${work.id}`} className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                        <img
+                          src={work.thumbnail_url}
+                          alt={work.title}
+                          className="w-full h-full object-cover hover:opacity-80 transition-opacity"
+                        />
+                      </Link>
+                      
+                      <div className="flex-1 min-w-0">
+                        <Link to={`/works/${work.id}`}>
+                          <h3 className="font-semibold text-gray-900 truncate hover:text-blue-600 transition-colors">{work.title}</h3>
+                        </Link>
+                        <Link to={`/user/${work.author.username}`}>
+                          <p className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
+                            {work.author.display_name}@{work.author.university}
+                          </p>
+                        </Link>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {work.tags.slice(0, 3).map((tag) => (
+                            <span key={tag.id} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                              #{tag.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-yellow-600">
+                          {work.points.toLocaleString()}pt
+                        </div>
+                        <div className="flex items-center justify-end space-x-2 text-sm text-gray-500">
+                          <Eye className="h-3 w-3" />
+                          <span>{work.views.toLocaleString()}</span>
+                          <Heart className="h-3 w-3" />
+                          <span>{work.likes.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
-
-          {/* 4位以下のリスト表示 */}
-          <div className="bg-white rounded-lg shadow-sm">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">4位以下</h2>
-            </div>
-            <div className="divide-y divide-gray-200">
-              {weeklyRanking.slice(3).map((work) => (
-                <div key={work.id} className="p-6 flex items-center space-x-4 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full">
-                    {getRankIcon(work.rank)}
-                  </div>
-                  
-                  <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                    <img
-                      src={work.thumbnail}
-                      alt={work.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 truncate">{work.title}</h3>
-                    <p className="text-sm text-gray-600">{work.author}</p>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {work.tags.slice(0, 3).map((tag, index) => (
-                        <span key={index} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-yellow-600">
-                      {work.totalPoints.toLocaleString()}pt
-                    </div>
-                    <div className="flex items-center justify-end space-x-2 text-sm text-gray-500">
-                      <Eye className="h-3 w-3" />
-                      <span>{work.views.toLocaleString()}</span>
-                      <Heart className="h-3 w-3" />
-                      <span>{work.likes.toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center justify-end mt-1">
-                      {getRankChangeIcon(work.rankChange)}
-                      <span className="text-xs text-gray-500 ml-1">前週比</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+            </>
+          )}
         </div>
       )}
 
@@ -272,23 +258,80 @@ const MangaRankingPage: React.FC = () => {
           </div>
 
           {/* タグ別作品一覧 */}
-          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {getTagRanking().map((work, index) => (
-              <div key={work.id} className="relative">
-                <div className="absolute -top-2 -left-2 z-10 w-8 h-8 bg-yellow-400 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                  {index + 1}
-                </div>
-                <WorkCard work={work} />
-              </div>
-            ))}
-          </div>
-
-          {getTagRanking().length === 0 && (
+          {loading ? (
             <div className="text-center py-12">
-              <Star className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">該当する作品がありません</h3>
-              <p className="text-gray-600">選択したタグの作品が見つかりませんでした。</p>
+              <p className="text-gray-600">ランキングを読み込み中...</p>
             </div>
+          ) : (
+            <>
+              <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {getTagRanking().map((work, index) => (
+                  <div key={work.id} className="relative">
+                    <div className={`absolute -top-2 -left-2 z-10 bg-yellow-400 text-white rounded-full flex items-center justify-center font-bold ${
+                      index < 3 ? 'w-10 h-10 text-base' : index < 10 ? 'w-8 h-8 text-sm' : 'w-6 h-6 text-xs'
+                    }`}>
+                      {index + 1}
+                    </div>
+                    <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden group">
+                      <Link to={`/works/${work.id}`} className="block">
+                        <div className="relative aspect-square overflow-hidden">
+                          <img
+                            src={work.thumbnail_url}
+                            alt={work.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                          />
+                        </div>
+                      </Link>
+                      <div className="p-4">
+                        <Link to={`/works/${work.id}`}>
+                          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 transition-colors">
+                            {work.title}
+                          </h3>
+                        </Link>
+                        <Link to={`/user/${work.author.username}`}>
+                          <p className="text-sm text-gray-600 mb-3 hover:text-blue-600 transition-colors">
+                            {work.author.display_name}@{work.author.university}
+                          </p>
+                        </Link>
+                        <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
+                          <div className="flex items-center space-x-4">
+                            <div className="flex items-center">
+                              <Heart className="h-4 w-4 mr-1" />
+                              <span>{work.likes.toLocaleString()}</span>
+                            </div>
+                            <div className="flex items-center">
+                              <Eye className="h-4 w-4 mr-1" />
+                              <span>{work.views.toLocaleString()}</span>
+                            </div>
+                          </div>
+                          <div className="font-bold text-yellow-600">
+                            {work.points.toLocaleString()}pt
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {work.tags.slice(0, 3).map((tag) => (
+                            <span
+                              key={tag.id}
+                              className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full"
+                            >
+                              #{tag.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {getTagRanking().length === 0 && (
+                <div className="text-center py-12">
+                  <Star className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">該当する作品がありません</h3>
+                  <p className="text-gray-600">選択したタグの作品が見つかりませんでした。</p>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
