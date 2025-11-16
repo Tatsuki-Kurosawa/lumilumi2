@@ -22,8 +22,16 @@ const WorksPage: React.FC = () => {
     return categoryParam || 'latest';
   });
   const [selectedTags, setSelectedTags] = useState<string[]>(() => {
-    const tagParam = searchParams.get('tags');
-    return tagParam ? tagParam.split(',') : [];
+    // 複数形（tags）と単数形（tag）の両方に対応
+    const tagsParam = searchParams.get('tags');
+    const tagParam = searchParams.get('tag');
+
+    if (tagsParam) {
+      return tagsParam.split(',');
+    } else if (tagParam) {
+      return [tagParam];
+    }
+    return [];
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -199,10 +207,17 @@ const WorksPage: React.FC = () => {
     setSelectedTags(newSelectedTags);
 
     // URLパラメータを更新
+    // 既存のtag/tagsパラメータを削除
+    newParams.delete('tag');
+    newParams.delete('tags');
+
     if (newSelectedTags.length > 0) {
-      newParams.set('tags', newSelectedTags.join(','));
-    } else {
-      newParams.delete('tags');
+      // 1つの場合は単数形、複数の場合は複数形を使用
+      if (newSelectedTags.length === 1) {
+        newParams.set('tag', newSelectedTags[0]);
+      } else {
+        newParams.set('tags', newSelectedTags.join(','));
+      }
     }
 
     setSearchParams(newParams);
@@ -212,6 +227,7 @@ const WorksPage: React.FC = () => {
   const handleClearAllTags = () => {
     setSelectedTags([]);
     const newParams = new URLSearchParams(searchParams);
+    newParams.delete('tag');
     newParams.delete('tags');
     setSearchParams(newParams);
     setCurrentPage(1);
