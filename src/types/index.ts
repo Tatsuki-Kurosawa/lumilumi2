@@ -37,6 +37,7 @@ export interface Post {
   author_id: string;
   type: 'manga' | 'illustration';
   title: string;
+  description?: string;
   thumbnail_url: string;
   is_r18: boolean;
   created_at: string;

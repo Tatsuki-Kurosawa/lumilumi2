@@ -161,7 +161,14 @@ const WorkDetailPage: React.FC = () => {
           {/* 作品情報 */}
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">{work.title}</h1>
-            
+
+            {/* 説明文 */}
+            {work.description && (
+              <div className="mb-6 pb-6 border-b border-gray-200">
+                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{work.description}</p>
+              </div>
+            )}
+
             {/* 作者情報 */}
             <div className="flex items-center space-x-3 mb-6">
               <Link to={`/user/${work.author.username}`} className="flex items-center space-x-3 hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors">
