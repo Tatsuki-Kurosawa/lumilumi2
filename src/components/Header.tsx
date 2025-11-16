@@ -30,20 +30,6 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
     navigate('/');
   };
 
-  const handleNavigation = (type: string, action: string) => {
-    setIsMenuOpen(false);
-    switch (action) {
-      case 'home':
-        navigate(type === 'manga' ? '/manga' : '/illustrations');
-        break;
-      case 'requests':
-        navigate('/direct-requests');
-        break;
-      case 'ranking':
-        navigate(type === 'manga' ? '/manga-ranking' : '/illustration-ranking');
-        break;
-    }
-  };
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50">
@@ -267,61 +253,6 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
                 About
               </Link>
 
-              {/* ナビゲーション */}
-              <div className="pt-4 border-t border-gray-200">
-                <h3 className="px-3 py-2 text-sm font-medium text-gray-500">ナビゲーション</h3>
-                <div className="grid grid-cols-2 gap-4 mt-2">
-                  {/* マンガ */}
-                  <div>
-                    <h4 className="px-3 py-1 text-sm font-medium text-gray-700">マンガ</h4>
-                    <div className="space-y-1">
-                      <button
-                        onClick={() => handleNavigation('manga', 'home')}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-md"
-                      >
-                        ホーム
-                      </button>
-                      <button
-                        onClick={() => handleNavigation('manga', 'requests')}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-md"
-                      >
-                        依頼
-                      </button>
-                      <button
-                        onClick={() => handleNavigation('manga', 'ranking')}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-md"
-                      >
-                        ランキング
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {/* イラスト */}
-                  <div>
-                    <h4 className="px-3 py-1 text-sm font-medium text-gray-700">イラスト</h4>
-                    <div className="space-y-1">
-                      <button
-                        onClick={() => handleNavigation('illustration', 'home')}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-md"
-                      >
-                        ホーム
-                      </button>
-                      <button
-                        onClick={() => handleNavigation('illustration', 'requests')}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-md"
-                      >
-                        依頼
-                      </button>
-                      <button
-                        onClick={() => handleNavigation('illustration', 'ranking')}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-md"
-                      >
-                        ランキング
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
             {/* モバイル検索 */}
             <div className="mt-4">
