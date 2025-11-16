@@ -226,7 +226,15 @@ const UserProfilePage: React.FC = () => {
       {/* プロフィールヘッダー */}
       <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-8">
         {/* カバー画像エリア */}
-        <div className="h-48 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+        <div className="h-48 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 relative">
+          {profileUser.cover_image_url && (
+            <img 
+              src={profileUser.cover_image_url} 
+              alt="カバー画像" 
+              className="w-full h-full object-cover" 
+            />
+          )}
+        </div>
         
         {/* プロフィール情報 */}
         <div className="relative px-6 pb-6">
@@ -268,9 +276,8 @@ const UserProfilePage: React.FC = () => {
           <div className="mt-4 ml-40">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               {profileUser.display_name}
-              {/* 依頼ステータス */}
               <span className="ml-4 px-3 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-600">
-                Coming Soon
+                {profileUser.status === 'ob' ? 'OB' : profileUser.status === 'og' ? 'OG' : '在学中'}
               </span>
             </h1>
             
@@ -324,72 +331,6 @@ const UserProfilePage: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* 依頼セクション - Coming Soon */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">依頼について</h2>
-          <div className="px-6 py-3 bg-gray-100 text-gray-500 rounded-lg font-medium text-lg">
-            Coming Soon
-          </div>
-        </div>
-
-        {/* Coming Soon メッセージ */}
-        <div className="text-center py-12">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Send className="h-8 w-8 text-gray-400" />
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">依頼機能は準備中です</h3>
-          <p className="text-gray-600 mb-4">
-            クリエイターへの依頼機能は現在開発中です。<br />
-            近日中にリリース予定ですので、お楽しみに！
-          </p>
-        </div>
-
-        {/* 元のデザインをコメントアウトで保持 */}
-        {/* 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="font-medium text-gray-900 mb-2">ジャンル:</h3>
-            <p className="text-gray-700">{profileUser.requestInfo.genre}</p>
-          </div>
-          
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="font-medium text-gray-900 mb-2">おまかせ金額:</h3>
-            <p className="text-gray-700 font-semibold text-lg text-green-600">
-              {profileUser.requestInfo.basePrice}
-            </p>
-          </div>
-          
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="font-medium text-gray-900 mb-2">返答締め切り日数:</h3>
-            <p className="text-gray-700">{profileUser.requestInfo.responseDeadline}</p>
-          </div>
-          
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="font-medium text-gray-900 mb-2">納品締め切り日数:</h3>
-            <p className="text-gray-700">{profileUser.requestInfo.deliveryDeadline}</p>
-          </div>
-          
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="font-medium text-gray-900 mb-2">総作品数:</h3>
-            <p className="text-gray-700">{profileUser.requestInfo.totalWorks}件</p>
-          </div>
-          
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="font-medium text-gray-900 mb-2">締め切り厳守率:</h3>
-            <div className="flex items-center">
-              <p className="text-gray-700 font-semibold">{profileUser.requestInfo.onTimeRate}%</p>
-              {profileUser.requestInfo.onTimeRate >= 95 ? (
-                <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
-              ) : (
-                <XCircle className="h-5 w-5 text-red-500 ml-2" />
-              )}
-            </div>
-          </div>
-        </div>
-        */}
       </div>
 
       {/* 作品セクション */}
@@ -476,6 +417,28 @@ const UserProfilePage: React.FC = () => {
             </nav>
           </div>
         )}
+      </div>
+
+      {/* 依頼セクション - Coming Soon */}
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">依頼について</h2>
+          <div className="px-6 py-3 bg-gray-100 text-gray-500 rounded-lg font-medium text-lg">
+            Coming Soon
+          </div>
+        </div>
+
+        {/* Coming Soon メッセージ */}
+        <div className="text-center py-12">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Send className="h-8 w-8 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">依頼機能は準備中です</h3>
+          <p className="text-gray-600 mb-4">
+            クリエイターへの依頼機能は現在開発中です。<br />
+            近日中にリリース予定ですので、お楽しみに！
+          </p>
+        </div>
       </div>
     </div>
 

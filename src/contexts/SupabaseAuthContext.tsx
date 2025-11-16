@@ -10,6 +10,7 @@ interface UserProfile {
   university: string;
   status: 'student' | 'ob' | 'og';
   avatar_url?: string;
+  cover_image_url?: string;
   bio?: string;
   is_creator: boolean;
   created_at: string;

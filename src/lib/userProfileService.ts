@@ -93,6 +93,7 @@ export class UserProfileService {
             university,
             status,
             avatar_url,
+            cover_image_url,
             bio,
             is_creator,
             created_at

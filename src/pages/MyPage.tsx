@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Heart, Upload, Edit } from 'lucide-react';
+import { User, Heart, Upload, Edit, MapPin, Calendar } from 'lucide-react';
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 import WorkCard from '../components/WorkCard';
 import ProfileEditModal from '../components/ProfileEditModal';
@@ -24,8 +24,15 @@ const MyPage: React.FC = () => {
   const [stats, setStats] = useState({
     worksCount: 0,
     followersCount: 0,
-    followingCount: 0
+    followingCount: 0,
+    totalLikes: 0,
+    totalViews: 0
   });
+  
+  // ページネーション状態
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const ITEMS_PER_PAGE = 12;
   
   // ローディング状態
   const [loading, setLoading] = useState({
@@ -42,11 +49,20 @@ const MyPage: React.FC = () => {
     
     setLoading(prev => ({ ...prev, works: true }));
     try {
-      const { posts, error } = await MyPageService.getUserPosts(user.id);
+      const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+      const { posts, error } = await MyPageService.getUserPosts(user.id, ITEMS_PER_PAGE, offset);
       if (error) {
         console.error('ユーザー作品取得エラー:', error);
       } else {
         setMyWorks(posts);
+        
+        // 総作品数を取得してページ数を計算
+        const { count: totalCount } = await MyPageService.getUserPostCount(user.id);
+        if (totalCount) {
+          setTotalPages(Math.ceil(totalCount / ITEMS_PER_PAGE));
+        } else {
+          setTotalPages(1);
+        }
       }
     } catch (error) {
       console.error('ユーザー作品取得中にエラーが発生:', error);
@@ -188,17 +204,8 @@ const MyPage: React.FC = () => {
     
     setLoading(prev => ({ ...prev, stats: true }));
     try {
-      const [worksResult, followersResult, followingResult] = await Promise.all([
-        MyPageService.getUserPostCount(user.id),
-        MyPageService.getFollowerCount(user.id),
-        MyPageService.getFollowingCount(user.id)
-      ]);
-
-      setStats({
-        worksCount: worksResult.count,
-        followersCount: followersResult.count,
-        followingCount: followingResult.count
-      });
+      const statsData = await MyPageService.getUserStats(user.id);
+      setStats(statsData);
     } catch (error) {
       console.error('統計データ取得中にエラーが発生:', error);
     } finally {
@@ -222,7 +229,7 @@ const MyPage: React.FC = () => {
     if (user) {
       switch (activeTab) {
         case 'works':
-          if (myWorks.length === 0) fetchUserWorks();
+          fetchUserWorks();
           break;
         case 'likes':
           if (likedWorks.length === 0) fetchLikedWorks();
@@ -235,7 +242,38 @@ const MyPage: React.FC = () => {
           break;
       }
     }
-  }, [activeTab, user]);
+  }, [activeTab, user, currentPage]);
+  
+  // ページが変更されたときに作品を再取得
+  useEffect(() => {
+    if (user && activeTab === 'works') {
+      fetchUserWorks();
+    }
+  }, [currentPage]);
+  
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  
+  // ページネーション用のページ番号配列を生成
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxPagesToShow = 5;
+
+    let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+    let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+    if (endPage - startPage < maxPagesToShow - 1) {
+      startPage = Math.max(1, endPage - maxPagesToShow + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  };
 
   if (!user) {
     return (
@@ -252,54 +290,46 @@ const MyPage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* プロフィールヘッダー */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-        <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
-          <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-            {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt={profile.display_name} className="w-24 h-24 rounded-full object-cover" />
-            ) : (
-              <User className="h-12 w-12 text-white" />
-            )}
-          </div>
-          
-          <div className="flex-1">
-            <div className="flex items-center space-x-4 mb-2">
-              <h1 className="text-2xl font-bold text-gray-900">{profile?.display_name}</h1>
-              <button 
-                onClick={() => setIsProfileEditOpen(true)}
-                className="flex items-center px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-              >
-                <Edit className="h-4 w-4 mr-1" />
-                編集
-              </button>
-            </div>
-            <p className="text-gray-600 mb-4">
-              {profile?.university} {profile?.status === 'ob' ? 'OB' : profile?.status === 'og' ? 'OG' : '在学中'}
-            </p>
-            
-            <div className="flex items-center space-x-6 text-sm text-gray-600">
-              <div>
-                <span className="font-semibold text-gray-900">
-                  {loading.stats ? '...' : stats.worksCount}
-                </span>
-                <span className="ml-1">作品</span>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-900">
-                  {loading.stats ? '...' : stats.followersCount}
-                </span>
-                <span className="ml-1">フォロワー</span>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-900">
-                  {loading.stats ? '...' : stats.followingCount}
-                </span>
-                <span className="ml-1">フォロー中</span>
-              </div>
+      <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-8">
+        {/* カバー画像エリア */}
+        <div className="h-48 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 relative">
+          {profile?.cover_image_url && (
+            <img 
+              src={profile.cover_image_url} 
+              alt="カバー画像" 
+              className="w-full h-full object-cover" 
+            />
+          )}
+        </div>
+        
+        {/* プロフィール情報 */}
+        <div className="relative px-6 pb-6">
+          {/* アバター */}
+          <div className="absolute -top-16 left-6">
+            <div className="w-32 h-32 rounded-full border-4 border-white overflow-hidden bg-white">
+              {profile?.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt={profile.display_name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                  <User className="h-16 w-16 text-white" />
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="flex space-x-3">
+          {/* 編集・投稿ボタン */}
+          <div className="flex justify-end pt-4 space-x-3">
+            <button 
+              onClick={() => setIsProfileEditOpen(true)}
+              className="flex items-center px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              編集
+            </button>
             <Link
               to="/upload"
               className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -307,6 +337,65 @@ const MyPage: React.FC = () => {
               <Upload className="h-4 w-4 mr-2" />
               作品を投稿
             </Link>
+          </div>
+
+          {/* ユーザー情報 */}
+          <div className="mt-4 ml-40">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              {profile?.display_name}
+              <span className="ml-4 px-3 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-600">
+                {profile?.status === 'ob' ? 'OB' : profile?.status === 'og' ? 'OG' : '在学中'}
+              </span>
+            </h1>
+            
+            <div className="flex items-center space-x-4 text-gray-600 mb-4">
+              <div className="flex items-center">
+                <MapPin className="h-4 w-4 mr-1" />
+                <span>{profile?.university}</span>
+              </div>
+              <div className="flex items-center">
+                <Calendar className="h-4 w-4 mr-1" />
+                <span>{profile?.created_at ? new Date(profile.created_at).toLocaleDateString('ja-JP') + ' から利用' : ''}</span>
+              </div>
+            </div>
+
+            {profile?.bio && (
+              <p className="text-gray-700 mb-6 max-w-2xl">{profile.bio}</p>
+            )}
+
+            {/* 統計情報 */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-900">
+                  {loading.stats ? '...' : stats.worksCount}
+                </div>
+                <div className="text-sm text-gray-600">作品</div>
+              </div>
+              <div className="text-center cursor-pointer" onClick={() => setActiveTab('followers')}>
+                <div className="text-2xl font-bold text-gray-900">
+                  {loading.stats ? '...' : stats.followersCount}
+                </div>
+                <div className="text-sm text-gray-600">フォロワー</div>
+              </div>
+              <div className="text-center cursor-pointer" onClick={() => setActiveTab('following')}>
+                <div className="text-2xl font-bold text-gray-900">
+                  {loading.stats ? '...' : stats.followingCount}
+                </div>
+                <div className="text-sm text-gray-600">フォロー中</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-900">
+                  {loading.stats ? '...' : stats.totalLikes.toLocaleString()}
+                </div>
+                <div className="text-sm text-gray-600">総いいね数</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-900">
+                  {loading.stats ? '...' : stats.totalViews.toLocaleString()}
+                </div>
+                <div className="text-sm text-gray-600">総閲覧数</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -361,7 +450,11 @@ const MyPage: React.FC = () => {
       {/* コンテンツ */}
       <div>
         {activeTab === 'works' && (
-          <div>
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">投稿作品</h2>
+            </div>
+
             {loading.works ? (
               <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {Array.from({ length: 4 }).map((_, index) => (
@@ -377,11 +470,75 @@ const MyPage: React.FC = () => {
                 ))}
               </div>
             ) : (
-          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {myWorks.map((work) => (
-                  <WorkCard key={work.id} work={PostsService.formatPostForWorkCard(work)} />
-            ))}
-              </div>
+              <>
+                <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {myWorks.map((work) => (
+                    <WorkCard key={work.id} work={PostsService.formatPostForWorkCard(work)} />
+                  ))}
+                </div>
+
+                {/* 空の状態 */}
+                {!loading.works && myWorks.length === 0 && (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Upload className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">まだ作品を投稿していません</h3>
+                    <p className="text-gray-600 mb-4">最初の作品を投稿してみましょう</p>
+                    <Link
+                      to="/upload"
+                      className="inline-flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      作品を投稿
+                    </Link>
+                  </div>
+                )}
+
+                {/* ページネーション */}
+                {!loading.works && myWorks.length > 0 && totalPages > 1 && (
+                  <div className="mt-8 flex justify-center">
+                    <nav className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className={`px-3 py-2 rounded-md transition-colors ${
+                          currentPage === 1
+                            ? 'text-gray-400 cursor-not-allowed'
+                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        前へ
+                      </button>
+
+                      {getPageNumbers().map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          className={`px-3 py-2 rounded-md transition-colors ${
+                            page === currentPage
+                              ? 'bg-blue-600 text-white'
+                              : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+
+                      <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className={`px-3 py-2 rounded-md transition-colors ${
+                          currentPage === totalPages
+                            ? 'text-gray-400 cursor-not-allowed'
+                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        次へ
+                      </button>
+                    </nav>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
@@ -557,39 +714,27 @@ const MyPage: React.FC = () => {
         )}
       </div>
 
-      {/* 空の状態 */}
-      {!loading.works && !loading.likes && !loading.following && !loading.followers &&
-       ((activeTab === 'works' && myWorks.length === 0) ||
-        (activeTab === 'likes' && likedWorks.length === 0) ||
+      {/* 空の状態（works以外） */}
+      {!loading.likes && !loading.following && !loading.followers &&
+       ((activeTab === 'likes' && likedWorks.length === 0) ||
         (activeTab === 'following' && followingUsers.length === 0) ||
         (activeTab === 'followers' && followerUsers.length === 0)) && (
         <div className="text-center py-12">
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            {activeTab === 'works' && <Upload className="h-8 w-8 text-gray-400" />}
             {activeTab === 'likes' && <Heart className="h-8 w-8 text-gray-400" />}
             {activeTab === 'following' && <User className="h-8 w-8 text-gray-400" />}
             {activeTab === 'followers' && <User className="h-8 w-8 text-gray-400" />}
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {activeTab === 'works' && 'まだ作品を投稿していません'}
             {activeTab === 'likes' && 'まだいいねした作品がありません'}
             {activeTab === 'following' && 'まだ誰もフォローしていません'}
             {activeTab === 'followers' && 'まだフォロワーがいません'}
           </h3>
           <p className="text-gray-600 mb-4">
-            {activeTab === 'works' && '最初の作品を投稿してみましょう'}
             {activeTab === 'likes' && '気に入った作品にいいねしてみましょう'}
             {activeTab === 'following' && '気になるクリエイターをフォローしてみましょう'}
             {activeTab === 'followers' && 'フォロワーが増えるとここに表示されます'}
           </p>
-          {activeTab === 'works' && (
-            <Link
-              to="/upload"
-              className="inline-flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              作品を投稿
-            </Link>
-          )}
         </div>
       )}
 

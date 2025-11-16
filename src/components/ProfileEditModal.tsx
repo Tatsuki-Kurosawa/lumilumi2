@@ -16,14 +16,18 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
     university: '',
     status: 'student' as 'student' | 'ob' | 'og',
     bio: '',
-    avatar_url: ''
+    avatar_url: '',
+    cover_image_url: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string>('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string>('');
+  const [coverFile, setCoverFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const coverInputRef = useRef<HTMLInputElement | null>(null);
 
   const AVATAR_BUCKET = 'avatars';
   const MAX_FILE_SIZE_MB = 5;
@@ -31,6 +35,15 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
 
   const updateAvatarPreview = (newPreview: string) => {
     setAvatarPreview(prev => {
+      if (prev && prev.startsWith('blob:')) {
+        URL.revokeObjectURL(prev);
+      }
+      return newPreview;
+    });
+  };
+
+  const updateCoverPreview = (newPreview: string) => {
+    setCoverPreview(prev => {
       if (prev && prev.startsWith('blob:')) {
         URL.revokeObjectURL(prev);
       }
@@ -47,29 +60,37 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
         university: profile.university || '',
         status: profile.status || 'student',
         bio: profile.bio || '',
-        avatar_url: profile.avatar_url || ''
+        avatar_url: profile.avatar_url || '',
+        cover_image_url: profile.cover_image_url || ''
       });
       updateAvatarPreview(profile.avatar_url || '');
+      updateCoverPreview(profile.cover_image_url || '');
       setAvatarFile(null);
+      setCoverFile(null);
     }
   }, [profile]);
 
   useEffect(() => {
     if (!isOpen) {
       setAvatarFile(null);
+      setCoverFile(null);
       updateAvatarPreview(profile?.avatar_url || '');
+      updateCoverPreview(profile?.cover_image_url || '');
       setError(null);
       setSuccess(false);
     }
-  }, [isOpen, profile?.avatar_url]);
+  }, [isOpen, profile?.avatar_url, profile?.cover_image_url]);
 
   useEffect(() => {
     return () => {
       if (avatarPreview && avatarPreview.startsWith('blob:')) {
         URL.revokeObjectURL(avatarPreview);
       }
+      if (coverPreview && coverPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(coverPreview);
+      }
     };
-  }, [avatarPreview]);
+  }, [avatarPreview, coverPreview]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -101,6 +122,31 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
 
     setAvatarFile(file);
     updateAvatarPreview(URL.createObjectURL(file));
+    event.target.value = '';
+  };
+
+  const handleCoverButtonClick = () => {
+    coverInputRef.current?.click();
+  };
+
+  const handleCoverChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setError(null);
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      setError('対応している画像形式は JPEG / PNG / WEBP です');
+      return;
+    }
+
+    const fileSizeMb = file.size / (1024 * 1024);
+    if (fileSizeMb > MAX_FILE_SIZE_MB) {
+      setError(`ファイルサイズは ${MAX_FILE_SIZE_MB}MB 以下にしてください`);
+      return;
+    }
+
+    setCoverFile(file);
+    updateCoverPreview(URL.createObjectURL(file));
     event.target.value = '';
   };
 
@@ -137,17 +183,54 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
     return data.publicUrl;
   };
 
+  const uploadCoverIfNeeded = async (): Promise<string | null> => {
+    if (!coverFile) {
+      return formData.cover_image_url || null;
+    }
+
+    if (!profile?.id) {
+      throw new Error('プロフィール情報が取得できませんでした。再度ログインしてください');
+    }
+
+    const fileExt = coverFile.name.split('.').pop() || 'png';
+    const fileName = `cover-${Date.now()}.${fileExt}`;
+    const filePath = `${profile.id}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(AVATAR_BUCKET)
+      .upload(filePath, coverFile, {
+        cacheControl: '3600',
+        upsert: true,
+        contentType: coverFile.type
+      });
+
+    if (uploadError) {
+      throw new Error(uploadError.message);
+    }
+
+    const { data } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(filePath);
+    if (!data?.publicUrl) {
+      throw new Error('アップロードした画像の公開URLを取得できませんでした');
+    }
+
+    return data.publicUrl;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      const uploadedAvatarUrl = await uploadAvatarIfNeeded();
+      const [uploadedAvatarUrl, uploadedCoverUrl] = await Promise.all([
+        uploadAvatarIfNeeded(),
+        uploadCoverIfNeeded()
+      ]);
 
       const updates = {
         ...formData,
-        avatar_url: uploadedAvatarUrl || ''
+        avatar_url: uploadedAvatarUrl || '',
+        cover_image_url: uploadedCoverUrl || ''
       };
 
       const { error } = await updateProfile(updates);
@@ -159,7 +242,12 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
           setFormData(prev => ({ ...prev, avatar_url: uploadedAvatarUrl }));
           updateAvatarPreview(uploadedAvatarUrl);
         }
+        if (uploadedCoverUrl) {
+          setFormData(prev => ({ ...prev, cover_image_url: uploadedCoverUrl }));
+          updateCoverPreview(uploadedCoverUrl);
+        }
         setAvatarFile(null);
+        setCoverFile(null);
         setSuccess(true);
         setTimeout(() => {
           setSuccess(false);
@@ -195,6 +283,38 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
 
         {/* フォーム */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* ヘッダー画像 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              ヘッダー画像
+            </label>
+            <div className="relative w-full h-32 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-lg overflow-hidden mb-2">
+              {coverPreview ? (
+                <img 
+                  src={coverPreview} 
+                  alt="ヘッダー画像" 
+                  className="w-full h-full object-cover" 
+                />
+              ) : null}
+            </div>
+            <button
+              type="button"
+              className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              onClick={handleCoverButtonClick}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              ヘッダー画像を変更
+            </button>
+            <input
+              ref={coverInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="hidden"
+              onChange={handleCoverChange}
+            />
+            <p className="text-xs text-gray-500 mt-1">JPEG / PNG / WEBP ・ {MAX_FILE_SIZE_MB}MB以内</p>
+          </div>
+
           {/* アバター */}
           <div className="flex flex-col items-center space-y-4">
             <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">

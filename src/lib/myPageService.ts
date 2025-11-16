@@ -19,6 +19,7 @@ export class MyPageService {
             university,
             status,
             avatar_url,
+            cover_image_url,
             bio,
             is_creator,
             created_at
@@ -177,6 +178,7 @@ export class MyPageService {
             university,
             status,
             avatar_url,
+            cover_image_url,
             bio,
             is_creator,
             created_at
@@ -241,6 +243,7 @@ export class MyPageService {
             university,
             status,
             avatar_url,
+            cover_image_url,
             bio,
             is_creator,
             created_at
@@ -355,6 +358,64 @@ export class MyPageService {
       console.error('作品数取得中にエラーが発生:', error);
       return {
         count: 0,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // ユーザーの統計情報を取得（総いいね数・総閲覧数含む）
+  static async getUserStats(userId: string): Promise<{ 
+    worksCount: number; 
+    followersCount: number; 
+    followingCount: number;
+    totalLikes: number;
+    totalViews: number;
+    error?: string 
+  }> {
+    try {
+      const [worksResult, followersResult, followingResult, profileTotals] = await Promise.all([
+        supabase
+          .from('posts')
+          .select('*', { count: 'exact', head: true })
+          .eq('author_id', userId),
+        supabase
+          .from('follows')
+          .select('*', { count: 'exact', head: true })
+          .eq('following_id', userId),
+        supabase
+          .from('follows')
+          .select('*', { count: 'exact', head: true })
+          .eq('follower_id', userId),
+        supabase
+          .from('profiles')
+          .select('total_like_counts, total_view_counts')
+          .eq('id', userId)
+          .maybeSingle()
+      ]);
+
+      const totalLikes = profileTotals?.data?.total_like_counts !== undefined && profileTotals?.data?.total_like_counts !== null
+        ? Number(profileTotals.data.total_like_counts)
+        : 0;
+
+      const totalViews = profileTotals?.data?.total_view_counts !== undefined && profileTotals?.data?.total_view_counts !== null
+        ? Number(profileTotals.data.total_view_counts)
+        : 0;
+
+      return {
+        worksCount: worksResult.count || 0,
+        followersCount: followersResult.count || 0,
+        followingCount: followingResult.count || 0,
+        totalLikes,
+        totalViews
+      };
+    } catch (error) {
+      console.error('ユーザー統計取得中にエラーが発生:', error);
+      return {
+        worksCount: 0,
+        followersCount: 0,
+        followingCount: 0,
+        totalLikes: 0,
+        totalViews: 0,
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
