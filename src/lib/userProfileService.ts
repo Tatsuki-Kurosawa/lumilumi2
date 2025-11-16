@@ -2,7 +2,6 @@ import { supabase } from './supabaseClient';
 import { PostWithDetails, User } from '../types';
 import { PostsService } from './postsService';
 import { PageViewService } from './pageViewService';
-import { NotificationService } from './notificationService';
 
 // UserProfilePage用のサービス関数
 export class UserProfileService {
@@ -165,6 +164,36 @@ export class UserProfileService {
     error?: string 
   }> {
     try {
+      // まず対象ユーザーの投稿IDを取得
+      const { data: userPosts, error: postsError } = await supabase
+        .from('posts')
+        .select('id')
+        .eq('author_id', userId);
+
+      if (postsError) {
+        console.error('投稿取得エラー:', postsError);
+      }
+
+      const postIds = (userPosts || []).map((post: { id: string }) => post.id);
+
+      // 投稿IDが存在する場合、likesテーブルからcountカラムの合計を取得
+      let totalLikes = 0;
+      if (postIds.length > 0) {
+        const { data: likesData, error: likesError } = await supabase
+          .from('likes')
+          .select('count')
+          .in('post_id', postIds);
+
+        if (likesError) {
+          console.error('いいね数取得エラー:', likesError);
+        } else {
+          // countカラムの合計を計算
+          totalLikes = (likesData || []).reduce((sum: number, like: { count: number | null }) => {
+            return sum + (Number(like.count) || 0);
+          }, 0);
+        }
+      }
+
       const [worksResult, followersResult, followingResult, profileTotals] = await Promise.all([
         supabase
           .from('posts')
@@ -180,19 +209,15 @@ export class UserProfileService {
           .eq('follower_id', userId),
         supabase
           .from('profiles')
-          .select('total_like_counts, total_view_counts')
+          .select('total_view_counts')
           .eq('id', userId)
           .maybeSingle()
       ]);
- 
-      const totalLikes = profileTotals?.data?.total_like_counts !== undefined && profileTotals?.data?.total_like_counts !== null
-        ? Number(profileTotals.data.total_like_counts)
-        : 0;
 
       const totalViews = profileTotals?.data?.total_view_counts !== undefined && profileTotals?.data?.total_view_counts !== null
         ? Number(profileTotals.data.total_view_counts)
         : 0;
- 
+
       return {
         worksCount: worksResult.count || 0,
         followersCount: followersResult.count || 0,
@@ -276,13 +301,6 @@ export class UserProfileService {
         console.error('フォローエラー:', error);
         return { success: false, error: error.message };
       }
-
-      // フォローされたユーザーに通知を送る
-      await NotificationService.createNotification(
-        targetUser.id,
-        'follow',
-        followerId
-      );
 
       return { success: true };
     } catch (error) {
