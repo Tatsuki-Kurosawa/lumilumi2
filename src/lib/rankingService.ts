@@ -141,5 +141,124 @@ export class RankingService {
   static async getIllustrationRanking(limit: number = 20): Promise<{ items: RankingItem[]; error?: string }> {
     return this.getRankingByType('illustration', limit);
   }
+
+  // 指定されたタイプ（manga/illustration）で、特定のタグが付いている作品数を取得
+  static async getTagPostCount(
+    tagName: string,
+    type: 'manga' | 'illustration'
+  ): Promise<{ count: number; error?: string }> {
+    try {
+      const { count, error } = await supabase
+        .from('post_tags')
+        .select('*, post:posts!inner(type)', { count: 'exact', head: true })
+        .eq('post.type', type)
+        .eq('tag:tags.name', tagName);
+
+      if (error) {
+        console.error('タグ作品数取得エラー:', error);
+        // 別の方法で取得を試みる
+        const { data, error: dataError } = await supabase
+          .from('post_tags')
+          .select(`
+            post:posts!inner(type),
+            tag:tags(name)
+          `)
+          .eq('post.type', type);
+
+        if (dataError) {
+          return { count: 0, error: dataError.message };
+        }
+
+        // データからタグ名でフィルタリングしてカウント
+        const filtered = (data || []).filter((item: any) => item.tag?.name === tagName);
+        return { count: filtered.length };
+      }
+
+      return { count: count || 0 };
+    } catch (error) {
+      console.error('タグ作品数取得中にエラーが発生:', error);
+      return {
+        count: 0,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // 複数のタグの作品数を一括取得
+  static async getTagPostCounts(
+    tagNames: string[],
+    type: 'manga' | 'illustration'
+  ): Promise<Map<string, number>> {
+    const tagCountsMap = new Map<string, number>();
+
+    if (tagNames.length === 0) {
+      return tagCountsMap;
+    }
+
+    try {
+      // WorksPage.tsxと同じアプローチを使用
+      const { data, error } = await supabase
+        .from('post_tags')
+        .select(`
+          post_id,
+          tag:tags(name),
+          post:posts!inner(id, type)
+        `)
+        .eq('post.type', type);
+
+      if (error) {
+        console.error('タグ作品数一括取得エラー:', error);
+        tagNames.forEach(name => tagCountsMap.set(name, 0));
+        return tagCountsMap;
+      }
+
+      // タグ名の出現回数をカウント（ユニークな投稿をカウントするため、投稿IDでグループ化）
+      const postIdsByTag = new Map<string, Set<number>>();
+      tagNames.forEach(name => postIdsByTag.set(name, new Set()));
+
+      // まず投稿IDを取得するためのマップを作成
+      const postIdMap = new Map<number, { tagName: string }[]>();
+      
+      (data || []).forEach((item: any) => {
+        const tagName = item.tag?.name;
+        const postId = item.post_id || item.post?.id;
+        
+        if (tagName && postId && tagNames.includes(tagName)) {
+          if (!postIdMap.has(postId)) {
+            postIdMap.set(postId, []);
+          }
+          postIdMap.get(postId)?.push({ tagName });
+        }
+      });
+
+      // 各投稿について、タグごとにカウント（同じ投稿に同じタグが複数回付いている場合も1回としてカウント）
+      postIdMap.forEach((tags, postId) => {
+        const uniqueTagNames = new Set(tags.map(t => t.tagName));
+        uniqueTagNames.forEach(tagName => {
+          if (postIdsByTag.has(tagName)) {
+            postIdsByTag.get(tagName)?.add(postId);
+          }
+        });
+      });
+
+      // Mapに変換（ユニークな投稿IDの数がそのタグの作品数）
+      postIdsByTag.forEach((postIds, tagName) => {
+        tagCountsMap.set(tagName, postIds.size);
+      });
+
+      // データが存在しないタグは0を設定
+      tagNames.forEach(name => {
+        if (!tagCountsMap.has(name)) {
+          tagCountsMap.set(name, 0);
+        }
+      });
+
+      return tagCountsMap;
+    } catch (error) {
+      console.error('タグ作品数一括取得中にエラーが発生:', error);
+      tagNames.forEach(name => tagCountsMap.set(name, 0));
+      return tagCountsMap;
+    }
+  }
 }
 

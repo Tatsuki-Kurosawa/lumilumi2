@@ -9,6 +9,14 @@ const MangaRankingPage: React.FC = () => {
   const [weeklyRanking, setWeeklyRanking] = useState<RankingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [popularTags, setPopularTags] = useState<Array<{ name: string; count: number }>>([
+    { name: '学園', count: 0 },
+    { name: 'ファンタジー', count: 0 },
+    { name: '4コマ', count: 0 },
+    { name: 'SF', count: 0 },
+    { name: '日常', count: 0 },
+    { name: 'ホラー', count: 0 },
+  ]);
 
   // ランキングデータを取得
   useEffect(() => {
@@ -27,14 +35,22 @@ const MangaRankingPage: React.FC = () => {
     fetchRanking();
   }, []);
 
-  const popularTags = [
-    { name: '学園', count: 45 },
-    { name: 'ファンタジー', count: 38 },
-    { name: '4コマ', count: 32 },
-    { name: 'SF', count: 28 },
-    { name: '日常', count: 25 },
-    { name: 'ホラー', count: 18 },
-  ];
+  // タグの作品数を取得
+  useEffect(() => {
+    const fetchTagCounts = async () => {
+      const tagNames = ['学園', 'ファンタジー', '4コマ', 'SF', '日常', 'ホラー'];
+      const tagCountsMap = await RankingService.getTagPostCounts(tagNames, 'manga');
+      
+      setPopularTags(prevTags => 
+        prevTags.map(tag => ({
+          ...tag,
+          count: tagCountsMap.get(tag.name) || 0
+        }))
+      );
+    };
+
+    fetchTagCounts();
+  }, []);
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -89,7 +105,7 @@ const MangaRankingPage: React.FC = () => {
           }`}
         >
           <Calendar className="h-4 w-4 inline mr-2" />
-          週間ランキング
+          ランキング
         </button>
         <button
           onClick={() => setActiveTab('tags')}
@@ -104,7 +120,7 @@ const MangaRankingPage: React.FC = () => {
         </button>
       </div>
 
-      {/* 週間ランキング */}
+      {/* ランキング */}
       {activeTab === 'weekly' && (
         <div className="space-y-6">
           {loading ? (
