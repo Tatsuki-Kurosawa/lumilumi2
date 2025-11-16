@@ -437,4 +437,69 @@ export class PostsService {
       };
     }
   }
+
+  // 統計情報を取得
+  static async getStatistics(): Promise<{
+    userCount: number;
+    postCount: number;
+    totalLikes: number;
+    monthlyViews: number;
+    error?: string;
+  }> {
+    try {
+      // 並列で全ての統計情報を取得
+      const [usersResult, postsResult, likesResult, viewsResult] = await Promise.all([
+        // 登録ユーザー数
+        supabase
+          .from('profiles')
+          .select('id', { count: 'exact', head: true }),
+
+        // 投稿作品数
+        supabase
+          .from('posts')
+          .select('id', { count: 'exact', head: true }),
+
+        // 総いいね数
+        supabase
+          .from('likes')
+          .select('id', { count: 'exact', head: true }),
+
+        // 月間PV（過去30日間）
+        supabase
+          .from('page_views')
+          .select('id', { count: 'exact', head: true })
+          .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+      ]);
+
+      // エラーチェック
+      if (usersResult.error || postsResult.error || likesResult.error || viewsResult.error) {
+        const errorMsg = usersResult.error?.message || postsResult.error?.message ||
+                        likesResult.error?.message || viewsResult.error?.message;
+        console.error('統計情報取得エラー:', errorMsg);
+        return {
+          userCount: 0,
+          postCount: 0,
+          totalLikes: 0,
+          monthlyViews: 0,
+          error: errorMsg
+        };
+      }
+
+      return {
+        userCount: usersResult.count || 0,
+        postCount: postsResult.count || 0,
+        totalLikes: likesResult.count || 0,
+        monthlyViews: viewsResult.count || 0
+      };
+    } catch (error) {
+      console.error('統計情報取得中にエラーが発生:', error);
+      return {
+        userCount: 0,
+        postCount: 0,
+        totalLikes: 0,
+        monthlyViews: 0,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
 }

@@ -16,6 +16,12 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
   const { user } = useSupabaseAuth();
   const [featuredWorks, setFeaturedWorks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    userCount: 0,
+    postCount: 0,
+    totalLikes: 0,
+    monthlyViews: 0
+  });
 
   // 投稿データを取得
   useEffect(() => {
@@ -53,11 +59,42 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
     fetchFeaturedWorks();
   }, []);
 
-  const stats = [
-    { icon: Users, label: '登録ユーザー', value: '12,450+' },
-    { icon: Palette, label: '投稿作品', value: '45,230+' },
-    { icon: Star, label: '総いいね数', value: '892,340+' },
-    { icon: TrendingUp, label: '月間PV', value: '2.1M+' },
+  // 統計情報を取得
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const statistics = await PostsService.getStatistics();
+        if (!statistics.error) {
+          setStats({
+            userCount: statistics.userCount,
+            postCount: statistics.postCount,
+            totalLikes: statistics.totalLikes,
+            monthlyViews: statistics.monthlyViews
+          });
+        }
+      } catch (error) {
+        console.error('統計情報取得中にエラーが発生:', error);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  // 数値をフォーマットする関数
+  const formatNumber = (num: number): string => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toString();
+  };
+
+  const statsData = [
+    { icon: Users, label: '登録ユーザー', value: formatNumber(stats.userCount) + '+' },
+    { icon: Palette, label: '投稿作品', value: formatNumber(stats.postCount) + '+' },
+    { icon: Star, label: '総いいね数', value: formatNumber(stats.totalLikes) + '+' },
+    { icon: TrendingUp, label: '月間PV', value: formatNumber(stats.monthlyViews) + '+' },
   ];
 
   const handleUploadClick = () => {
@@ -135,7 +172,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
+            {statsData.map((stat, index) => (
               <div key={index} className="text-center">
                 <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mb-4">
                   <stat.icon className="h-6 w-6 text-blue-600" />
