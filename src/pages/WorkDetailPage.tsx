@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Eye, Share2, Flag, User, Calendar, Tag } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { Eye, Share2, Flag, User, Calendar, Tag, ArrowLeft } from 'lucide-react';
 
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 import { PostsService } from '../lib/postsService';
@@ -11,6 +11,7 @@ import LikeButton from '../components/LikeButton';
 
 const WorkDetailPage: React.FC = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useSupabaseAuth();
   const [work, setWork] = useState<PostWithDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -137,6 +138,15 @@ const WorkDetailPage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* 戻るボタン */}
+      <button
+        onClick={() => navigate(-1)}
+        className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+      >
+        <ArrowLeft className="h-5 w-5" />
+        <span className="font-medium">戻る</span>
+      </button>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* メイン画像エリア */}
         <div className="lg:col-span-2">
