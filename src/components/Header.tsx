@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, User, Menu, X } from 'lucide-react';
+import { Search, User, Menu, X, PenSquare } from 'lucide-react';
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 
 interface HeaderProps {
@@ -140,6 +140,13 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
             ) : user && profile ? (
               <div className="flex items-center space-x-2">
                 <Link
+                  to="/upload"
+                  className="flex items-center space-x-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <PenSquare className="h-5 w-5" />
+                  <span className="hidden sm:inline">投稿する</span>
+                </Link>
+                <Link
                   to="/my-page"
                   className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-cyan-600 transition-colors"
                 >
@@ -157,7 +164,14 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
               <div className="flex space-x-2">
                 <button
                   onClick={onLoginClick}
-                  className="px-4 py-2 text-cyan-600 border border-cyan-600 rounded-lg hover:bg-cyan-50 transition-colors"
+                  className="flex items-center space-x-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <PenSquare className="h-5 w-5" />
+                  <span className="hidden sm:inline">投稿する</span>
+                </button>
+                <button
+                  onClick={onLoginClick}
+                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   ログイン
                 </button>
@@ -178,6 +192,27 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
         {isMenuOpen && (
           <div className="lg:hidden border-t border-gray-200 py-4">
             <div className="flex flex-col space-y-2">
+              {user && profile ? (
+                <Link
+                  to="/upload"
+                  className="flex items-center justify-center space-x-2 mx-3 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <PenSquare className="h-5 w-5" />
+                  <span>投稿する</span>
+                </Link>
+              ) : (
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onLoginClick();
+                  }}
+                  className="flex items-center justify-center space-x-2 mx-3 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <PenSquare className="h-5 w-5" />
+                  <span>投稿する</span>
+                </button>
+              )}
               <Link
                 to="/manga"
                 className="px-3 py-2 text-gray-700 hover:text-cyan-600 hover:bg-gray-50 rounded-md"
