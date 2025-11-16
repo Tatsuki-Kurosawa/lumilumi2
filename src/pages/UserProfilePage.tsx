@@ -237,10 +237,10 @@ const UserProfilePage: React.FC = () => {
         </div>
         
         {/* プロフィール情報 */}
-        <div className="relative px-6 pb-6">
+        <div className="relative px-3 sm:px-6 pb-6">
           {/* アバター */}
-          <div className="absolute -top-16 left-6">
-            <div className="w-32 h-32 rounded-full border-4 border-white overflow-hidden bg-white">
+          <div className="absolute -top-12 sm:-top-16 left-1/2 transform -translate-x-1/2 sm:left-6 sm:transform-none">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white overflow-hidden bg-white">
               {profileUser.avatar_url ? (
                 <img
                   src={profileUser.avatar_url}
@@ -257,11 +257,11 @@ const UserProfilePage: React.FC = () => {
 
           {/* フォローボタン */}
           {isAuthenticated && (
-            <div className="flex justify-end pt-4">
+            <div className="flex justify-center sm:justify-end pt-4">
               <button
                 onClick={handleFollow}
                 disabled={loading.follow}
-                className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                className={`px-4 sm:px-6 py-2 rounded-lg font-medium transition-colors text-sm sm:text-base ${
                   isFollowing
                     ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     : 'bg-blue-600 text-white hover:bg-blue-700'
@@ -273,22 +273,22 @@ const UserProfilePage: React.FC = () => {
           )}
 
           {/* ユーザー情報 */}
-          <div className="mt-4 ml-40">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <div className="mt-20 sm:mt-4 sm:ml-40">
+            <h1 className="text-xl sm:text-3xl font-bold text-gray-900 mb-2">
               {profileUser.display_name}
-              <span className="ml-4 px-3 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-600">
+              <span className="ml-2 sm:ml-4 px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium rounded-full bg-gray-100 text-gray-600">
                 {profileUser.status === 'ob' ? 'OB' : profileUser.status === 'og' ? 'OG' : '在学中'}
               </span>
             </h1>
             
-            <div className="flex items-center space-x-4 text-gray-600 mb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 text-gray-600 mb-4">
               <div className="flex items-center">
                 <MapPin className="h-4 w-4 mr-1" />
-                <span>{profileUser.university}</span>
+                <span className="text-sm sm:text-base">{profileUser.university}</span>
               </div>
               <div className="flex items-center">
                 <Calendar className="h-4 w-4 mr-1" />
-                <span>{new Date(profileUser.created_at).toLocaleDateString('ja-JP')} から利用</span>
+                <span className="text-sm sm:text-base">{new Date(profileUser.created_at).toLocaleDateString('ja-JP')} から利用</span>
               </div>
             </div>
 
@@ -297,36 +297,36 @@ const UserProfilePage: React.FC = () => {
             )}
 
             {/* 統計情報 */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 sm:gap-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">
+                <div className="text-xl sm:text-2xl font-bold text-gray-900">
                   {loading.stats ? '...' : stats.worksCount}
                 </div>
-                <div className="text-sm text-gray-600">投稿作品</div>
+                <div className="text-xs sm:text-sm text-gray-600">投稿作品</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">
+                <div className="text-xl sm:text-2xl font-bold text-gray-900">
                   {loading.stats ? '...' : stats.totalLikes.toLocaleString()}
                 </div>
-                <div className="text-sm text-gray-600">総いいね数</div>
+                <div className="text-xs sm:text-sm text-gray-600">総いいね数</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">
+                <div className="text-xl sm:text-2xl font-bold text-gray-900">
                   {loading.stats ? '...' : stats.totalViews.toLocaleString()}
                 </div>
-                <div className="text-sm text-gray-600">総閲覧数</div>
+                <div className="text-xs sm:text-sm text-gray-600">総閲覧数</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">
+                <div className="text-xl sm:text-2xl font-bold text-gray-900">
                   {loading.stats ? '...' : stats.followersCount}
                 </div>
-                <div className="text-sm text-gray-600">フォロワー</div>
+                <div className="text-xs sm:text-sm text-gray-600">フォロワー</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">
+                <div className="text-xl sm:text-2xl font-bold text-gray-900">
                   {loading.stats ? '...' : stats.followingCount}
                 </div>
-                <div className="text-sm text-gray-600">フォロー中</div>
+                <div className="text-xs sm:text-sm text-gray-600">フォロー中</div>
               </div>
             </div>
           </div>
