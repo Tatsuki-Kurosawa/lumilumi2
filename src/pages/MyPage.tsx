@@ -365,23 +365,11 @@ const MyPage: React.FC = () => {
 
             {/* 統計情報 */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-              <div className="text-center">
+              <div className="text-center cursor-pointer" onClick={() => setActiveTab('works')}>
                 <div className="text-2xl font-bold text-gray-900">
                   {loading.stats ? '...' : stats.worksCount}
                 </div>
-                <div className="text-sm text-gray-600">作品</div>
-              </div>
-              <div className="text-center cursor-pointer" onClick={() => setActiveTab('followers')}>
-                <div className="text-2xl font-bold text-gray-900">
-                  {loading.stats ? '...' : stats.followersCount}
-                </div>
-                <div className="text-sm text-gray-600">フォロワー</div>
-              </div>
-              <div className="text-center cursor-pointer" onClick={() => setActiveTab('following')}>
-                <div className="text-2xl font-bold text-gray-900">
-                  {loading.stats ? '...' : stats.followingCount}
-                </div>
-                <div className="text-sm text-gray-600">フォロー中</div>
+                <div className="text-sm text-gray-600">投稿作品</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-gray-900">
@@ -394,6 +382,18 @@ const MyPage: React.FC = () => {
                   {loading.stats ? '...' : stats.totalViews.toLocaleString()}
                 </div>
                 <div className="text-sm text-gray-600">総閲覧数</div>
+              </div>
+              <div className="text-center cursor-pointer" onClick={() => setActiveTab('followers')}>
+                <div className="text-2xl font-bold text-gray-900">
+                  {loading.stats ? '...' : stats.followersCount}
+                </div>
+                <div className="text-sm text-gray-600">フォロワー</div>
+              </div>
+              <div className="text-center cursor-pointer" onClick={() => setActiveTab('following')}>
+                <div className="text-2xl font-bold text-gray-900">
+                  {loading.stats ? '...' : stats.followingCount}
+                </div>
+                <div className="text-sm text-gray-600">フォロー中</div>
               </div>
             </div>
           </div>
@@ -414,16 +414,6 @@ const MyPage: React.FC = () => {
             投稿作品 ({loading.works ? '...' : myWorks.length})
           </button>
           <button
-            onClick={() => setActiveTab('likes')}
-            className={`px-4 py-2 rounded-md font-medium transition-colors ${
-              activeTab === 'likes'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            いいねした作品 ({loading.likes ? '...' : likedWorks.length})
-          </button>
-          <button
             onClick={() => setActiveTab('followers')}
             className={`px-4 py-2 rounded-md font-medium transition-colors ${
               activeTab === 'followers'
@@ -442,6 +432,16 @@ const MyPage: React.FC = () => {
             }`}
           >
             フォロー中 ({loading.following ? '...' : followingUsers.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('likes')}
+            className={`px-4 py-2 rounded-md font-medium transition-colors ${
+              activeTab === 'likes'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            いいねした作品 ({loading.likes ? '...' : likedWorks.length})
           </button>
         </div>
 

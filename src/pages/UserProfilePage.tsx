@@ -302,19 +302,7 @@ const UserProfilePage: React.FC = () => {
                 <div className="text-2xl font-bold text-gray-900">
                   {loading.stats ? '...' : stats.worksCount}
                 </div>
-                <div className="text-sm text-gray-600">作品</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">
-                  {loading.stats ? '...' : stats.followersCount}
-                </div>
-                <div className="text-sm text-gray-600">フォロワー</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">
-                  {loading.stats ? '...' : stats.followingCount}
-                </div>
-                <div className="text-sm text-gray-600">フォロー中</div>
+                <div className="text-sm text-gray-600">投稿作品</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-gray-900">
@@ -327,6 +315,18 @@ const UserProfilePage: React.FC = () => {
                   {loading.stats ? '...' : stats.totalViews.toLocaleString()}
                 </div>
                 <div className="text-sm text-gray-600">総閲覧数</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-900">
+                  {loading.stats ? '...' : stats.followersCount}
+                </div>
+                <div className="text-sm text-gray-600">フォロワー</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-900">
+                  {loading.stats ? '...' : stats.followingCount}
+                </div>
+                <div className="text-sm text-gray-600">フォロー中</div>
               </div>
             </div>
           </div>
