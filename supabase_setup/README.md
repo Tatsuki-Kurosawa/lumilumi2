@@ -20,8 +20,10 @@
 
 - `page_views`: PV記録テーブル
 - `post_view_counts`: PV数集計テーブル（`post_id`, `daily_views`, `weekly_views`, `monthly_views`, `total_views`, `last_updated`）
-- `likes`: いいね記録テーブル
+- `likes`: いいね記録テーブル（`count`カラムを含む）
 - `post_like_counts`: いいね数集計テーブル（`post_id`, `daily_likes`, `weekly_likes`, `monthly_likes`, `total_likes`, `last_updated`）
+- `profiles`: ユーザープロフィールテーブル（`total_like_counts`, `total_view_counts`カラムを含む）
+- `posts`: 投稿テーブル（`author_id`カラムを含む）
 
 ### 2. pg_cron拡張機能の有効化
 
@@ -63,11 +65,17 @@ SELECT aggregate_page_views();
 -- いいね数だけ集計
 SELECT aggregate_likes();
 
+-- プロフィールの総いいね数・総閲覧数だけ集計
+SELECT aggregate_profile_totals();
+
 -- 両方集計
 SELECT aggregate_views_and_likes();
 ```
 
-実行後、`post_view_counts`と`post_like_counts`テーブルを確認して、値が正しく更新されているか確認してください。
+実行後、以下のテーブルを確認して、値が正しく更新されているか確認してください：
+- `post_view_counts`: 投稿ごとのPV数集計
+- `post_like_counts`: 投稿ごとのいいね数集計（`likes`テーブルの`count`カラムの合計を使用）
+- `profiles`: ユーザーごとの総いいね数・総閲覧数（`likes`テーブルの`count`カラムの合計を使用）
 
 ## 📊 集計タイミング
 

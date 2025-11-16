@@ -130,6 +130,37 @@ END;
 $$;
 
 -- =====================================================
+-- ユーザープロフィールの総いいね数・総閲覧数を集計する関数
+-- =====================================================
+
+CREATE OR REPLACE FUNCTION aggregate_profile_totals()
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  -- profilesテーブルのtotal_like_countsとtotal_view_countsを更新
+  -- likesテーブルのcountカラムの合計を使用
+  UPDATE profiles p
+  SET 
+    total_like_counts = COALESCE((
+      SELECT SUM(l.count)
+      FROM likes l
+      INNER JOIN posts pt ON l.post_id = pt.id
+      WHERE pt.author_id = p.id
+    ), 0),
+    total_view_counts = COALESCE((
+      SELECT SUM(pvc.total_views)
+      FROM post_view_counts pvc
+      INNER JOIN posts pt ON pvc.post_id = pt.id
+      WHERE pt.author_id = p.id
+    ), 0)
+  WHERE EXISTS (
+    SELECT 1 FROM posts WHERE author_id = p.id
+  );
+END;
+$$;
+
+-- =====================================================
 -- 統合集計関数（PV数といいね数を同時に集計）
 -- =====================================================
 
@@ -143,6 +174,9 @@ BEGIN
   
   -- いいね数を集計
   PERFORM aggregate_likes();
+  
+  -- ユーザープロフィールの総いいね数・総閲覧数を集計
+  PERFORM aggregate_profile_totals();
 END;
 $$;
 
@@ -172,6 +206,9 @@ SELECT * FROM cron.job WHERE jobname = 'aggregate-views-likes-hourly';
 
 -- いいね数だけ集計
 -- SELECT aggregate_likes();
+
+-- プロフィールの総いいね数・総閲覧数だけ集計
+-- SELECT aggregate_profile_totals();
 
 -- 両方集計
 -- SELECT aggregate_views_and_likes();
