@@ -47,7 +47,7 @@ export class LikeService {
       // 既存のいいねをチェック
       const { data: existingLike, error: checkError } = await supabase
         .from('likes')
-        .select('id')
+        .select('count')
         .eq('post_id', postId)
         .eq('user_id', userId)
         .single();
@@ -87,7 +87,7 @@ export class LikeService {
       // 既存のいいねをチェック
       const { data: existingLike, error: checkError } = await supabase
         .from('likes')
-        .select('id')
+        .select('count')
         .eq('post_id', postId)
         .eq('user_id', userId)
         .single();
