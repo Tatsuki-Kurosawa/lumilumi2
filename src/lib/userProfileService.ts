@@ -2,6 +2,7 @@ import { supabase } from './supabaseClient';
 import { PostWithDetails, User } from '../types';
 import { PostsService } from './postsService';
 import { PageViewService } from './pageViewService';
+import { NotificationService } from './notificationService';
 
 // UserProfilePage用のサービス関数
 export class UserProfileService {
@@ -275,6 +276,13 @@ export class UserProfileService {
         console.error('フォローエラー:', error);
         return { success: false, error: error.message };
       }
+
+      // フォローされたユーザーに通知を送る
+      await NotificationService.createNotification(
+        targetUser.id,
+        'follow',
+        followerId
+      );
 
       return { success: true };
     } catch (error) {

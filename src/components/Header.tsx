@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, User, Menu, X, PenSquare } from 'lucide-react';
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
+import NotificationDropdown from './NotificationDropdown';
 
 interface HeaderProps {
   onLoginClick: () => void;
@@ -156,6 +157,7 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
                   <PenSquare className="h-5 w-5" />
                   <span className="hidden sm:inline">投稿する</span>
                 </Link>
+                <NotificationDropdown />
                 <Link
                   to="/my-page"
                   className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-cyan-600 transition-colors"

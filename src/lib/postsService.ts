@@ -1,6 +1,7 @@
 import { supabase } from './supabaseClient';
 import { PostWithDetails } from '../types';
 import { PageViewService } from './pageViewService';
+import { NotificationService } from './notificationService';
 
 // 投稿データを取得するサービス
 export class PostsService {
@@ -405,6 +406,22 @@ export class PostsService {
       if (error) {
         console.error('いいね追加エラー:', error);
         return { success: false, error: error.message };
+      }
+
+      // 投稿の作者に通知を送る
+      const { data: post } = await supabase
+        .from('posts')
+        .select('author_id')
+        .eq('id', postId)
+        .single();
+
+      if (post && post.author_id) {
+        await NotificationService.createNotification(
+          post.author_id,
+          'like',
+          userId,
+          postId
+        );
       }
 
       return { success: true };

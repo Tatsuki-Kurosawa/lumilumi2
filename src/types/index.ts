@@ -119,6 +119,26 @@ export interface PageView {
   is_unique: boolean;
 }
 
+// 通知関連
+export interface Notification {
+  id: number;
+  user_id: string;
+  type: 'like' | 'follow';
+  actor_id: string;
+  post_id?: number;
+  is_read: boolean;
+  created_at: string;
+}
+
+export interface NotificationWithDetails extends Notification {
+  actor: User;
+  post?: {
+    id: number;
+    title: string;
+    thumbnail_url: string;
+  };
+}
+
 // 年齢確認関連
 export interface AgeVerification {
   id: number;
