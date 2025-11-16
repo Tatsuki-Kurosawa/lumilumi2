@@ -118,6 +118,16 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
             >
               R-18
             </Link>
+            <Link
+              to="/about"
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                isActive('/about')
+                  ? 'text-cyan-600 bg-cyan-50'
+                  : 'text-gray-700 hover:text-cyan-600 hover:bg-gray-50'
+              }`}
+            >
+              About
+            </Link>
           </nav>
 
           {/* 右側のボタン群 */}
@@ -246,6 +256,13 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 R-18
+              </Link>
+              <Link
+                to="/about"
+                className="px-3 py-2 text-gray-700 hover:text-cyan-600 hover:bg-gray-50 rounded-md"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                About
               </Link>
 
               {/* ナビゲーション */}

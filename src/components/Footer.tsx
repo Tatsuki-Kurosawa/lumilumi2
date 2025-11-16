@@ -42,6 +42,11 @@ const Footer: React.FC = () => {
             <h3 className="text-white font-semibold text-lg mb-4">サービス</h3>
             <ul className="space-y-2 text-sm">
               <li>
+                <Link to="/about" className="hover:text-cyan-400 transition-colors">
+                  イラストーク大学について
+                </Link>
+              </li>
+              <li>
                 <Link to="/manga" className="hover:text-cyan-400 transition-colors">
                   マンガ
                 </Link>

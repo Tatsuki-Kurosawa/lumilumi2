@@ -30,6 +30,7 @@ import CompanyPage from './pages/CompanyPage';
 import HelpPage from './pages/HelpPage';
 import GuidelinesPage from './pages/GuidelinesPage';
 import ContactPage from './pages/ContactPage';
+import AboutPage from './pages/AboutPage';
 
 import AuthModals from './components/AuthModals';
 import ScrollToTop from './components/ScrollToTop';
@@ -141,6 +142,7 @@ function AppContent() {
             <Route path="/help" element={<HelpPage />} />
             <Route path="/guidelines" element={<GuidelinesPage />} />
             <Route path="/contact" element={<ContactPage />} />
+            <Route path="/about" element={<AboutPage />} />
           </Routes>
         </main>
         <Footer />
