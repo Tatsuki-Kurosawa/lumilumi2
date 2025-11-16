@@ -8,9 +8,10 @@ import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 
 interface HomePageProps {
   onLoginClick: () => void;
+  onSignUpClick?: () => void;
 }
 
-const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
+const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
   const navigate = useNavigate();
   const { user } = useSupabaseAuth();
   const [featuredWorks, setFeaturedWorks] = useState<any[]>([]);
@@ -217,13 +218,13 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick }) => {
           <p className="text-xl mb-8 text-blue-100">
             無料で登録して、あなたの創作活動を次のレベルへ
           </p>
-          <Link
-            to="/register"
+          <button
+            onClick={onSignUpClick}
             className="inline-flex items-center px-8 py-3 bg-white text-blue-600 rounded-full font-semibold hover:bg-gray-100 transition-colors text-lg"
           >
             無料で始める
             <ArrowRight className="ml-2 h-5 w-5" />
-          </Link>
+          </button>
         </div>
       </section>
     </div>
