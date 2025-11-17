@@ -134,12 +134,12 @@ const IllustrationsPage: React.FC = () => {
           
           {/* 依頼・ランキングリンク */}
           <div className="flex items-center space-x-4">
-            <Link
+            {/* <Link
               to="/direct-requests"
               className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
             >
               依頼
-            </Link>
+            </Link> */}
             <Link
               to="/illustration-ranking"
               className="flex items-center px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors font-medium"
