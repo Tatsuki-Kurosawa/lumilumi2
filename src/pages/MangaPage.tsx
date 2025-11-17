@@ -129,7 +129,6 @@ const MangaPage: React.FC = () => {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
-            <BookOpen className="h-8 w-8 text-blue-600 mr-3" />
             <h1 className="text-3xl font-bold text-gray-900">マンガ</h1>
           </div>
           
@@ -217,7 +216,6 @@ const MangaPage: React.FC = () => {
       <section className="mb-12">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
-            <Clock className="h-6 w-6 text-green-500 mr-2" />
             <h2 className="text-2xl font-bold text-gray-900">新着</h2>
           </div>
           <Link
@@ -263,7 +261,6 @@ const MangaPage: React.FC = () => {
       <section className="mb-12">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
-            <Star className="h-6 w-6 text-yellow-500 mr-2" />
             <h2 className="text-2xl font-bold text-gray-900">おすすめ</h2>
           </div>
           <Link
@@ -309,7 +306,6 @@ const MangaPage: React.FC = () => {
       <section className="mb-12">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
-            <TrendingUp className="h-6 w-6 text-red-500 mr-2" />
             <h2 className="text-2xl font-bold text-gray-900">急上昇</h2>
           </div>
           <Link
