@@ -126,18 +126,6 @@ const AboutPage: React.FC = () => {
                 イラストーク大学は完全無料でご利用いただけます。
                 アカウント登録後、すぐに作品の投稿や閲覧が可能です。
               </p>
-              <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-6">
-                <p className="text-gray-900 font-semibold mb-2">今すぐ始めましょう！</p>
-                <p className="text-gray-700 mb-4">
-                  無料アカウントを作成して、あなたの創作活動を次のレベルへ。
-                </p>
-                <Link
-                  to="/"
-                  className="inline-block px-6 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors font-medium"
-                >
-                  ホームページへ
-                </Link>
-              </div>
             </section>
 
             <section className="mb-6">
