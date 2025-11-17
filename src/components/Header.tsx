@@ -53,7 +53,7 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
                 placeholder="作品やユーザーを検索..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
               <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             </form>
@@ -65,8 +65,8 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
               to="/manga"
               className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 isActive('/manga')
-                  ? 'text-cyan-600 bg-cyan-50'
-                  : 'text-gray-700 hover:text-cyan-600 hover:bg-gray-50'
+                  ? 'text-primary-600 bg-primary-50'
+                  : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
               }`}
             >
               マンガ
@@ -75,8 +75,8 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
               to="/illustrations"
               className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 isActive('/illustrations')
-                  ? 'text-cyan-600 bg-cyan-50'
-                  : 'text-gray-700 hover:text-cyan-600 hover:bg-gray-50'
+                  ? 'text-primary-600 bg-primary-50'
+                  : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
               }`}
             >
               イラスト
@@ -85,8 +85,8 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
               to="/works"
               className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 isActive('/works')
-                  ? 'text-cyan-600 bg-cyan-50'
-                  : 'text-gray-700 hover:text-cyan-600 hover:bg-gray-50'
+                  ? 'text-primary-600 bg-primary-50'
+                  : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
               }`}
             >
               作品一覧
@@ -109,8 +109,8 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
               to="/about"
               className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 isActive('/about')
-                  ? 'text-cyan-600 bg-cyan-50'
-                  : 'text-gray-700 hover:text-cyan-600 hover:bg-gray-50'
+                  ? 'text-primary-600 bg-primary-50'
+                  : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
               }`}
             >
               About
@@ -122,7 +122,7 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
             {/* ハンバーガーメニューボタン */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden p-2 text-gray-700 hover:text-cyan-600 transition-colors"
+              className="lg:hidden p-2 text-gray-700 hover:text-primary-600 transition-colors"
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -138,7 +138,7 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
               <div className="flex items-center space-x-2">
                 <Link
                   to="/upload"
-                  className="flex items-center space-x-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  className="flex items-center space-x-1 px-4 py-2 bg-accent-400 text-gray-900 rounded-lg hover:bg-accent-500 transition-colors font-medium"
                 >
                   <PenSquare className="h-5 w-5" />
                   <span className="hidden sm:inline">投稿する</span>
@@ -146,7 +146,7 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
                 <NotificationDropdown />
                 <Link
                   to="/my-page"
-                  className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-cyan-600 transition-colors"
+                  className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-primary-600 transition-colors"
                 >
                   <User className="h-5 w-5" />
                   <span className="hidden sm:block">{profile.display_name}</span>
@@ -162,7 +162,7 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
               <div className="flex space-x-2">
                 <button
                   onClick={onLoginClick}
-                  className="flex items-center space-x-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  className="flex items-center space-x-1 px-4 py-2 bg-accent-400 text-gray-900 rounded-lg hover:bg-accent-500 transition-colors font-medium"
                 >
                   <PenSquare className="h-5 w-5" />
                   <span className="hidden sm:inline">投稿する</span>
@@ -176,7 +176,7 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
                 {onSignUpClick && (
                   <button
                     onClick={onSignUpClick}
-                    className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors"
+                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
                   >
                     新規登録
                   </button>

@@ -108,7 +108,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
   return (
     <div className="min-h-screen">
       {/* ヒーローセクション */}
-      <section className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 text-white py-20 relative">
+      <section className="bg-primary-600 text-white py-20 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* ソーシャルメディアリンク */}
           <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center space-x-3">
@@ -116,7 +116,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
               href="https://x.com/YOUR_X_ACCOUNT"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center space-x-2 px-3 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg transition-colors"
+              className="flex items-center space-x-2 px-3 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
               title="X (旧Twitter)でフォロー"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -128,7 +128,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
               href="https://discord.gg/YOUR_DISCORD_INVITE"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center space-x-2 px-3 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg transition-colors"
+              className="flex items-center space-x-2 px-3 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
               title="Discordサーバーに参加"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -141,25 +141,25 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
               学生クリエイターの
               <br />
-              <span className="bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
+              <span className="text-accent-400">
                 創作プラットフォーム
               </span>
             </h1>
-            <p className="text-xl md:text-2xl mb-8 text-blue-100 max-w-3xl mx-auto">
+            <p className="text-xl md:text-2xl mb-8 text-primary-100 max-w-3xl mx-auto">
               あなたの描いた漫画・イラストを世界に発信しよう。
               学生同士で繋がり、創作活動を支援し合うコミュニティ。
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/manga"
-                className="inline-flex items-center px-8 py-3 bg-white text-blue-600 rounded-full font-semibold hover:bg-gray-100 transition-colors"
+                className="inline-flex items-center px-8 py-3 bg-accent-400 text-gray-900 rounded-lg font-semibold hover:bg-accent-500 transition-colors shadow-md"
               >
                 作品を見る
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
               <button
                 onClick={handleUploadClick}
-                className="inline-flex items-center px-8 py-3 bg-transparent border-2 border-white text-white rounded-full font-semibold hover:bg-white hover:text-blue-600 transition-colors"
+                className="inline-flex items-center px-8 py-3 bg-white text-primary-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors shadow-md"
               >
                 作品を投稿
               </button>
@@ -276,14 +276,14 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
       </section>
 
       {/* CTAセクション */}
-      <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+      <section className="py-16 bg-accent-400">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold mb-4">
+          <h2 className="text-3xl font-bold mb-6 text-gray-900">
             {stats.userCount > 0 ? `${stats.userCount.toLocaleString()}人の学生と共に発信していこう` : '学生と共に発信していこう'}
           </h2>
           <button
             onClick={onSignUpClick}
-            className="inline-flex items-center px-8 py-3 bg-white text-blue-600 rounded-full font-semibold hover:bg-gray-100 transition-colors text-lg"
+            className="inline-flex items-center px-8 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors text-lg shadow-md"
           >
             無料で始める
             <ArrowRight className="ml-2 h-5 w-5" />
