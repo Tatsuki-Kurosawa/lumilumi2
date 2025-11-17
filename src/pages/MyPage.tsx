@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Heart, Upload, Edit, MapPin, Calendar } from 'lucide-react';
+import { User, Heart, Upload, Edit, MapPin, Calendar, Trash2 } from 'lucide-react';
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 import WorkCard from '../components/WorkCard';
 import ProfileEditModal from '../components/ProfileEditModal';
+import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
 import { MyPageService } from '../lib/myPageService';
 import { PostsService } from '../lib/postsService';
 import { PostWithDetails, User as UserType } from '../types';
@@ -13,6 +14,11 @@ const MyPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'works' | 'likes' | 'following' | 'followers'>('works');
   const [isProfileEditOpen, setIsProfileEditOpen] = useState(false);
+
+  // 削除モーダル状態
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<PostWithDetails | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // データ状態
   const [myWorks, setMyWorks] = useState<PostWithDetails[]>([]);
@@ -199,9 +205,51 @@ const MyPage: React.FC = () => {
   };
 
 
+  // 削除関連のハンドラー
+  const handleDeleteClick = (post: PostWithDetails) => {
+    setPostToDelete(post);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!postToDelete || !user) return;
+
+    setIsDeleting(true);
+    try {
+      const { success, error } = await PostsService.deletePost(postToDelete.id, user.id);
+
+      if (success) {
+        // UIから削除された投稿を除外
+        setMyWorks(prev => prev.filter(work => work.id !== postToDelete.id));
+
+        // 統計を更新
+        setStats(prev => ({
+          ...prev,
+          worksCount: Math.max(0, prev.worksCount - 1)
+        }));
+
+        // モーダルを閉じる
+        setDeleteModalOpen(false);
+        setPostToDelete(null);
+      } else {
+        alert(`削除に失敗しました: ${error || '不明なエラー'}`);
+      }
+    } catch (error) {
+      console.error('削除中にエラーが発生:', error);
+      alert('削除中にエラーが発生しました。時間をおいて再度お試しください。');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModalOpen(false);
+    setPostToDelete(null);
+  };
+
   const fetchStats = async () => {
     if (!user) return;
-    
+
     setLoading(prev => ({ ...prev, stats: true }));
     try {
       const statsData = await MyPageService.getUserStats(user.id);
@@ -473,7 +521,16 @@ const MyPage: React.FC = () => {
               <>
                 <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {myWorks.map((work) => (
-                    <WorkCard key={work.id} work={PostsService.formatPostForWorkCard(work)} />
+                    <div key={work.id} className="relative group">
+                      <WorkCard work={PostsService.formatPostForWorkCard(work)} />
+                      <button
+                        onClick={() => handleDeleteClick(work)}
+                        className="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700 shadow-lg"
+                        title="削除"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   ))}
                 </div>
 
@@ -739,9 +796,18 @@ const MyPage: React.FC = () => {
       )}
 
       {/* プロフィール編集モーダル */}
-      <ProfileEditModal 
-        isOpen={isProfileEditOpen} 
-        onClose={() => setIsProfileEditOpen(false)} 
+      <ProfileEditModal
+        isOpen={isProfileEditOpen}
+        onClose={() => setIsProfileEditOpen(false)}
+      />
+
+      {/* 削除確認モーダル */}
+      <DeleteConfirmModal
+        isOpen={deleteModalOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        postTitle={postToDelete?.title || ''}
+        isDeleting={isDeleting}
       />
     </div>
   );

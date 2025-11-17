@@ -528,4 +528,180 @@ describe('PostsService', () => {
       expect(result.tags).toEqual(['オリジナル', 'ファンタジー']);
     });
   });
+
+  describe('deletePost', () => {
+    it('投稿を正常に削除できる', async () => {
+      // Arrange
+      const postId = 123;
+      const userId = 'user-123';
+      const mockPost = {
+        author_id: 'user-123',
+        images: [
+          { image_url: 'https://example.com/storage/v1/object/public/posts/path/image1.jpg' },
+          { image_url: 'https://example.com/storage/v1/object/public/posts/path/image2.jpg' },
+        ],
+      };
+
+      const mockSingle = vi.fn().mockResolvedValue({ data: mockPost, error: null });
+      const mockEq = vi.fn().mockReturnValue({ single: mockSingle });
+      const mockSelect = vi.fn().mockReturnValue({ eq: mockEq });
+
+      const mockRemove = vi.fn().mockResolvedValue({ error: null });
+      const mockStorageFrom = vi.fn().mockReturnValue({ remove: mockRemove });
+
+      const mockDeleteEq = vi.fn().mockResolvedValue({ error: null });
+      const mockDelete = vi.fn().mockReturnValue({ eq: mockDeleteEq });
+
+      (supabase.from as any)
+        .mockReturnValueOnce({ select: mockSelect })
+        .mockReturnValueOnce({ delete: mockDelete });
+
+      (supabase.storage.from as any) = mockStorageFrom;
+
+      // Act
+      const result = await PostsService.deletePost(postId, userId);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(mockStorageFrom).toHaveBeenCalledWith('posts');
+      expect(mockRemove).toHaveBeenCalledWith(['path/image1.jpg', 'path/image2.jpg']);
+      expect(mockDelete).toHaveBeenCalled();
+      expect(mockDeleteEq).toHaveBeenCalledWith('id', postId);
+    });
+
+    it('投稿の所有者でない場合はエラーを返す', async () => {
+      // Arrange
+      const postId = 123;
+      const userId = 'user-456'; // 異なるユーザー
+      const mockPost = {
+        author_id: 'user-123', // 投稿の所有者
+        images: [],
+      };
+
+      const mockSingle = vi.fn().mockResolvedValue({ data: mockPost, error: null });
+      const mockEq = vi.fn().mockReturnValue({ single: mockSingle });
+      const mockSelect = vi.fn().mockReturnValue({ eq: mockEq });
+      (supabase.from as any).mockReturnValue({ select: mockSelect });
+
+      // Act
+      const result = await PostsService.deletePost(postId, userId);
+
+      // Assert
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('削除する権限がありません');
+    });
+
+    it('投稿が見つからない場合はエラーを返す', async () => {
+      // Arrange
+      const postId = 999;
+      const userId = 'user-123';
+
+      const mockSingle = vi.fn().mockResolvedValue({ data: null, error: null });
+      const mockEq = vi.fn().mockReturnValue({ single: mockSingle });
+      const mockSelect = vi.fn().mockReturnValue({ eq: mockEq });
+      (supabase.from as any).mockReturnValue({ select: mockSelect });
+
+      // Act
+      const result = await PostsService.deletePost(postId, userId);
+
+      // Assert
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('投稿が見つかりません');
+    });
+
+    it('画像がない投稿も削除できる', async () => {
+      // Arrange
+      const postId = 123;
+      const userId = 'user-123';
+      const mockPost = {
+        author_id: 'user-123',
+        images: [], // 画像なし
+      };
+
+      const mockSingle = vi.fn().mockResolvedValue({ data: mockPost, error: null });
+      const mockEq = vi.fn().mockReturnValue({ single: mockSingle });
+      const mockSelect = vi.fn().mockReturnValue({ eq: mockEq });
+
+      const mockDeleteEq = vi.fn().mockResolvedValue({ error: null });
+      const mockDelete = vi.fn().mockReturnValue({ eq: mockDeleteEq });
+
+      (supabase.from as any)
+        .mockReturnValueOnce({ select: mockSelect })
+        .mockReturnValueOnce({ delete: mockDelete });
+
+      // Act
+      const result = await PostsService.deletePost(postId, userId);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(mockDelete).toHaveBeenCalled();
+    });
+
+    it('画像削除に失敗しても投稿の削除は続行される', async () => {
+      // Arrange
+      const postId = 123;
+      const userId = 'user-123';
+      const mockPost = {
+        author_id: 'user-123',
+        images: [
+          { image_url: 'https://example.com/storage/v1/object/public/posts/path/image1.jpg' },
+        ],
+      };
+
+      const mockSingle = vi.fn().mockResolvedValue({ data: mockPost, error: null });
+      const mockEq = vi.fn().mockReturnValue({ single: mockSingle });
+      const mockSelect = vi.fn().mockReturnValue({ eq: mockEq });
+
+      const mockRemove = vi.fn().mockResolvedValue({
+        error: { message: 'Storage error' },
+      });
+      const mockStorageFrom = vi.fn().mockReturnValue({ remove: mockRemove });
+
+      const mockDeleteEq = vi.fn().mockResolvedValue({ error: null });
+      const mockDelete = vi.fn().mockReturnValue({ eq: mockDeleteEq });
+
+      (supabase.from as any)
+        .mockReturnValueOnce({ select: mockSelect })
+        .mockReturnValueOnce({ delete: mockDelete });
+
+      (supabase.storage.from as any) = mockStorageFrom;
+
+      // Act
+      const result = await PostsService.deletePost(postId, userId);
+
+      // Assert
+      expect(result.success).toBe(true); // 画像削除失敗でも投稿削除は成功
+      expect(mockDelete).toHaveBeenCalled();
+    });
+
+    it('データベース削除エラー時にエラーを返す', async () => {
+      // Arrange
+      const postId = 123;
+      const userId = 'user-123';
+      const mockPost = {
+        author_id: 'user-123',
+        images: [],
+      };
+
+      const mockSingle = vi.fn().mockResolvedValue({ data: mockPost, error: null });
+      const mockEq = vi.fn().mockReturnValue({ single: mockSingle });
+      const mockSelect = vi.fn().mockReturnValue({ eq: mockEq });
+
+      const mockDeleteEq = vi.fn().mockResolvedValue({
+        error: { message: 'Database delete error' },
+      });
+      const mockDelete = vi.fn().mockReturnValue({ eq: mockDeleteEq });
+
+      (supabase.from as any)
+        .mockReturnValueOnce({ select: mockSelect })
+        .mockReturnValueOnce({ delete: mockDelete });
+
+      // Act
+      const result = await PostsService.deletePost(postId, userId);
+
+      // Assert
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Database delete error');
+    });
+  });
 });

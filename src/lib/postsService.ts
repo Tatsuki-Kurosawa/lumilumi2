@@ -522,4 +522,63 @@ export class PostsService {
       };
     }
   }
+
+  // 投稿を削除
+  static async deletePost(postId: number, userId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      // 投稿の所有者確認
+      const { data: post, error: fetchError } = await supabase
+        .from('posts')
+        .select('author_id, images:post_images(image_url)')
+        .eq('id', postId)
+        .single();
+
+      if (fetchError || !post) {
+        return { success: false, error: '投稿が見つかりません' };
+      }
+
+      if (post.author_id !== userId) {
+        return { success: false, error: '削除する権限がありません' };
+      }
+
+      // Storageから画像を削除
+      if (post.images && post.images.length > 0) {
+        const imagePaths = post.images.map((img: any) => {
+          const url = new URL(img.image_url);
+          const path = url.pathname.split('/storage/v1/object/public/posts/')[1];
+          return path;
+        }).filter(Boolean);
+
+        if (imagePaths.length > 0) {
+          const { error: storageError } = await supabase.storage
+            .from('posts')
+            .remove(imagePaths);
+
+          if (storageError) {
+            console.error('画像削除エラー:', storageError);
+            // 画像削除に失敗しても続行
+          }
+        }
+      }
+
+      // 投稿を削除（関連データはCASCADE削除される）
+      const { error: deleteError } = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', postId);
+
+      if (deleteError) {
+        console.error('投稿削除エラー:', deleteError);
+        return { success: false, error: deleteError.message };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('投稿削除中にエラーが発生:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
 }
