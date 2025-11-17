@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import { NotificationService } from './notificationService';
 
 export interface LikeStats {
   available: number;
@@ -73,6 +74,22 @@ export class LikeService {
 
       if (insertError) {
         return { success: false, error: insertError.message };
+      }
+
+      // 投稿の作者に通知を送る
+      const { data: post } = await supabase
+        .from('posts')
+        .select('author_id')
+        .eq('id', postId)
+        .single();
+
+      if (post && post.author_id) {
+        await NotificationService.createNotification(
+          post.author_id,
+          'like',
+          userId,
+          postId
+        );
       }
 
       return { success: true, currentCount: 1 };
