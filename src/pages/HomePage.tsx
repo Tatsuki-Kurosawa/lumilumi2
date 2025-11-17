@@ -278,10 +278,9 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
       {/* CTAセクション */}
       <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold mb-4">今すぐ始めよう</h2>
-          <p className="text-xl mb-8 text-blue-100">
-            無料で登録して、あなたの創作活動を次のレベルへ
-          </p>
+          <h2 className="text-3xl font-bold mb-4">
+            {stats.userCount > 0 ? `${stats.userCount.toLocaleString()}人の学生と共に発信していこう` : '学生と共に発信していこう'}
+          </h2>
           <button
             onClick={onSignUpClick}
             className="inline-flex items-center px-8 py-3 bg-white text-blue-600 rounded-full font-semibold hover:bg-gray-100 transition-colors text-lg"
