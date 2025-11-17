@@ -8,28 +8,28 @@ const Footer: React.FC = () => {
   return (
     <footer className="bg-gray-900 text-gray-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
           {/* サービス */}
-          <div>
+          <div className="text-center sm:text-left">
             <h3 className="text-white font-semibold text-lg mb-4">サービス</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link to="/about" className="hover:text-cyan-400 transition-colors">
+                <Link to="/about" className="hover:text-accent-400 transition-colors">
                   イラストーク大学について
                 </Link>
               </li>
               <li>
-                <Link to="/manga" className="hover:text-cyan-400 transition-colors">
+                <Link to="/manga" className="hover:text-accent-400 transition-colors">
                   マンガ
                 </Link>
               </li>
               <li>
-                <Link to="/illustrations" className="hover:text-cyan-400 transition-colors">
+                <Link to="/illustrations" className="hover:text-accent-400 transition-colors">
                   イラスト
                 </Link>
               </li>
               <li>
-                <Link to="/works" className="hover:text-cyan-400 transition-colors">
+                <Link to="/works" className="hover:text-accent-400 transition-colors">
                   作品一覧
                 </Link>
               </li>
@@ -42,23 +42,23 @@ const Footer: React.FC = () => {
           </div>
 
           {/* サポート */}
-          <div>
+          <div className="text-center sm:text-left">
             <h3 className="text-white font-semibold text-lg mb-4">サポート</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link to="/help" className="flex items-center hover:text-cyan-400 transition-colors">
+                <Link to="/help" className="inline-flex items-center hover:text-accent-400 transition-colors">
                   <HelpCircle className="h-4 w-4 mr-2" />
                   ヘルプ・よくある質問
                 </Link>
               </li>
               <li>
-                <Link to="/guidelines" className="flex items-center hover:text-cyan-400 transition-colors">
+                <Link to="/guidelines" className="inline-flex items-center hover:text-accent-400 transition-colors">
                   <BookOpen className="h-4 w-4 mr-2" />
                   投稿ガイドライン
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="flex items-center hover:text-cyan-400 transition-colors">
+                <Link to="/contact" className="inline-flex items-center hover:text-accent-400 transition-colors">
                   <Mail className="h-4 w-4 mr-2" />
                   お問い合わせ
                 </Link>
@@ -67,22 +67,22 @@ const Footer: React.FC = () => {
           </div>
 
           {/* SNS */}
-          <div>
+          <div className="text-center sm:text-left sm:col-span-2 lg:col-span-1">
             <h3 className="text-white font-semibold text-lg mb-4">SNS</h3>
             <p className="text-sm text-gray-400 mb-4">
               公式SNSで最新情報をチェック
             </p>
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 justify-center sm:justify-start">
               <a
                 href="https://x.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-cyan-400 transition-colors"
+                className="text-gray-400 hover:text-accent-400 transition-colors"
                 aria-label="X (Twitter)"
                 title="X (Twitter)"
               >
                 <svg
-                  className="h-5 w-5"
+                  className="h-6 w-6"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
@@ -94,12 +94,12 @@ const Footer: React.FC = () => {
                 href="https://discord.gg"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-cyan-400 transition-colors"
+                className="text-gray-400 hover:text-accent-400 transition-colors"
                 aria-label="Discord"
                 title="Discord"
               >
                 <svg
-                  className="h-5 w-5"
+                  className="h-6 w-6"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
