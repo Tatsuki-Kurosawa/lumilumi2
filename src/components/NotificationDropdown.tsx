@@ -15,8 +15,10 @@ const NotificationDropdown: React.FC = () => {
 
   // 通知を取得
   const fetchNotifications = async () => {
+    // ログインしていなければ通知を取得しない
     if (!user) return;
 
+    // 取得には時間がかかるのでローディング
     setLoading(true);
     try {
       const { notifications: data } = await NotificationService.getNotifications(user.id, 10);
