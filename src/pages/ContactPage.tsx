@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Send } from 'lucide-react';
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
+import { ContactService, ContactFormData } from '../lib/contactService';
 
 const ContactPage: React.FC = () => {
-  const [formData, setFormData] = useState({
+  const { user } = useSupabaseAuth();
+  const [formData, setFormData] = useState<ContactFormData>({
     name: '',
     email: '',
     category: 'general',
@@ -12,31 +15,56 @@ const ContactPage: React.FC = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    // エラーメッセージをクリア
+    if (submitStatus === 'error') {
+      setSubmitStatus('idle');
+      setErrorMessage('');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmitStatus('idle');
+    setErrorMessage('');
 
-    // ここに実際の送信処理を実装
-    // 現在は仮の処理
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      // お問い合わせを送信
+      const { contact, error } = await ContactService.submitContact(
+        formData,
+        user?.id || null
+      );
 
-    setSubmitStatus('success');
-    setIsSubmitting(false);
+      if (error || !contact) {
+        setSubmitStatus('error');
+        setErrorMessage(error || 'お問い合わせの送信に失敗しました');
+        setIsSubmitting(false);
+        return;
+      }
 
-    // フォームをリセット
-    setFormData({
-      name: '',
-      email: '',
-      category: 'general',
-      subject: '',
-      message: ''
-    });
+      // 成功
+      setSubmitStatus('success');
+      
+      // フォームをリセット
+      setFormData({
+        name: '',
+        email: '',
+        category: 'general',
+        subject: '',
+        message: ''
+      });
+    } catch (error) {
+      console.error('お問い合わせ送信中にエラーが発生:', error);
+      setSubmitStatus('error');
+      setErrorMessage(error instanceof Error ? error.message : '予期しないエラーが発生しました');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -64,7 +92,7 @@ const ContactPage: React.FC = () => {
           {submitStatus === 'error' && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
               <p className="text-red-800">
-                送信に失敗しました。しばらく時間をおいて再度お試しください。
+                {errorMessage || '送信に失敗しました。しばらく時間をおいて再度お試しください。'}
               </p>
             </div>
           )}
