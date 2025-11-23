@@ -735,6 +735,7 @@ const MyPage: React.FC = () => {
                 )}
               </>
             )}
+            </div>
           </div>
         )}
 
