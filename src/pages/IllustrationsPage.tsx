@@ -105,6 +105,13 @@ const IllustrationsPage: React.FC = () => {
         const query = searchQuery.trim();
         const queryPatterns = normalizeSearchQuery(query);
         
+        // queryPatternsが空の場合は通常の検索にフォールバック
+        if (queryPatterns.length === 0) {
+          setWorks([]);
+          setLoading(false);
+          return;
+        }
+        
         // タイトルで検索（ひらがな・カタカナ互換）
         let titleQuery = supabase
           .from('posts')
@@ -140,7 +147,7 @@ const IllustrationsPage: React.FC = () => {
         if (queryPatterns.length > 1) {
           const orConditions = queryPatterns.map(pattern => `title.ilike.%${pattern}%`).join(',');
           titleQuery = titleQuery.or(orConditions);
-        } else {
+        } else if (queryPatterns.length === 1) {
           titleQuery = titleQuery.ilike('title', `%${queryPatterns[0]}%`);
         }
 
@@ -155,7 +162,7 @@ const IllustrationsPage: React.FC = () => {
         if (queryPatterns.length > 1) {
           const orConditions = queryPatterns.map(pattern => `name.ilike.%${pattern}%`).join(',');
           tagQuery = tagQuery.or(orConditions);
-        } else {
+        } else if (queryPatterns.length === 1) {
           tagQuery = tagQuery.ilike('name', `%${queryPatterns[0]}%`);
         }
         
@@ -217,7 +224,10 @@ const IllustrationsPage: React.FC = () => {
           userOrConditions.push(`display_name.ilike.%${pattern}%`);
           userOrConditions.push(`username.ilike.%${pattern}%`);
         });
-        userQuery = userQuery.or(userOrConditions.join(','));
+        
+        if (userOrConditions.length > 0) {
+          userQuery = userQuery.or(userOrConditions.join(','));
+        }
         
         const { data: userData, error: userError } = await userQuery;
 
@@ -296,9 +306,10 @@ const IllustrationsPage: React.FC = () => {
         if (selectedTags.length > 0) {
           finalWorks = worksWithStats.filter(work =>
             selectedTags.some(selectedTag => 
-              work.tags.some((tag: any) => 
-                (typeof tag === 'string' ? tag : tag.name) === selectedTag
-              )
+              (work?.tags || []).some((tag: any) => {
+                const tagName = typeof tag === 'string' ? tag : tag?.name;
+                return tagName === selectedTag;
+              })
             )
           );
         }
@@ -341,9 +352,10 @@ const IllustrationsPage: React.FC = () => {
           if (selectedTags.length > 0) {
             finalWorks = formattedWorks.filter(work =>
               selectedTags.some(selectedTag => 
-                work.tags.some((tag: any) => 
-                  (typeof tag === 'string' ? tag : tag.name) === selectedTag
-                )
+                (work?.tags || []).some((tag: any) => {
+                  const tagName = typeof tag === 'string' ? tag : tag?.name;
+                  return tagName === selectedTag;
+                })
               )
             );
           }
@@ -397,7 +409,10 @@ const IllustrationsPage: React.FC = () => {
   const getTagRanking = () => {
     if (selectedRankingTag === 'all') return rankingItems;
     return rankingItems.filter(work => 
-      work.tags.some(tag => tag.name === selectedRankingTag)
+      (work.tags || []).some((tag: any) => {
+        const tagName = typeof tag === 'string' ? tag : tag?.name;
+        return tagName === selectedRankingTag;
+      })
     );
   };
 
@@ -551,45 +566,50 @@ const IllustrationsPage: React.FC = () => {
                       <Link to={`/works/${work.id}`} className="block">
                         <div className="relative aspect-square overflow-hidden">
                           <img
-                            src={work.thumbnail_url}
-                            alt={work.title}
+                            src={work.thumbnail_url || ''}
+                            alt={work.title || ''}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x400?text=No+Image';
+                            }}
                           />
                         </div>
                       </Link>
                       <div className="p-4">
                         <Link to={`/works/${work.id}`}>
                           <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 transition-colors">
-                            {work.title}
+                            {work.title || 'タイトルなし'}
                           </h3>
                         </Link>
-                        <Link to={`/user/${work.author.username}`}>
-                          <p className="text-sm text-gray-600 mb-3 hover:text-blue-600 transition-colors">
-                            {work.author.display_name}@{work.author.university}
-                          </p>
-                        </Link>
+                        {work.author && (
+                          <Link to={`/user/${work.author.username || ''}`}>
+                            <p className="text-sm text-gray-600 mb-3 hover:text-blue-600 transition-colors">
+                              {work.author.display_name || ''}@{work.author.university || ''}
+                            </p>
+                          </Link>
+                        )}
                         <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
                           <div className="flex items-center space-x-4">
                             <div className="flex items-center">
                               <Heart className="h-4 w-4 mr-1" />
-                              <span>{work.likes.toLocaleString()}</span>
+                              <span>{(work.likes || 0).toLocaleString()}</span>
                             </div>
                             <div className="flex items-center">
                               <Eye className="h-4 w-4 mr-1" />
-                              <span>{work.views.toLocaleString()}</span>
+                              <span>{(work.views || 0).toLocaleString()}</span>
                             </div>
                           </div>
                           <div className="font-bold text-yellow-600">
-                            {work.points.toLocaleString()}pt
+                            {(work.points || 0).toLocaleString()}pt
                           </div>
                         </div>
                         <div className="flex flex-wrap gap-1">
-                          {work.tags.slice(0, 3).map((tag) => (
+                          {(work.tags || []).slice(0, 3).map((tag: any) => (
                             <span
-                              key={tag.id}
+                              key={tag?.id || tag?.name || tag}
                               className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full"
                             >
-                              #{tag.name}
+                              #{typeof tag === 'string' ? tag : tag?.name || ''}
                             </span>
                           ))}
                         </div>

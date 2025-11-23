@@ -95,23 +95,25 @@ export class RankingService {
       });
 
       // 5. ランキングアイテムを作成
-      const rankingItems: RankingItem[] = posts.map((post: any) => {
-        const likes = likeCountsMap.get(post.id) || 0;
-        const views = viewCountsMap.get(post.id) || 0;
-        const points = likes * 5 + views * 1; // いいね×5pt + PV×1pt
+      const rankingItems: RankingItem[] = posts
+        .filter((post: any) => post.author) // authorが存在する投稿のみ
+        .map((post: any) => {
+          const likes = likeCountsMap.get(post.id) || 0;
+          const views = viewCountsMap.get(post.id) || 0;
+          const points = likes * 5 + views * 1; // いいね×5pt + PV×1pt
 
-        return {
-          id: post.id,
-          title: post.title,
-          thumbnail_url: post.thumbnail_url,
-          author: post.author,
-          likes,
-          views,
-          points,
-          tags: (post.tags || []).map((tag: any) => tag.tag).filter(Boolean),
-          rank: 0 // 後で設定
-        };
-      });
+          return {
+            id: post.id,
+            title: post.title || '',
+            thumbnail_url: post.thumbnail_url || '',
+            author: post.author,
+            likes,
+            views,
+            points,
+            tags: (post.tags || []).map((tag: any) => tag.tag).filter(Boolean),
+            rank: 0 // 後で設定
+          };
+        });
 
       // 6. ポイント順にソート
       rankingItems.sort((a, b) => b.points - a.points);
