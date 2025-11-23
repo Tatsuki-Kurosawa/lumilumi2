@@ -404,7 +404,12 @@ const IllustrationsPage: React.FC = () => {
             <span className="font-medium text-gray-700">人気タグ</span>
           </div>
           <div className="flex flex-wrap gap-2">
-            {popularTags.map((tag) => (
+            {popularTags
+              .filter(tag => 
+                !searchQuery.trim() || 
+                tag.name.toLowerCase().includes(searchQuery.toLowerCase())
+              )
+              .map((tag) => (
               <button
                 key={tag.name}
                 onClick={() => {

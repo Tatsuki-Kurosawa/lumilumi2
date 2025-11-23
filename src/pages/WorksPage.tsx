@@ -104,12 +104,6 @@ const WorksPage: React.FC = () => {
     }
   }, [activeCategory, currentPage, activeWorkType, selectedTags, searchQuery]);
 
-  // フィルタリング処理（検索クエリがない場合のみ）
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      filterWorks();
-    }
-  }, [works, selectedTags, activeWorkType]);
 
   const fetchRanking = async () => {
     setRankingLoading(true);
@@ -439,33 +433,6 @@ const WorksPage: React.FC = () => {
     }
   };
 
-  const filterWorks = () => {
-    let filtered = [...works];
-
-    // タグフィルタリング（OR条件：いずれかのタグを含む作品を表示）
-    if (selectedTags.length > 0) {
-      filtered = filtered.filter(work =>
-        selectedTags.some(selectedTag => 
-          work.tags.some((tag: any) => 
-            (typeof tag === 'string' ? tag : tag.name) === selectedTag
-          )
-        )
-      );
-    }
-
-    // 検索クエリフィルタリング
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(work =>
-        work.title.toLowerCase().includes(query) ||
-        work.authorDisplayName.toLowerCase().includes(query) ||
-        work.authorUsername.toLowerCase().includes(query) ||
-        work.tags.some((tag: string) => tag.toLowerCase().includes(query))
-      );
-    }
-
-    setFilteredWorks(filtered);
-  };
 
   const handleTagClick = (tag: string) => {
     const newParams = new URLSearchParams(searchParams);
@@ -670,7 +637,12 @@ const WorksPage: React.FC = () => {
               <span className="font-medium text-gray-700">人気タグ</span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {popularTags.map((tag) => (
+              {popularTags
+                .filter(tag => 
+                  !searchQuery.trim() || 
+                  tag.name.toLowerCase().includes(searchQuery.toLowerCase())
+                )
+                .map((tag) => (
                 <button
                   key={tag.name}
                   onClick={() => {

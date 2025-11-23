@@ -99,30 +99,176 @@ const MangaPage: React.FC = () => {
   const fetchWorks = async () => {
     setLoading(true);
     try {
-      let result;
-
-      switch (activeCategory) {
-        case 'ranking':
-          await fetchRanking();
-          return;
-        case 'latest':
-        default:
-          result = await PostsService.getLatestPostsByCategory('manga', ITEMS_PER_PAGE);
-          break;
-      }
-
-      if (result?.error) {
-        console.error('作品取得エラー:', result.error);
-        setWorks([]);
-      } else {
-        const formattedWorks = (result?.posts || []).map((post: any) => 
-          PostsService.formatPostForWorkCard(post)
-        );
+      // 検索クエリがある場合は検索を実行
+      if (searchQuery.trim()) {
+        const query = searchQuery.trim();
         
+        // タイトルで検索
+        let titleQuery = supabase
+          .from('posts')
+          .select(`
+            *,
+            author:profiles!posts_author_id_fkey(
+              id,
+              username,
+              display_name,
+              university,
+              status,
+              avatar_url,
+              bio,
+              is_creator,
+              created_at
+            ),
+            images:post_images(
+              id,
+              post_id,
+              image_url,
+              display_order
+            ),
+            tags:post_tags(
+              tag:tags(
+                id,
+                name
+              )
+            )
+          `)
+          .ilike('title', `%${query}%`)
+          .eq('type', 'manga');
+
+        const { data: postsByTitle, error: titleError } = await titleQuery;
+
+        // タグで検索
+        const { data: tagData, error: tagError } = await supabase
+          .from('tags')
+          .select('id')
+          .ilike('name', `%${query}%`);
+
+        let postsByTag: any[] = [];
+        if (tagData && tagData.length > 0 && !tagError) {
+          const tagIds = tagData.map((tag: any) => tag.id);
+          
+          let postTagQuery = supabase
+            .from('post_tags')
+            .select(`
+              posts:post_id (
+                *,
+                author:profiles!posts_author_id_fkey(
+                  id,
+                  username,
+                  display_name,
+                  university,
+                  status,
+                  avatar_url,
+                  bio,
+                  is_creator,
+                  created_at
+                ),
+                images:post_images(
+                  id,
+                  post_id,
+                  image_url,
+                  display_order
+                ),
+                tags:post_tags(
+                  tag:tags(
+                    id,
+                    name
+                  )
+                )
+              )
+            `)
+            .in('tag_id', tagIds);
+
+          const { data: postTagData, error: postTagError } = await postTagQuery;
+          
+          if (!postTagError && postTagData) {
+            postsByTag = postTagData
+              .map((item: any) => item.posts)
+              .filter((post: any) => post !== null && post.type === 'manga');
+          }
+        }
+
+        // ユーザー名で検索
+        const { data: userData, error: userError } = await supabase
+          .from('profiles')
+          .select('id')
+          .or(`display_name.ilike.%${query}%,username.ilike.%${query}%`);
+
+        let postsByUser: any[] = [];
+        if (userData && userData.length > 0 && !userError) {
+          const userIds = userData.map((user: any) => user.id);
+          
+          let userPostQuery = supabase
+            .from('posts')
+            .select(`
+              *,
+              author:profiles!posts_author_id_fkey(
+                id,
+                username,
+                display_name,
+                university,
+                status,
+                avatar_url,
+                bio,
+                is_creator,
+                created_at
+              ),
+              images:post_images(
+                id,
+                post_id,
+                image_url,
+                display_order
+              ),
+              tags:post_tags(
+                tag:tags(
+                  id,
+                  name
+                )
+              )
+            `)
+            .in('author_id', userIds)
+            .eq('type', 'manga');
+
+          const { data: userPostData, error: userPostError } = await userPostQuery;
+          
+          if (!userPostError && userPostData) {
+            postsByUser = userPostData;
+          }
+        }
+
+        // 重複を除去してマージ
+        const allPosts = [
+          ...(postsByTitle || []),
+          ...postsByTag,
+          ...postsByUser
+        ];
+        const uniquePosts = Array.from(
+          new Map(allPosts.map((post: any) => [post.id, post])).values()
+        );
+
+        // いいね数と閲覧数を取得して追加
+        const worksWithStats = await Promise.all(
+          uniquePosts.map(async (post: any) => {
+            const { count: likesCount } = await PostsService.getLikeCount(post.id);
+
+            const { data: viewData } = await supabase
+              .from('post_view_counts')
+              .select('total_views')
+              .eq('post_id', post.id)
+              .single();
+
+            return PostsService.formatPostForWorkCard({
+              ...post,
+              like_count: likesCount,
+              view_count: viewData?.total_views || 0
+            });
+          })
+        );
+
         // タグフィルタリング（OR条件：いずれかのタグを含む作品を表示）
-        let finalWorks = formattedWorks;
+        let finalWorks = worksWithStats;
         if (selectedTags.length > 0) {
-          finalWorks = formattedWorks.filter(work =>
+          finalWorks = worksWithStats.filter(work =>
             selectedTags.some(selectedTag => 
               work.tags.some((tag: any) => 
                 (typeof tag === 'string' ? tag : tag.name) === selectedTag
@@ -132,6 +278,32 @@ const MangaPage: React.FC = () => {
         }
         
         setWorks(finalWorks);
+      } else {
+        // 検索クエリがない場合は通常の取得
+        let result = await PostsService.getLatestPostsByCategory('manga', ITEMS_PER_PAGE);
+
+        if (result?.error) {
+          console.error('作品取得エラー:', result.error);
+          setWorks([]);
+        } else {
+          const formattedWorks = (result?.posts || []).map((post: any) => 
+            PostsService.formatPostForWorkCard(post)
+          );
+          
+          // タグフィルタリング（OR条件：いずれかのタグを含む作品を表示）
+          let finalWorks = formattedWorks;
+          if (selectedTags.length > 0) {
+            finalWorks = formattedWorks.filter(work =>
+              selectedTags.some(selectedTag => 
+                work.tags.some((tag: any) => 
+                  (typeof tag === 'string' ? tag : tag.name) === selectedTag
+                )
+              )
+            );
+          }
+          
+          setWorks(finalWorks);
+        }
       }
     } catch (error) {
       console.error('作品取得中にエラーが発生:', error);
@@ -226,7 +398,12 @@ const MangaPage: React.FC = () => {
             <span className="font-medium text-gray-700">人気タグ</span>
           </div>
           <div className="flex flex-wrap gap-2">
-            {popularTags.map((tag) => (
+            {popularTags
+              .filter(tag => 
+                !searchQuery.trim() || 
+                tag.name.toLowerCase().includes(searchQuery.toLowerCase())
+              )
+              .map((tag) => (
               <button
                 key={tag.name}
                 onClick={() => {
