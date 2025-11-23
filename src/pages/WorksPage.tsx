@@ -4,6 +4,7 @@ import { Search, Filter, Palette } from 'lucide-react';
 import WorkCard from '../components/WorkCard';
 import { PostsService } from '../lib/postsService';
 import { supabase } from '../lib/supabaseClient';
+import { RankingService, RankingItem } from '../lib/rankingService';
 
 type WorkType = 'all' | 'manga' | 'illustration';
 
@@ -36,6 +37,7 @@ const WorksPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [popularTags, setPopularTags] = useState<string[]>([]);
+  const [rankingWorks, setRankingWorks] = useState<any[]>([]);
 
   const ITEMS_PER_PAGE = 12;
 
@@ -84,13 +86,135 @@ const WorksPage: React.FC = () => {
 
   // 投稿データを取得
   useEffect(() => {
-    fetchWorks();
+    if (activeCategory === 'ranking') {
+      fetchRanking();
+    } else {
+      fetchWorks();
+    }
   }, [activeCategory, currentPage, activeWorkType, selectedTags]);
 
   // フィルタリング処理
   useEffect(() => {
     filterWorks();
   }, [works, selectedTags, searchQuery, activeWorkType]);
+
+  const fetchRanking = async () => {
+    setLoading(true);
+    try {
+      let rankingItems: RankingItem[] = [];
+      
+      if (activeWorkType === 'manga') {
+        const result = await RankingService.getMangaRanking(ITEMS_PER_PAGE);
+        if (result.error) {
+          console.error('マンガランキング取得エラー:', result.error);
+        } else {
+          rankingItems = result.items;
+        }
+      } else if (activeWorkType === 'illustration') {
+        const result = await RankingService.getIllustrationRanking(ITEMS_PER_PAGE);
+        if (result.error) {
+          console.error('イラストランキング取得エラー:', result.error);
+        } else {
+          rankingItems = result.items;
+        }
+      } else {
+        // allの場合は両方取得してマージ
+        const [mangaResult, illustrationResult] = await Promise.all([
+          RankingService.getMangaRanking(ITEMS_PER_PAGE),
+          RankingService.getIllustrationRanking(ITEMS_PER_PAGE)
+        ]);
+        
+        const allItems = [
+          ...(mangaResult.items || []),
+          ...(illustrationResult.items || [])
+        ];
+        
+        // ポイント順にソート
+        allItems.sort((a, b) => b.points - a.points);
+        rankingItems = allItems.slice(0, ITEMS_PER_PAGE);
+      }
+
+      // ランキングアイテムのIDから実際の投稿データを取得
+      const postIds = rankingItems.map(item => item.id);
+      if (postIds.length === 0) {
+        setRankingWorks([]);
+        setWorks([]);
+        setTotalPages(1);
+        return;
+      }
+
+      const { data: postsData, error: postsError } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          author:profiles!posts_author_id_fkey(
+            id,
+            username,
+            display_name,
+            university,
+            status,
+            avatar_url,
+            cover_image_url,
+            bio,
+            is_creator,
+            created_at
+          ),
+          images:post_images(
+            id,
+            post_id,
+            image_url,
+            display_order
+          ),
+          tags:post_tags(
+            tag:tags(
+              id,
+              name
+            )
+          )
+        `)
+        .in('id', postIds);
+
+      if (postsError) {
+        console.error('投稿データ取得エラー:', postsError);
+        setRankingWorks([]);
+        setWorks([]);
+        return;
+      }
+
+      // ランキング順序を保持しながら投稿データを整形
+      const rankingMap = new Map(rankingItems.map(item => [item.id, item]));
+      const formattedWorks = (postsData || [])
+        .map((post: any) => {
+          const rankingItem = rankingMap.get(post.id);
+          if (!rankingItem) return null;
+
+          return PostsService.formatPostForWorkCard({
+            ...post,
+            author: post.author,
+            images: (post.images || []).sort((a: any, b: any) => a.display_order - b.display_order),
+            tags: (post.tags || []).map((tag: any) => tag.tag).filter(Boolean),
+            like_count: rankingItem.likes,
+            view_count: rankingItem.views
+          });
+        })
+        .filter(Boolean)
+        .sort((a: any, b: any) => {
+          const rankA = rankingMap.get(a.id)?.rank || 999;
+          const rankB = rankingMap.get(b.id)?.rank || 999;
+          return rankA - rankB;
+        });
+
+      setRankingWorks(formattedWorks);
+      setWorks(formattedWorks);
+      setTotalPages(1); // ランキングはページネーションなし
+    } catch (error) {
+      console.error('ランキング取得中にエラーが発生:', error);
+      setRankingWorks([]);
+      setWorks([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchWorks = async () => {
     setLoading(true);
@@ -245,6 +369,7 @@ const WorksPage: React.FC = () => {
       case 'recommended': return `${typePrefix}おすすめ作品`;
       case 'trending': return `${typePrefix}急上昇作品`;
       case 'latest': return `${typePrefix}新着作品`;
+      case 'ranking': return `${typePrefix}ランキング`;
       case 'popular': return `${typePrefix}人気作品`;
       default: return `${typePrefix}全作品`;
     }
@@ -345,6 +470,16 @@ const WorksPage: React.FC = () => {
               }`}
             >
               新着
+            </button>
+            <button
+              onClick={() => handleCategoryChange('ranking')}
+              className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+                activeCategory === 'ranking'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              ランキング
             </button>
             <button
               onClick={() => handleCategoryChange('recommended')}

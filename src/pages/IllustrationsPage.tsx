@@ -5,58 +5,23 @@ import WorkCard from '../components/WorkCard';
 import { PostsService } from '../lib/postsService';
 import { PostWithDetails } from '../types';
 import { supabase } from '../lib/supabaseClient';
+import { RankingService, RankingItem } from '../lib/rankingService';
 
 const IllustrationsPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [recommendedWorks, setRecommendedWorks] = useState<any[]>([]);
-  const [trendingWorks, setTrendingWorks] = useState<any[]>([]);
-  const [latestWorks, setLatestWorks] = useState<any[]>([]);
+  const [works, setWorks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [popularTags, setPopularTags] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [activeCategory, setActiveCategory] = useState<'latest' | 'ranking' | 'recommended' | 'trending'>('latest');
+
+  const ITEMS_PER_PAGE = 12;
 
   // イラスト作品データを取得
   useEffect(() => {
-    const fetchIllustrationWorks = async () => {
-      setLoading(true);
-      try {
-        // 各セクションのイラスト作品を並行して取得
-        const [recommended, trending, latest] = await Promise.all([
-          PostsService.getRecommendedPostsByCategory('illustration', 8),
-          PostsService.getTrendingPostsByCategory('illustration', 8),
-          PostsService.getLatestPostsByCategory('illustration', 8)
-        ]);
-
-        if (recommended.error) {
-          console.error('おすすめイラスト作品の取得に失敗:', recommended.error);
-        } else {
-          const formattedRecommended = recommended.posts.map(post => PostsService.formatPostForWorkCard(post));
-          setRecommendedWorks(formattedRecommended);
-        }
-
-        if (trending.error) {
-          console.error('急上昇イラスト作品の取得に失敗:', trending.error);
-        } else {
-          const formattedTrending = trending.posts.map(post => PostsService.formatPostForWorkCard(post));
-          setTrendingWorks(formattedTrending);
-        }
-
-        if (latest.error) {
-          console.error('新着イラスト作品の取得に失敗:', latest.error);
-        } else {
-          const formattedLatest = latest.posts.map(post => PostsService.formatPostForWorkCard(post));
-          setLatestWorks(formattedLatest);
-        }
-      } catch (error) {
-        console.error('イラスト作品データ取得中にエラーが発生:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchIllustrationWorks();
-  }, []);
+    fetchWorks();
+  }, [activeCategory]);
 
   // 人気タグを取得（イラストのみ）
   useEffect(() => {
@@ -97,6 +62,118 @@ const IllustrationsPage: React.FC = () => {
     fetchPopularTags();
   }, []);
 
+  const fetchWorks = async () => {
+    setLoading(true);
+    try {
+      let result;
+
+      switch (activeCategory) {
+        case 'recommended':
+          result = await PostsService.getRecommendedPostsByCategory('illustration', ITEMS_PER_PAGE);
+          break;
+        case 'trending':
+          result = await PostsService.getTrendingPostsByCategory('illustration', ITEMS_PER_PAGE);
+          break;
+        case 'ranking':
+          const rankingResult = await RankingService.getIllustrationRanking(ITEMS_PER_PAGE);
+          if (rankingResult.error) {
+            console.error('イラストランキング取得エラー:', rankingResult.error);
+            setWorks([]);
+            return;
+          }
+          
+          // ランキングアイテムのIDから実際の投稿データを取得
+          const postIds = rankingResult.items.map(item => item.id);
+          if (postIds.length === 0) {
+            setWorks([]);
+            return;
+          }
+
+          const { data: postsData, error: postsError } = await supabase
+            .from('posts')
+            .select(`
+              *,
+              author:profiles!posts_author_id_fkey(
+                id,
+                username,
+                display_name,
+                university,
+                status,
+                avatar_url,
+                cover_image_url,
+                bio,
+                is_creator,
+                created_at
+              ),
+              images:post_images(
+                id,
+                post_id,
+                image_url,
+                display_order
+              ),
+              tags:post_tags(
+                tag:tags(
+                  id,
+                  name
+                )
+              )
+            `)
+            .in('id', postIds);
+
+          if (postsError) {
+            console.error('投稿データ取得エラー:', postsError);
+            setWorks([]);
+            return;
+          }
+
+          // ランキング順序を保持しながら投稿データを整形
+          const rankingMap = new Map(rankingResult.items.map(item => [item.id, item]));
+          const formattedWorks = (postsData || [])
+            .map((post: any) => {
+              const rankingItem = rankingMap.get(post.id);
+              if (!rankingItem) return null;
+
+              return PostsService.formatPostForWorkCard({
+                ...post,
+                author: post.author,
+                images: (post.images || []).sort((a: any, b: any) => a.display_order - b.display_order),
+                tags: (post.tags || []).map((tag: any) => tag.tag).filter(Boolean),
+                like_count: rankingItem.likes,
+                view_count: rankingItem.views
+              });
+            })
+            .filter(Boolean)
+            .sort((a: any, b: any) => {
+              const rankA = rankingMap.get(a.id)?.rank || 999;
+              const rankB = rankingMap.get(b.id)?.rank || 999;
+              return rankA - rankB;
+            });
+
+          setWorks(formattedWorks);
+          return;
+        case 'latest':
+        default:
+          result = await PostsService.getLatestPostsByCategory('illustration', ITEMS_PER_PAGE);
+          break;
+      }
+
+      if (result?.error) {
+        console.error('作品取得エラー:', result.error);
+        setWorks([]);
+      } else {
+        const formattedWorks = (result?.posts || []).map((post: any) => 
+          PostsService.formatPostForWorkCard(post)
+        );
+        setWorks(formattedWorks);
+      }
+    } catch (error) {
+      console.error('作品取得中にエラーが発生:', error);
+      setWorks([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleTagClick = (tag: string) => {
     if (selectedTags.includes(tag)) {
       setSelectedTags(selectedTags.filter(t => t !== tag));
@@ -110,7 +187,7 @@ const IllustrationsPage: React.FC = () => {
   };
 
   // タグでフィルタリングされた作品を取得
-  const getFilteredWorks = (works: any[]) => {
+  const getFilteredWorks = () => {
     if (selectedTags.length === 0) {
       return works;
     }
@@ -119,9 +196,7 @@ const IllustrationsPage: React.FC = () => {
     );
   };
 
-  const filteredRecommendedWorks = getFilteredWorks(recommendedWorks);
-  const filteredTrendingWorks = getFilteredWorks(trendingWorks);
-  const filteredLatestWorks = getFilteredWorks(latestWorks);
+  const filteredWorks = getFilteredWorks();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -131,22 +206,50 @@ const IllustrationsPage: React.FC = () => {
           <div className="flex items-center">
             <h1 className="text-3xl font-bold text-gray-900">イラスト</h1>
           </div>
-          
-          {/* 依頼・ランキングリンク */}
-          <div className="flex items-center space-x-4">
-            {/* <Link
-              to="/direct-requests"
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-            >
-              依頼
-            </Link> */}
-            <Link
-              to="/illustration-ranking"
-              className="flex items-center px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors font-medium"
-            >
-              ランキング
-            </Link>
-          </div>
+        </div>
+        
+        {/* カテゴリタブ */}
+        <div className="mb-6 flex space-x-2 overflow-x-auto">
+          <button
+            onClick={() => setActiveCategory('latest')}
+            className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+              activeCategory === 'latest'
+                ? 'bg-purple-600 text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            新着
+          </button>
+          <button
+            onClick={() => setActiveCategory('ranking')}
+            className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+              activeCategory === 'ranking'
+                ? 'bg-purple-600 text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            ランキング
+          </button>
+          <button
+            onClick={() => setActiveCategory('recommended')}
+            className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+              activeCategory === 'recommended'
+                ? 'bg-purple-600 text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            おすすめ
+          </button>
+          <button
+            onClick={() => setActiveCategory('trending')}
+            className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+              activeCategory === 'trending'
+                ? 'bg-purple-600 text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            急上昇
+          </button>
         </div>
         
         {/* 検索バー */}
@@ -212,140 +315,47 @@ const IllustrationsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 新着作品セクション */}
-      <section className="mb-12">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            <h2 className="text-2xl font-bold text-gray-900">新着</h2>
-          </div>
-          <Link
-            to="/works?type=illustration&category=latest"
-            className="flex items-center text-blue-600 hover:text-blue-700 font-medium"
-          >
-            もっと見る
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </Link>
-        </div>
+      {/* 作品一覧 */}
+      {loading ? (
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {loading ? (
-            Array.from({ length: 8 }).map((_, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
-                <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded mb-2"></div>
-                <div className="flex space-x-2">
-                  <div className="h-3 w-12 bg-gray-200 rounded"></div>
-                  <div className="h-3 w-16 bg-gray-200 rounded"></div>
-                </div>
+          {Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
+            <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
+              <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
+              <div className="h-4 bg-gray-200 rounded mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded mb-2"></div>
+              <div className="flex space-x-2">
+                <div className="h-3 w-12 bg-gray-200 rounded"></div>
+                <div className="h-3 w-16 bg-gray-200 rounded"></div>
               </div>
-            ))
-          ) : filteredLatestWorks.length > 0 ? (
-            filteredLatestWorks.map((work) => (
-              <WorkCard key={work.id} work={work} />
-            ))
-          ) : selectedTags.length > 0 ? (
-            <div className="col-span-full text-center py-8">
-              <Clock className="h-12 w-12 text-gray-300 mx-auto mb-2" />
-              <p className="text-gray-600">選択されたタグに一致するイラスト作品がありません</p>
             </div>
-          ) : (
-            <div className="col-span-full text-center py-8">
-              <Clock className="h-12 w-12 text-gray-300 mx-auto mb-2" />
-              <p className="text-gray-600">新着のイラスト作品がありません</p>
-            </div>
-          )}
+          ))}
         </div>
-      </section>
-
-      {/* おすすめ作品セクション */}
-      <section className="mb-12">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            <h2 className="text-2xl font-bold text-gray-900">おすすめ</h2>
-          </div>
-          <Link
-            to="/works?type=illustration&category=recommended"
-            className="flex items-center text-blue-600 hover:text-blue-700 font-medium"
-          >
-            もっと見る
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </Link>
-        </div>
+      ) : filteredWorks.length > 0 ? (
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {loading ? (
-            Array.from({ length: 8 }).map((_, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
-                <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded mb-2"></div>
-                <div className="flex space-x-2">
-                  <div className="h-3 w-12 bg-gray-200 rounded"></div>
-                  <div className="h-3 w-16 bg-gray-200 rounded"></div>
-                </div>
-              </div>
-            ))
-          ) : filteredRecommendedWorks.length > 0 ? (
-            filteredRecommendedWorks.map((work) => (
-              <WorkCard key={work.id} work={work} />
-            ))
-          ) : selectedTags.length > 0 ? (
-            <div className="col-span-full text-center py-8">
-              <Star className="h-12 w-12 text-gray-300 mx-auto mb-2" />
-              <p className="text-gray-600">選択されたタグに一致するイラスト作品がありません</p>
-            </div>
-          ) : (
-            <div className="col-span-full text-center py-8">
-              <Palette className="h-12 w-12 text-gray-300 mx-auto mb-2" />
-              <p className="text-gray-600">おすすめのイラスト作品がありません</p>
-            </div>
-          )}
+          {filteredWorks.map((work) => (
+            <WorkCard key={work.id} work={work} />
+          ))}
         </div>
-      </section>
-
-      {/* 急上昇作品セクション */}
-      <section className="mb-12">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            <h2 className="text-2xl font-bold text-gray-900">急上昇</h2>
-          </div>
-          <Link
-            to="/works?type=illustration&category=trending"
-            className="flex items-center text-blue-600 hover:text-blue-700 font-medium"
-          >
-            もっと見る
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </Link>
+      ) : selectedTags.length > 0 ? (
+        <div className="text-center py-12">
+          <Palette className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            選択されたタグに一致するイラスト作品がありません
+          </h3>
+          <p className="text-gray-500">別のタグで検索してみてください</p>
         </div>
-        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {loading ? (
-            Array.from({ length: 8 }).map((_, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
-                <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded mb-2"></div>
-                <div className="flex space-x-2">
-                  <div className="h-3 w-12 bg-gray-200 rounded"></div>
-                  <div className="h-3 w-16 bg-gray-200 rounded"></div>
-                </div>
-              </div>
-            ))
-          ) : filteredTrendingWorks.length > 0 ? (
-            filteredTrendingWorks.map((work) => (
-              <WorkCard key={work.id} work={work} />
-            ))
-          ) : selectedTags.length > 0 ? (
-            <div className="col-span-full text-center py-8">
-              <TrendingUp className="h-12 w-12 text-gray-300 mx-auto mb-2" />
-              <p className="text-gray-600">選択されたタグに一致するイラスト作品がありません</p>
-            </div>
-          ) : (
-            <div className="col-span-full text-center py-8">
-              <TrendingUp className="h-12 w-12 text-gray-300 mx-auto mb-2" />
-              <p className="text-gray-600">急上昇のイラスト作品がありません</p>
-            </div>
-          )}
+      ) : (
+        <div className="text-center py-12">
+          <Palette className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            {activeCategory === 'ranking' ? 'ランキングのイラスト作品がありません' :
+             activeCategory === 'recommended' ? 'おすすめのイラスト作品がありません' :
+             activeCategory === 'trending' ? '急上昇のイラスト作品がありません' :
+             '新着のイラスト作品がありません'}
+          </h3>
+          <p className="text-gray-500">まだ作品が投稿されていません</p>
         </div>
-      </section>
+      )}
     </div>
   );
 };
