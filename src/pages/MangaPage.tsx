@@ -78,16 +78,42 @@ const MangaPage: React.FC = () => {
       } else {
         setRankingItems(result.items);
         
-        // タグ別ランキング用の人気タグを取得
-        const tagNames = ['学園', 'ファンタジー', '4コマ', 'SF', '日常', 'ホラー'];
-        const tagCountsMap = await RankingService.getTagPostCounts(tagNames, 'manga');
-        
-        setRankingPopularTags(
-          tagNames.map(name => ({
-            name,
-            count: tagCountsMap.get(name) || 0
-          }))
-        );
+        // タグ別ランキング用の人気タグを取得（実際に使用されているタグを取得）
+        try {
+          const { data: tagData, error: tagError } = await supabase
+            .from('post_tags')
+            .select(`
+              tag:tags(name),
+              post:posts!inner(type)
+            `)
+            .eq('post.type', 'manga');
+
+          if (tagError) {
+            console.error('ランキングタグ取得エラー:', tagError);
+          } else {
+            // タグ名の出現回数をカウント
+            const tagCounts = new Map<string, number>();
+            tagData?.forEach((item: any) => {
+              const tagName = item.tag?.name;
+              if (tagName) {
+                tagCounts.set(tagName, (tagCounts.get(tagName) || 0) + 1);
+              }
+            });
+
+            // 出現回数の多い順にソートして上位10件を取得
+            const sortedTags = Array.from(tagCounts.entries())
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 10)
+              .map(([name, count]) => ({
+                name,
+                count
+              }));
+
+            setRankingPopularTags(sortedTags);
+          }
+        } catch (error) {
+          console.error('ランキングタグ取得中にエラーが発生:', error);
+        }
       }
     } catch (error) {
       console.error('ランキング取得中にエラーが発生:', error);

@@ -146,25 +146,50 @@ const WorksPage: React.FC = () => {
 
       setRankingItems(items);
 
-      // タグ別ランキング用の人気タグを取得
-      if (items.length > 0) {
-        const tagNames = activeWorkType === 'manga' 
-          ? ['学園', 'ファンタジー', '4コマ', 'SF', '日常', 'ホラー']
-          : activeWorkType === 'illustration'
-          ? ['ファンタジー', 'キャラクター', '風景', 'アニメ', '水彩', 'SF']
-          : ['学園', 'ファンタジー', '4コマ', 'SF', '日常', 'ホラー', 'キャラクター', '風景', 'アニメ', '水彩'];
-        
-        const tagCountsMap = await RankingService.getTagPostCounts(
-          tagNames, 
-          activeWorkType === 'manga' ? 'manga' : activeWorkType === 'illustration' ? 'illustration' : 'manga'
-        );
-        
-        setRankingPopularTags(
-          tagNames.map(name => ({
-            name,
-            count: tagCountsMap.get(name) || 0
-          }))
-        );
+      // タグ別ランキング用の人気タグを取得（実際に使用されているタグを取得）
+      try {
+        let tagQuery = supabase
+          .from('post_tags')
+          .select(`
+            tag:tags(name),
+            post:posts!inner(type)
+          `);
+
+        // 作品タイプでフィルタリング
+        if (activeWorkType === 'manga') {
+          tagQuery = tagQuery.eq('post.type', 'manga');
+        } else if (activeWorkType === 'illustration') {
+          tagQuery = tagQuery.eq('post.type', 'illustration');
+        }
+        // allの場合はフィルタリングなし
+
+        const { data: tagData, error: tagError } = await tagQuery;
+
+        if (tagError) {
+          console.error('ランキングタグ取得エラー:', tagError);
+        } else {
+          // タグ名の出現回数をカウント
+          const tagCounts = new Map<string, number>();
+          tagData?.forEach((item: any) => {
+            const tagName = item.tag?.name;
+            if (tagName) {
+              tagCounts.set(tagName, (tagCounts.get(tagName) || 0) + 1);
+            }
+          });
+
+          // 出現回数の多い順にソートして上位10件を取得
+          const sortedTags = Array.from(tagCounts.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10)
+            .map(([name, count]) => ({
+              name,
+              count
+            }));
+
+          setRankingPopularTags(sortedTags);
+        }
+      } catch (error) {
+        console.error('ランキングタグ取得中にエラーが発生:', error);
       }
     } catch (error) {
       console.error('ランキング取得中にエラーが発生:', error);
