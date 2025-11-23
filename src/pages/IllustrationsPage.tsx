@@ -22,12 +22,16 @@ const IllustrationsPage: React.FC = () => {
 
   const ITEMS_PER_PAGE = 12;
 
-  // イラスト作品データを取得
+  // イラスト作品データを取得（検索クエリの変更にデバウンスを適用）
   useEffect(() => {
     if (activeCategory === 'ranking') {
       fetchRanking();
     } else {
-      fetchWorks();
+      const timeoutId = setTimeout(() => {
+        fetchWorks();
+      }, searchQuery.trim() ? 300 : 0); // 検索クエリがある場合は300ms待機、ない場合は即座に実行
+
+      return () => clearTimeout(timeoutId);
     }
   }, [activeCategory, searchQuery, selectedTags]);
 
@@ -462,11 +466,6 @@ const IllustrationsPage: React.FC = () => {
             placeholder="作品タイトル、タグ、ユーザー名で検索..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                fetchWorks();
-              }
-            }}
             className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
           <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />

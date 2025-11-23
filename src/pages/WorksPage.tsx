@@ -91,12 +91,16 @@ const WorksPage: React.FC = () => {
     fetchPopularTags();
   }, [activeWorkType]);
 
-  // 投稿データを取得
+  // 投稿データを取得（検索クエリの変更にデバウンスを適用）
   useEffect(() => {
     if (activeCategory === 'ranking') {
       fetchRanking();
     } else {
-      fetchWorks();
+      const timeoutId = setTimeout(() => {
+        fetchWorks();
+      }, searchQuery.trim() ? 300 : 0); // 検索クエリがある場合は300ms待機、ない場合は即座に実行
+
+      return () => clearTimeout(timeoutId);
     }
   }, [activeCategory, currentPage, activeWorkType, selectedTags, searchQuery]);
 
@@ -727,11 +731,9 @@ const WorksPage: React.FC = () => {
               type="text"
               placeholder="作品タイトル、タグ、ユーザー名で検索..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  setCurrentPage(1);
-                }
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
               }}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
