@@ -101,12 +101,11 @@ const UserProfilePage: React.FC = () => {
     if (!profileUser?.id) return;
     
     try {
-      const { posts, error } = await UserProfileService.getUserPosts(profileUser.id, 100, 0);
+      const { posts, error } = await UserProfileService.getPinnedPosts(profileUser.id);
       if (error) {
         console.error('固定作品取得エラー:', error);
       } else {
-        const pinned = posts.filter(post => post.is_pinned);
-        setPinnedWorks(pinned);
+        setPinnedWorks(posts);
       }
     } catch (error) {
       console.error('固定作品取得中にエラーが発生:', error);
@@ -118,22 +117,11 @@ const UserProfilePage: React.FC = () => {
     if (!profileUser?.id) return;
     
     try {
-      const { posts, error } = await UserProfileService.getUserPosts(profileUser.id, 100, 0);
+      const { posts, error } = await UserProfileService.getPopularPosts(profileUser.id, 3);
       if (error) {
         console.error('人気作品取得エラー:', error);
       } else {
-        // ランキングポイントを計算（いいね×5 + 閲覧数×1）
-        const postsWithPoints = posts.map(post => ({
-          ...post,
-          points: (post.like_count || 0) * 5 + (post.view_count || 0)
-        }));
-        
-        // ポイント順にソートして上位3つを取得
-        const popular = postsWithPoints
-          .sort((a, b) => b.points - a.points)
-          .slice(0, 3);
-        
-        setPopularWorks(popular);
+        setPopularWorks(posts);
       }
     } catch (error) {
       console.error('人気作品取得中にエラーが発生:', error);

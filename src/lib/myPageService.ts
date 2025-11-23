@@ -5,6 +5,173 @@ import { PageViewService } from './pageViewService';
 
 // MyPage用のサービス関数
 export class MyPageService {
+  // 固定作品を取得（すべての固定作品を取得）
+  static async getPinnedPosts(userId: string): Promise<{ posts: PostWithDetails[]; error?: string }> {
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          author:profiles!posts_author_id_fkey(
+            id,
+            username,
+            display_name,
+            university,
+            status,
+            avatar_url,
+            cover_image_url,
+            bio,
+            is_creator,
+            created_at
+          ),
+          images:post_images(
+            id,
+            post_id,
+            image_url,
+            display_order
+          ),
+          tags:post_tags(
+            tag:tags(
+              id,
+              name
+            )
+          )
+        `)
+        .eq('author_id', userId)
+        .eq('is_pinned', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('固定作品取得エラー:', error);
+        return { posts: [], error: error.message };
+      }
+
+      // 投稿IDリストを取得
+      const postIds = (data || []).map((post: any) => post.id);
+      
+      // いいね数とPV数を一括取得
+      const [likeCountsMap, viewCountsMap] = await Promise.all([
+        PostsService.getLikeCountsForPosts(postIds),
+        PageViewService.getViewCountsForPosts(postIds)
+      ]);
+
+      // データを整形
+      const formattedPosts: PostWithDetails[] = (data || []).map((post: any) => ({
+        id: post.id,
+        author_id: post.author_id,
+        type: post.type,
+        title: post.title,
+        description: post.description || undefined,
+        thumbnail_url: post.thumbnail_url,
+        is_r18: post.is_r18,
+        is_pinned: post.is_pinned || false,
+        created_at: post.created_at,
+        author: post.author,
+        images: (post.images || []).sort((a: any, b: any) => a.display_order - b.display_order),
+        tags: (post.tags || []).map((tag: any) => tag.tag).filter(Boolean),
+        like_count: likeCountsMap.get(post.id) || 0,
+        view_count: viewCountsMap.get(post.id) || 0
+      }));
+
+      return { posts: formattedPosts };
+    } catch (error) {
+      console.error('固定作品取得中にエラーが発生:', error);
+      return {
+        posts: [],
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // 人気作品を取得（すべての投稿からポイント順で上位を取得）
+  static async getPopularPosts(userId: string, limit = 3): Promise<{ posts: PostWithDetails[]; error?: string }> {
+    try {
+      // すべての投稿を取得（limitなし）
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          author:profiles!posts_author_id_fkey(
+            id,
+            username,
+            display_name,
+            university,
+            status,
+            avatar_url,
+            cover_image_url,
+            bio,
+            is_creator,
+            created_at
+          ),
+          images:post_images(
+            id,
+            post_id,
+            image_url,
+            display_order
+          ),
+          tags:post_tags(
+            tag:tags(
+              id,
+              name
+            )
+          )
+        `)
+        .eq('author_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('人気作品取得エラー:', error);
+        return { posts: [], error: error.message };
+      }
+
+      // 投稿IDリストを取得
+      const postIds = (data || []).map((post: any) => post.id);
+      
+      // いいね数とPV数を一括取得
+      const [likeCountsMap, viewCountsMap] = await Promise.all([
+        PostsService.getLikeCountsForPosts(postIds),
+        PageViewService.getViewCountsForPosts(postIds)
+      ]);
+
+      // データを整形してポイントを計算
+      const postsWithPoints: (PostWithDetails & { points: number })[] = (data || []).map((post: any) => {
+        const likeCount = likeCountsMap.get(post.id) || 0;
+        const viewCount = viewCountsMap.get(post.id) || 0;
+        return {
+          id: post.id,
+          author_id: post.author_id,
+          type: post.type,
+          title: post.title,
+          description: post.description || undefined,
+          thumbnail_url: post.thumbnail_url,
+          is_r18: post.is_r18,
+          is_pinned: post.is_pinned || false,
+          created_at: post.created_at,
+          author: post.author,
+          images: (post.images || []).sort((a: any, b: any) => a.display_order - b.display_order),
+          tags: (post.tags || []).map((tag: any) => tag.tag).filter(Boolean),
+          like_count: likeCount,
+          view_count: viewCount,
+          points: likeCount * 5 + viewCount
+        };
+      });
+
+      // ポイント順にソートして上位を取得
+      const popularPosts = postsWithPoints
+        .sort((a, b) => b.points - a.points)
+        .slice(0, limit)
+        .map(({ points, ...post }) => post); // pointsを除外
+
+      return { posts: popularPosts };
+    } catch (error) {
+      console.error('人気作品取得中にエラーが発生:', error);
+      return {
+        posts: [],
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
   // ユーザーの投稿作品を取得
   static async getUserPosts(userId: string, limit = 20, offset = 0): Promise<{ posts: PostWithDetails[]; error?: string }> {
     try {
