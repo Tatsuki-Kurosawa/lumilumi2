@@ -523,6 +523,123 @@ export class PostsService {
     }
   }
 
+  // 投稿を更新（タイトル、説明、タグ、固定状態）
+  static async updatePost(
+    postId: number,
+    userId: string,
+    updates: {
+      title?: string;
+      description?: string;
+      tags?: string[];
+      is_pinned?: boolean;
+    }
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      // 投稿の所有者確認
+      const { data: post, error: fetchError } = await supabase
+        .from('posts')
+        .select('author_id')
+        .eq('id', postId)
+        .single();
+
+      if (fetchError || !post) {
+        return { success: false, error: '投稿が見つかりません' };
+      }
+
+      if (post.author_id !== userId) {
+        return { success: false, error: '編集する権限がありません' };
+      }
+
+      // 投稿情報を更新
+      const updateData: any = {};
+      if (updates.title !== undefined) updateData.title = updates.title;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.is_pinned !== undefined) updateData.is_pinned = updates.is_pinned;
+
+      if (Object.keys(updateData).length > 0) {
+        const { error: updateError } = await supabase
+          .from('posts')
+          .update(updateData)
+          .eq('id', postId);
+
+        if (updateError) {
+          console.error('投稿更新エラー:', updateError);
+          return { success: false, error: updateError.message };
+        }
+      }
+
+      // タグを更新
+      if (updates.tags !== undefined) {
+        // 既存のタグを削除
+        const { error: deleteTagsError } = await supabase
+          .from('post_tags')
+          .delete()
+          .eq('post_id', postId);
+
+        if (deleteTagsError) {
+          console.error('タグ削除エラー:', deleteTagsError);
+          return { success: false, error: deleteTagsError.message };
+        }
+
+        // 新しいタグを追加
+        if (updates.tags.length > 0) {
+          // タグが存在するか確認し、存在しない場合は作成
+          const tagIds: number[] = [];
+          for (const tagName of updates.tags) {
+            // タグを取得または作成
+            let { data: existingTag } = await supabase
+              .from('tags')
+              .select('id')
+              .eq('name', tagName)
+              .single();
+
+            if (!existingTag) {
+              // タグが存在しない場合は作成
+              const { data: newTag, error: createError } = await supabase
+                .from('tags')
+                .insert({ name: tagName })
+                .select('id')
+                .single();
+
+              if (createError) {
+                console.error('タグ作成エラー:', createError);
+                continue;
+              }
+              tagIds.push(newTag.id);
+            } else {
+              tagIds.push(existingTag.id);
+            }
+          }
+
+          // post_tagsテーブルに追加
+          if (tagIds.length > 0) {
+            const postTagsData = tagIds.map(tagId => ({
+              post_id: postId,
+              tag_id: tagId
+            }));
+
+            const { error: insertTagsError } = await supabase
+              .from('post_tags')
+              .insert(postTagsData);
+
+            if (insertTagsError) {
+              console.error('タグ追加エラー:', insertTagsError);
+              return { success: false, error: insertTagsError.message };
+            }
+          }
+        }
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('投稿更新中にエラーが発生:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
   // 投稿を削除
   static async deletePost(postId: number, userId: string): Promise<{ success: boolean; error?: string }> {
     try {

@@ -41,6 +41,7 @@ export interface Post {
   description?: string;
   thumbnail_url: string;
   is_r18: boolean;
+  is_pinned?: boolean;
   created_at: string;
 }
 

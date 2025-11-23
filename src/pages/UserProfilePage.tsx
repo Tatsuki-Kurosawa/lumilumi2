@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { User, MapPin, Calendar, Send } from 'lucide-react';
+import { User, MapPin, Calendar, Send, Pin, Star } from 'lucide-react';
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 import WorkCard from '../components/WorkCard';
 import { UserProfileService } from '../lib/userProfileService';
@@ -16,6 +16,8 @@ const UserProfilePage: React.FC = () => {
   // データ状態
   const [profileUser, setProfileUser] = useState<UserType | null>(null);
   const [userWorks, setUserWorks] = useState<PostWithDetails[]>([]);
+  const [pinnedWorks, setPinnedWorks] = useState<PostWithDetails[]>([]);
+  const [popularWorks, setPopularWorks] = useState<PostWithDetails[]>([]);
   const [stats, setStats] = useState({
     worksCount: 0,
     followersCount: 0,
@@ -94,6 +96,50 @@ const UserProfilePage: React.FC = () => {
     }
   };
 
+  // 固定作品を取得
+  const fetchPinnedWorks = async () => {
+    if (!profileUser?.id) return;
+    
+    try {
+      const { posts, error } = await UserProfileService.getUserPosts(profileUser.id, 100, 0);
+      if (error) {
+        console.error('固定作品取得エラー:', error);
+      } else {
+        const pinned = posts.filter(post => post.is_pinned);
+        setPinnedWorks(pinned);
+      }
+    } catch (error) {
+      console.error('固定作品取得中にエラーが発生:', error);
+    }
+  };
+
+  // 人気作品を取得（ランキングポイント順）
+  const fetchPopularWorks = async () => {
+    if (!profileUser?.id) return;
+    
+    try {
+      const { posts, error } = await UserProfileService.getUserPosts(profileUser.id, 100, 0);
+      if (error) {
+        console.error('人気作品取得エラー:', error);
+      } else {
+        // ランキングポイントを計算（いいね×5 + 閲覧数×1）
+        const postsWithPoints = posts.map(post => ({
+          ...post,
+          points: (post.like_count || 0) * 5 + (post.view_count || 0)
+        }));
+        
+        // ポイント順にソートして上位3つを取得
+        const popular = postsWithPoints
+          .sort((a, b) => b.points - a.points)
+          .slice(0, 3);
+        
+        setPopularWorks(popular);
+      }
+    } catch (error) {
+      console.error('人気作品取得中にエラーが発生:', error);
+    }
+  };
+
   const fetchUserStats = async () => {
     if (!profileUser?.id) return;
     
@@ -131,6 +177,8 @@ const UserProfilePage: React.FC = () => {
   useEffect(() => {
     if (profileUser) {
       fetchUserWorks();
+      fetchPinnedWorks();
+      fetchPopularWorks();
       fetchUserStats();
       checkFollowStatus();
     }
@@ -334,13 +382,45 @@ const UserProfilePage: React.FC = () => {
       </div>
 
       {/* 作品セクション */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">投稿作品</h2>
-        </div>
+      <div className="space-y-6">
+        {/* 固定作品セクション */}
+        {pinnedWorks.length > 0 && (
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center space-x-2 mb-4">
+              <Pin className="h-5 w-5 text-blue-600" />
+              <h2 className="text-xl font-bold text-gray-900">固定作品</h2>
+            </div>
+            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {pinnedWorks.map((work) => (
+                <WorkCard key={work.id} work={PostsService.formatPostForWorkCard(work)} />
+              ))}
+            </div>
+          </div>
+        )}
 
-        {/* 作品一覧 */}
-        {loading.works ? (
+        {/* 人気作品セクション */}
+        {popularWorks.length > 0 && (
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center space-x-2 mb-4">
+              <Star className="h-5 w-5 text-yellow-600" />
+              <h2 className="text-xl font-bold text-gray-900">人気の作品</h2>
+            </div>
+            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {popularWorks.map((work) => (
+                <WorkCard key={work.id} work={PostsService.formatPostForWorkCard(work)} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 投稿作品セクション */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">投稿作品</h2>
+          </div>
+
+          {/* 作品一覧 */}
+          {loading.works ? (
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 4 }).map((_, index) => (
               <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">

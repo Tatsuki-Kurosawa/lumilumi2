@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Heart, Upload, Edit, MapPin, Calendar, Trash2 } from 'lucide-react';
+import { User, Heart, Upload, Edit, MapPin, Calendar, Trash2, Pin, Star } from 'lucide-react';
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 import WorkCard from '../components/WorkCard';
 import ProfileEditModal from '../components/ProfileEditModal';
 import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
+import { PostEditModal } from '../components/PostEditModal';
 import { MyPageService } from '../lib/myPageService';
 import { PostsService } from '../lib/postsService';
 import { PostWithDetails, User as UserType } from '../types';
@@ -20,8 +21,14 @@ const MyPage: React.FC = () => {
   const [postToDelete, setPostToDelete] = useState<PostWithDetails | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   
+  // 編集モーダル状態
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [postToEdit, setPostToEdit] = useState<PostWithDetails | null>(null);
+  
   // データ状態
   const [myWorks, setMyWorks] = useState<PostWithDetails[]>([]);
+  const [pinnedWorks, setPinnedWorks] = useState<PostWithDetails[]>([]);
+  const [popularWorks, setPopularWorks] = useState<PostWithDetails[]>([]);
   const [likedWorks, setLikedWorks] = useState<PostWithDetails[]>([]);
   const [followingUsers, setFollowingUsers] = useState<(UserType & { isFollowingBack: boolean })[]>([]);
   const [followerUsers, setFollowerUsers] = useState<(UserType & { isFollowingBack: boolean })[]>([]);
@@ -74,6 +81,50 @@ const MyPage: React.FC = () => {
       console.error('ユーザー作品取得中にエラーが発生:', error);
     } finally {
       setLoading(prev => ({ ...prev, works: false }));
+    }
+  };
+
+  // 固定作品を取得
+  const fetchPinnedWorks = async () => {
+    if (!user) return;
+    
+    try {
+      const { posts, error } = await MyPageService.getUserPosts(user.id, 100, 0);
+      if (error) {
+        console.error('固定作品取得エラー:', error);
+      } else {
+        const pinned = posts.filter(post => post.is_pinned);
+        setPinnedWorks(pinned);
+      }
+    } catch (error) {
+      console.error('固定作品取得中にエラーが発生:', error);
+    }
+  };
+
+  // 人気作品を取得（ランキングポイント順）
+  const fetchPopularWorks = async () => {
+    if (!user) return;
+    
+    try {
+      const { posts, error } = await MyPageService.getUserPosts(user.id, 100, 0);
+      if (error) {
+        console.error('人気作品取得エラー:', error);
+      } else {
+        // ランキングポイントを計算（いいね×5 + 閲覧数×1）
+        const postsWithPoints = posts.map(post => ({
+          ...post,
+          points: (post.like_count || 0) * 5 + (post.view_count || 0)
+        }));
+        
+        // ポイント順にソートして上位3つを取得
+        const popular = postsWithPoints
+          .sort((a, b) => b.points - a.points)
+          .slice(0, 3);
+        
+        setPopularWorks(popular);
+      }
+    } catch (error) {
+      console.error('人気作品取得中にエラーが発生:', error);
     }
   };
 
@@ -205,6 +256,20 @@ const MyPage: React.FC = () => {
   };
 
 
+  // 編集関連のハンドラー
+  const handleEditClick = (post: PostWithDetails) => {
+    setPostToEdit(post);
+    setEditModalOpen(true);
+  };
+
+  const handleEditUpdate = () => {
+    if (user) {
+      fetchUserWorks();
+      fetchPinnedWorks();
+      fetchPopularWorks();
+    }
+  };
+
   // 削除関連のハンドラー
   const handleDeleteClick = (post: PostWithDetails) => {
     setPostToDelete(post);
@@ -265,6 +330,8 @@ const MyPage: React.FC = () => {
   useEffect(() => {
     if (user) {
       fetchUserWorks();
+      fetchPinnedWorks();
+      fetchPopularWorks();
       fetchLikedWorks();
       fetchFollowerUsers();
       fetchFollowingUsers();
@@ -498,12 +565,76 @@ const MyPage: React.FC = () => {
       {/* コンテンツ */}
       <div>
         {activeTab === 'works' && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">投稿作品</h2>
-            </div>
+          <div className="space-y-6">
+            {/* 固定作品セクション */}
+            {pinnedWorks.length > 0 && (
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Pin className="h-5 w-5 text-blue-600" />
+                  <h2 className="text-xl font-bold text-gray-900">固定作品</h2>
+                </div>
+                <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {pinnedWorks.map((work) => (
+                    <div key={work.id} className="relative group">
+                      <WorkCard work={PostsService.formatPostForWorkCard(work)} />
+                      <button
+                        onClick={() => handleEditClick(work)}
+                        className="absolute top-2 left-2 p-2 bg-blue-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-700 shadow-lg z-10"
+                        title="編集"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(work)}
+                        className="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700 shadow-lg z-10"
+                        title="削除"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-            {loading.works ? (
+            {/* 人気作品セクション */}
+            {popularWorks.length > 0 && (
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Star className="h-5 w-5 text-yellow-600" />
+                  <h2 className="text-xl font-bold text-gray-900">人気の作品</h2>
+                </div>
+                <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                  {popularWorks.map((work) => (
+                    <div key={work.id} className="relative group">
+                      <WorkCard work={PostsService.formatPostForWorkCard(work)} />
+                      <button
+                        onClick={() => handleEditClick(work)}
+                        className="absolute top-2 left-2 p-2 bg-blue-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-700 shadow-lg z-10"
+                        title="編集"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(work)}
+                        className="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700 shadow-lg z-10"
+                        title="削除"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 投稿作品セクション */}
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">投稿作品</h2>
+              </div>
+
+              {loading.works ? (
               <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {Array.from({ length: 4 }).map((_, index) => (
                   <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
@@ -524,8 +655,15 @@ const MyPage: React.FC = () => {
                     <div key={work.id} className="relative group">
                       <WorkCard work={PostsService.formatPostForWorkCard(work)} />
                       <button
+                        onClick={() => handleEditClick(work)}
+                        className="absolute top-2 left-2 p-2 bg-blue-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-700 shadow-lg z-10"
+                        title="編集"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button
                         onClick={() => handleDeleteClick(work)}
-                        className="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700 shadow-lg"
+                        className="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700 shadow-lg z-10"
                         title="削除"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -799,6 +937,17 @@ const MyPage: React.FC = () => {
       <ProfileEditModal
         isOpen={isProfileEditOpen}
         onClose={() => setIsProfileEditOpen(false)}
+      />
+
+      {/* 編集モーダル */}
+      <PostEditModal
+        isOpen={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setPostToEdit(null);
+        }}
+        post={postToEdit}
+        onUpdate={handleEditUpdate}
       />
 
       {/* 削除確認モーダル */}
