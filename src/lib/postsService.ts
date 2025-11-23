@@ -463,7 +463,7 @@ export class PostsService {
     userCount: number;
     postCount: number;
     totalLikes: number;
-    monthlyViews: number;
+    totalViews: number;
     error?: string;
   }> {
     try {
@@ -479,16 +479,15 @@ export class PostsService {
           .from('posts')
           .select('id', { count: 'exact', head: true }),
 
-        // 総いいね数
+        // 総いいね数（post_like_countsテーブルから合計）
         supabase
-          .from('likes')
-          .select('id', { count: 'exact', head: true }),
+          .from('post_like_counts')
+          .select('total_likes'),
 
-        // 月間PV（過去30日間）
+        // 総閲覧数（post_view_countsテーブルから合計）
         supabase
-          .from('page_views')
-          .select('id', { count: 'exact', head: true })
-          .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+          .from('post_view_counts')
+          .select('total_views')
       ]);
 
       // エラーチェック
@@ -500,16 +499,22 @@ export class PostsService {
           userCount: 0,
           postCount: 0,
           totalLikes: 0,
-          monthlyViews: 0,
+          totalViews: 0,
           error: errorMsg
         };
       }
 
+      // 総いいね数を計算（post_like_countsのtotal_likesを合計）
+      const totalLikes = (likesResult.data || []).reduce((sum, item) => sum + (item.total_likes || 0), 0);
+
+      // 総閲覧数を計算（post_view_countsのtotal_viewsを合計）
+      const totalViews = (viewsResult.data || []).reduce((sum, item) => sum + (item.total_views || 0), 0);
+
       return {
         userCount: usersResult.count || 0,
         postCount: postsResult.count || 0,
-        totalLikes: likesResult.count || 0,
-        monthlyViews: viewsResult.count || 0
+        totalLikes: totalLikes,
+        totalViews: totalViews
       };
     } catch (error) {
       console.error('統計情報取得中にエラーが発生:', error);
@@ -517,7 +522,7 @@ export class PostsService {
         userCount: 0,
         postCount: 0,
         totalLikes: 0,
-        monthlyViews: 0,
+        totalViews: 0,
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     }

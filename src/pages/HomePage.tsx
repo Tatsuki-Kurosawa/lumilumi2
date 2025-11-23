@@ -20,7 +20,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
     userCount: 0,
     postCount: 0,
     totalLikes: 0,
-    monthlyViews: 0
+    totalViews: 0
   });
 
   // 投稿データを取得
@@ -69,7 +69,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
             userCount: statistics.userCount,
             postCount: statistics.postCount,
             totalLikes: statistics.totalLikes,
-            monthlyViews: statistics.monthlyViews
+            totalViews: statistics.totalViews
           });
         }
       } catch (error) {
@@ -94,7 +94,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
     { icon: Users, label: '登録ユーザー', value: formatNumber(stats.userCount) + '+' },
     { icon: Palette, label: '投稿作品', value: formatNumber(stats.postCount) + '+' },
     { icon: Star, label: '総いいね数', value: formatNumber(stats.totalLikes) + '+' },
-    { icon: TrendingUp, label: '月間PV', value: formatNumber(stats.monthlyViews) + '+' },
+    { icon: TrendingUp, label: '総閲覧数', value: formatNumber(stats.totalViews) + '+' },
   ];
 
   const handleUploadClick = () => {
@@ -279,7 +279,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
       <section className="py-16 bg-accent-400">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold mb-6 text-gray-900">
-            {stats.userCount > 0 ? `${stats.userCount.toLocaleString()}人の学生と共に発信していこう` : '学生と共に発信していこう'}
+            {stats.userCount > 0 ? `${stats.userCount.toLocaleString()}人の学生と共に発信していこう` : '何人の学生と共に発信していこう'}
           </h2>
           <button
             onClick={onSignUpClick}
