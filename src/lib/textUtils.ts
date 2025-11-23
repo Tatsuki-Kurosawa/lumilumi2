@@ -46,8 +46,9 @@ export const normalizeSearchQuery = (query: string): string[] => {
 /**
  * テキストが検索クエリに一致するかチェック（ひらがな・カタカナ互換）
  */
-export const matchesSearchQuery = (text: string, query: string): boolean => {
+export const matchesSearchQuery = (text: string | null | undefined, query: string): boolean => {
   if (!query.trim()) return true;
+  if (!text) return false;
   
   const normalizedQuery = query.trim().toLowerCase();
   const normalizedText = text.toLowerCase();

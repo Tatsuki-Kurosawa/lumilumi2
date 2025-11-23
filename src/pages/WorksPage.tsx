@@ -377,11 +377,11 @@ const WorksPage: React.FC = () => {
         
         // 検索クエリで追加フィルタリング（タイトル、タグ、ユーザー名で検索）
         finalWorks = finalWorks.filter(work => {
-          const titleMatch = matchesSearchQuery(work.title, query);
-          const authorMatch = matchesSearchQuery(work.authorDisplayName, query) || 
-                             matchesSearchQuery(work.authorUsername, query);
-          const tagMatch = work.tags.some((tag: any) => {
-            const tagName = typeof tag === 'string' ? tag : tag.name;
+          const titleMatch = matchesSearchQuery(work?.title, query);
+          const authorMatch = matchesSearchQuery(work?.authorDisplayName, query) || 
+                             matchesSearchQuery(work?.authorUsername, query);
+          const tagMatch = (work?.tags || []).some((tag: any) => {
+            const tagName = typeof tag === 'string' ? tag : tag?.name;
             return matchesSearchQuery(tagName, query);
           });
           
