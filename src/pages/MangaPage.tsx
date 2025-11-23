@@ -6,6 +6,7 @@ import { PostsService } from '../lib/postsService';
 import { PostWithDetails } from '../types';
 import { supabase } from '../lib/supabaseClient';
 import { RankingService, RankingItem } from '../lib/rankingService';
+import { normalizeSearchQuery, matchesSearchQuery } from '../lib/textUtils';
 
 const MangaPage: React.FC = () => {
   const navigate = useNavigate();
@@ -102,8 +103,9 @@ const MangaPage: React.FC = () => {
       // 検索クエリがある場合は検索を実行
       if (searchQuery.trim()) {
         const query = searchQuery.trim();
+        const queryPatterns = normalizeSearchQuery(query);
         
-        // タイトルで検索
+        // タイトルで検索（ひらがな・カタカナ互換）
         let titleQuery = supabase
           .from('posts')
           .select(`
@@ -132,16 +134,32 @@ const MangaPage: React.FC = () => {
               )
             )
           `)
-          .ilike('title', `%${query}%`)
           .eq('type', 'manga');
+        
+        // 複数のパターンで検索（OR条件）
+        if (queryPatterns.length > 1) {
+          const orConditions = queryPatterns.map(pattern => `title.ilike.%${pattern}%`).join(',');
+          titleQuery = titleQuery.or(orConditions);
+        } else {
+          titleQuery = titleQuery.ilike('title', `%${queryPatterns[0]}%`);
+        }
 
         const { data: postsByTitle, error: titleError } = await titleQuery;
 
-        // タグで検索
-        const { data: tagData, error: tagError } = await supabase
+        // タグで検索（ひらがな・カタカナ互換）
+        let tagQuery = supabase
           .from('tags')
-          .select('id')
-          .ilike('name', `%${query}%`);
+          .select('id');
+        
+        // 複数のパターンで検索（OR条件）
+        if (queryPatterns.length > 1) {
+          const orConditions = queryPatterns.map(pattern => `name.ilike.%${pattern}%`).join(',');
+          tagQuery = tagQuery.or(orConditions);
+        } else {
+          tagQuery = tagQuery.ilike('name', `%${queryPatterns[0]}%`);
+        }
+        
+        const { data: tagData, error: tagError } = await tagQuery;
 
         let postsByTag: any[] = [];
         if (tagData && tagData.length > 0 && !tagError) {
@@ -188,11 +206,20 @@ const MangaPage: React.FC = () => {
           }
         }
 
-        // ユーザー名で検索
-        const { data: userData, error: userError } = await supabase
+        // ユーザー名で検索（ひらがな・カタカナ互換）
+        let userQuery = supabase
           .from('profiles')
-          .select('id')
-          .or(`display_name.ilike.%${query}%,username.ilike.%${query}%`);
+          .select('id');
+        
+        // 複数のパターンで検索（OR条件）
+        const userOrConditions: string[] = [];
+        queryPatterns.forEach(pattern => {
+          userOrConditions.push(`display_name.ilike.%${pattern}%`);
+          userOrConditions.push(`username.ilike.%${pattern}%`);
+        });
+        userQuery = userQuery.or(userOrConditions.join(','));
+        
+        const { data: userData, error: userError } = await userQuery;
 
         let postsByUser: any[] = [];
         if (userData && userData.length > 0 && !userError) {
@@ -266,6 +293,7 @@ const MangaPage: React.FC = () => {
         );
 
         // タグフィルタリング（OR条件：いずれかのタグを含む作品を表示）
+        // さらに検索クエリでフィルタリング（ひらがな・カタカナ互換）
         let finalWorks = worksWithStats;
         if (selectedTags.length > 0) {
           finalWorks = worksWithStats.filter(work =>
@@ -276,6 +304,19 @@ const MangaPage: React.FC = () => {
             )
           );
         }
+        
+        // 検索クエリで追加フィルタリング（タイトル、タグ、ユーザー名で検索）
+        finalWorks = finalWorks.filter(work => {
+          const titleMatch = matchesSearchQuery(work.title, query);
+          const authorMatch = matchesSearchQuery(work.authorDisplayName, query) || 
+                             matchesSearchQuery(work.authorUsername, query);
+          const tagMatch = work.tags.some((tag: any) => {
+            const tagName = typeof tag === 'string' ? tag : tag.name;
+            return matchesSearchQuery(tagName, query);
+          });
+          
+          return titleMatch || authorMatch || tagMatch;
+        });
         
         setWorks(finalWorks);
       } else {
@@ -401,7 +442,7 @@ const MangaPage: React.FC = () => {
             {popularTags
               .filter(tag => 
                 !searchQuery.trim() || 
-                tag.name.toLowerCase().includes(searchQuery.toLowerCase())
+                matchesSearchQuery(tag.name, searchQuery)
               )
               .map((tag) => (
               <button
