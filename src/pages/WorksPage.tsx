@@ -402,12 +402,6 @@ const WorksPage: React.FC = () => {
         let result;
 
         switch (activeCategory) {
-          case 'recommended':
-            result = await PostsService.getRecommendedPosts(ITEMS_PER_PAGE, offset);
-            break;
-          case 'trending':
-            result = await PostsService.getTrendingPosts(ITEMS_PER_PAGE, offset);
-            break;
           case 'latest':
             result = await PostsService.getLatestPosts(ITEMS_PER_PAGE, offset);
             break;
@@ -559,8 +553,6 @@ const WorksPage: React.FC = () => {
     const typePrefix = activeWorkType === 'manga' ? 'マンガ - ' : activeWorkType === 'illustration' ? 'イラスト - ' : '';
 
     switch (activeCategory) {
-      case 'recommended': return `${typePrefix}おすすめ作品`;
-      case 'trending': return `${typePrefix}急上昇作品`;
       case 'latest': return `${typePrefix}新着作品`;
       case 'ranking': return `${typePrefix}ランキング`;
       case 'popular': return `${typePrefix}人気作品`;
@@ -701,26 +693,6 @@ const WorksPage: React.FC = () => {
               }`}
             >
               ランキング
-            </button>
-            <button
-              onClick={() => handleCategoryChange('recommended')}
-              className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
-                activeCategory === 'recommended'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              おすすめ
-            </button>
-            <button
-              onClick={() => handleCategoryChange('trending')}
-              className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
-                activeCategory === 'trending'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              急上昇
             </button>
           </div>
 

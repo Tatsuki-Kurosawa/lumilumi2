@@ -14,7 +14,7 @@ const IllustrationsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [popularTags, setPopularTags] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [activeCategory, setActiveCategory] = useState<'latest' | 'ranking' | 'recommended' | 'trending'>('latest');
+  const [activeCategory, setActiveCategory] = useState<'latest' | 'ranking'>('latest');
   const [rankingItems, setRankingItems] = useState<RankingItem[]>([]);
   const [rankingLoading, setRankingLoading] = useState(false);
   const [rankingError, setRankingError] = useState<string | null>(null);
@@ -312,12 +312,6 @@ const IllustrationsPage: React.FC = () => {
         let result;
 
         switch (activeCategory) {
-          case 'recommended':
-            result = await PostsService.getRecommendedPostsByCategory('illustration', ITEMS_PER_PAGE);
-            break;
-          case 'trending':
-            result = await PostsService.getTrendingPostsByCategory('illustration', ITEMS_PER_PAGE);
-            break;
           case 'latest':
           default:
             result = await PostsService.getLatestPostsByCategory('illustration', ITEMS_PER_PAGE);
@@ -438,26 +432,6 @@ const IllustrationsPage: React.FC = () => {
             }`}
           >
             ランキング
-          </button>
-          <button
-            onClick={() => setActiveCategory('recommended')}
-            className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
-              activeCategory === 'recommended'
-                ? 'bg-purple-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            おすすめ
-          </button>
-          <button
-            onClick={() => setActiveCategory('trending')}
-            className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
-              activeCategory === 'trending'
-                ? 'bg-purple-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            急上昇
           </button>
         </div>
         
@@ -690,8 +664,6 @@ const IllustrationsPage: React.FC = () => {
           <Palette className="h-16 w-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             {activeCategory === 'ranking' ? 'ランキングのイラスト作品がありません' :
-             activeCategory === 'recommended' ? 'おすすめのイラスト作品がありません' :
-             activeCategory === 'trending' ? '急上昇のイラスト作品がありません' :
              '新着のイラスト作品がありません'}
           </h3>
           <p className="text-gray-500">まだ作品が投稿されていません</p>
