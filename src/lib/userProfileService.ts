@@ -176,27 +176,44 @@ export class UserProfileService {
         console.error('投稿取得エラー:', postsError);
       }
 
-      const postIds = (userPosts || []).map((post: { id: string }) => post.id);
+      const postIds = (userPosts || []).map((post: { id: number }) => post.id);
 
-      // 投稿IDが存在する場合、likesテーブルからcountカラムの合計を取得
+      // 投稿IDが存在する場合、post_like_countsとpost_view_countsから集計
       let totalLikes = 0;
-      if (postIds.length > 0) {
-        const { data: likesData, error: likesError } = await supabase
-          .from('likes')
-          .select('count')
-          .in('post_id', postIds);
+      let totalViews = 0;
 
-        if (likesError) {
-          console.error('いいね数取得エラー:', likesError);
+      if (postIds.length > 0) {
+        const [likesResult, viewsResult] = await Promise.all([
+          supabase
+            .from('post_like_counts')
+            .select('total_likes')
+            .in('post_id', postIds),
+          supabase
+            .from('post_view_counts')
+            .select('total_views')
+            .in('post_id', postIds)
+        ]);
+
+        if (likesResult.error) {
+          console.error('いいね数取得エラー:', likesResult.error);
         } else {
-          // countカラムの合計を計算
-          totalLikes = (likesData || []).reduce((sum: number, like: { count: number | null }) => {
-            return sum + (Number(like.count) || 0);
+          // total_likesの合計を計算
+          totalLikes = (likesResult.data || []).reduce((sum: number, item: { total_likes: number | null }) => {
+            return sum + (Number(item.total_likes) || 0);
+          }, 0);
+        }
+
+        if (viewsResult.error) {
+          console.error('閲覧数取得エラー:', viewsResult.error);
+        } else {
+          // total_viewsの合計を計算
+          totalViews = (viewsResult.data || []).reduce((sum: number, item: { total_views: number | null }) => {
+            return sum + (Number(item.total_views) || 0);
           }, 0);
         }
       }
 
-      const [worksResult, followersResult, followingResult, profileTotals] = await Promise.all([
+      const [worksResult, followersResult, followingResult] = await Promise.all([
         supabase
           .from('posts')
           .select('*', { count: 'exact', head: true })
@@ -208,17 +225,8 @@ export class UserProfileService {
         supabase
           .from('follows')
           .select('*', { count: 'exact', head: true })
-          .eq('follower_id', userId),
-        supabase
-          .from('profiles')
-          .select('total_view_counts')
-          .eq('id', userId)
-          .maybeSingle()
+          .eq('follower_id', userId)
       ]);
-
-      const totalViews = profileTotals?.data?.total_view_counts !== undefined && profileTotals?.data?.total_view_counts !== null
-        ? Number(profileTotals.data.total_view_counts)
-        : 0;
 
       return {
         worksCount: worksResult.count || 0,
