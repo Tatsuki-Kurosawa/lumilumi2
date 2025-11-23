@@ -113,7 +113,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
           {/* ソーシャルメディアリンク */}
           <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center space-x-3">
             <a
-              href="https://x.com/YOUR_X_ACCOUNT"
+              href="https://x.com/illustalk_univ?s=21"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center space-x-2 px-3 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
@@ -125,7 +125,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
               <span className="hidden sm:inline text-sm font-medium">フォロー</span>
             </a>
             <a
-              href="https://discord.gg/YOUR_DISCORD_INVITE"
+              href="https://discord.gg/S2xhpHyqv"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center space-x-2 px-3 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"

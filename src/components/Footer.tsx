@@ -74,7 +74,7 @@ const Footer: React.FC = () => {
             </p>
             <div className="flex space-x-4 justify-center sm:justify-start">
               <a
-                href="https://x.com"
+                href="https://x.com/illustalk_univ?s=21"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-accent-400 transition-colors"
@@ -91,7 +91,7 @@ const Footer: React.FC = () => {
                 </svg>
               </a>
               <a
-                href="https://discord.gg"
+                href="https://discord.gg/S2xhpHyqv"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-accent-400 transition-colors"
