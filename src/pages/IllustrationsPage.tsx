@@ -619,6 +619,8 @@ const IllustrationsPage: React.FC = () => {
           <p className="text-gray-500">まだ作品が投稿されていません</p>
         </div>
       )}
+        </>
+      )}
     </div>
   );
 };
