@@ -390,7 +390,7 @@ const UserProfilePage: React.FC = () => {
               <Pin className="h-5 w-5 text-blue-600" />
               <h2 className="text-xl font-bold text-gray-900">固定作品</h2>
             </div>
-            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {pinnedWorks.map((work) => (
                 <WorkCard key={work.id} work={PostsService.formatPostForWorkCard(work)} />
               ))}
