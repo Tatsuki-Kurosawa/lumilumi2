@@ -497,6 +497,7 @@ const UserProfilePage: React.FC = () => {
             </nav>
           </div>
         )}
+        </div>
       </div>
 
       {/* 依頼セクション - Coming Soon */}
