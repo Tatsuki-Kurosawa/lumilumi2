@@ -12,14 +12,13 @@ const IllustrationsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [works, setWorks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [popularTags, setPopularTags] = useState<string[]>([]);
+  const [popularTags, setPopularTags] = useState<Array<{ name: string; count: number }>>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [activeCategory, setActiveCategory] = useState<'latest' | 'ranking'>('latest');
   const [rankingItems, setRankingItems] = useState<RankingItem[]>([]);
   const [rankingLoading, setRankingLoading] = useState(false);
   const [rankingError, setRankingError] = useState<string | null>(null);
   const [selectedRankingTag, setSelectedRankingTag] = useState<string>('all');
-  const [rankingPopularTags, setRankingPopularTags] = useState<Array<{ name: string; count: number }>>([]);
 
   const ITEMS_PER_PAGE = 12;
 
@@ -30,7 +29,7 @@ const IllustrationsPage: React.FC = () => {
     } else {
       fetchWorks();
     }
-  }, [activeCategory, searchQuery]);
+  }, [activeCategory, searchQuery, selectedTags]);
 
   // 人気タグを取得（イラストのみ）
   useEffect(() => {
@@ -60,7 +59,10 @@ const IllustrationsPage: React.FC = () => {
         const sortedTags = Array.from(tagCounts.entries())
           .sort((a, b) => b[1] - a[1])
           .slice(0, 20)
-          .map(([name]) => name);
+          .map(([name, count]) => ({
+            name,
+            count
+          }));
 
         setPopularTags(sortedTags);
       } catch (error) {
@@ -80,43 +82,6 @@ const IllustrationsPage: React.FC = () => {
         setRankingError(result.error);
       } else {
         setRankingItems(result.items);
-        
-        // タグ別ランキング用の人気タグを取得（実際に使用されているタグを取得）
-        try {
-          const { data: tagData, error: tagError } = await supabase
-            .from('post_tags')
-            .select(`
-              tag:tags(name),
-              post:posts!inner(type)
-            `)
-            .eq('post.type', 'illustration');
-
-          if (tagError) {
-            console.error('ランキングタグ取得エラー:', tagError);
-          } else {
-            // タグ名の出現回数をカウント
-            const tagCounts = new Map<string, number>();
-            tagData?.forEach((item: any) => {
-              const tagName = item.tag?.name;
-              if (tagName) {
-                tagCounts.set(tagName, (tagCounts.get(tagName) || 0) + 1);
-              }
-            });
-
-            // 出現回数の多い順にソートして上位10件を取得
-            const sortedTags = Array.from(tagCounts.entries())
-              .sort((a, b) => b[1] - a[1])
-              .slice(0, 10)
-              .map(([name, count]) => ({
-                name,
-                count
-              }));
-
-            setRankingPopularTags(sortedTags);
-          }
-        } catch (error) {
-          console.error('ランキングタグ取得中にエラーが発生:', error);
-        }
       }
     } catch (error) {
       console.error('ランキング取得中にエラーが発生:', error);
@@ -326,11 +291,11 @@ const IllustrationsPage: React.FC = () => {
             PostsService.formatPostForWorkCard(post)
           );
           
-          // タグフィルタリング
+          // タグフィルタリング（OR条件：いずれかのタグを含む作品を表示）
           let finalWorks = formattedWorks;
           if (selectedTags.length > 0) {
             finalWorks = formattedWorks.filter(work =>
-              selectedTags.every(selectedTag => 
+              selectedTags.some(selectedTag => 
                 work.tags.some((tag: any) => 
                   (typeof tag === 'string' ? tag : tag.name) === selectedTag
                 )
@@ -362,16 +327,6 @@ const IllustrationsPage: React.FC = () => {
   };
 
   // タグでフィルタリングされた作品を取得
-  const getFilteredWorks = () => {
-    if (selectedTags.length === 0) {
-      return works;
-    }
-    return works.filter(work =>
-      selectedTags.every(selectedTag => work.tags.includes(selectedTag))
-    );
-  };
-
-  const filteredWorks = getFilteredWorks();
 
   // ランキング表示用のヘルパー関数
   const getRankIcon = (rank: number) => {
@@ -437,8 +392,8 @@ const IllustrationsPage: React.FC = () => {
         
       </div>
 
-      {/* 人気タグ（統合、ランキング以外で表示） */}
-      {activeCategory !== 'ranking' && popularTags.length > 0 && (
+      {/* 人気タグ（新着とランキングで表示） */}
+      {popularTags.length > 0 && (
         <div className="mb-6">
           <div className="flex items-center mb-3">
             <Filter className="h-5 w-5 text-gray-600 mr-2" />
@@ -447,19 +402,31 @@ const IllustrationsPage: React.FC = () => {
           <div className="flex flex-wrap gap-2">
             {popularTags.map((tag) => (
               <button
-                key={tag}
-                onClick={() => handleTagClick(tag)}
+                key={tag.name}
+                onClick={() => {
+                  if (activeCategory === 'ranking') {
+                    // ランキングは単一選択
+                    setSelectedRankingTag(selectedRankingTag === tag.name ? 'all' : tag.name);
+                  } else {
+                    // 新着は複数選択
+                    handleTagClick(tag.name);
+                  }
+                }}
                 className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  selectedTags.includes(tag)
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-purple-100 hover:text-purple-700'
+                  activeCategory === 'ranking'
+                    ? selectedRankingTag === tag.name
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : selectedTags.includes(tag.name)
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                #{tag}
+                #{tag.name} ({tag.count})
               </button>
             ))}
           </div>
-          {selectedTags.length > 0 && (
+          {activeCategory !== 'ranking' && selectedTags.length > 0 && (
             <div className="mt-3 flex items-center flex-wrap gap-2">
               <span className="text-sm text-gray-600">選択中:</span>
               {selectedTags.map((tag) => (
@@ -514,36 +481,6 @@ const IllustrationsPage: React.FC = () => {
             <p className="text-gray-600">
               いいね数（×5pt）とPV数（×1pt）を合計したポイントでランキングを算出しています
             </p>
-          </div>
-
-          {/* タグ選択（人気タグを統合） */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">人気タグ</h2>
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => setSelectedRankingTag('all')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  selectedRankingTag === 'all'
-                    ? 'bg-yellow-400 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                すべて ({rankingItems.length})
-              </button>
-              {rankingPopularTags.map((tag) => (
-                <button
-                  key={tag.name}
-                  onClick={() => setSelectedRankingTag(tag.name)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                    selectedRankingTag === tag.name
-                      ? 'bg-yellow-400 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  #{tag.name} ({tag.count})
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* タグ別ランキング表示 */}
@@ -647,7 +584,7 @@ const IllustrationsPage: React.FC = () => {
         </div>
       ) : filteredWorks.length > 0 ? (
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredWorks.map((work) => (
+          {works.map((work) => (
             <WorkCard key={work.id} work={work} />
           ))}
         </div>
