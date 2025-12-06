@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Loader2, Plus, Minus } from 'lucide-react';
+import { Heart, Loader2 } from 'lucide-react';
 import { LikeService } from '../lib/likeService';
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 
@@ -39,7 +39,8 @@ const LikeButton: React.FC<LikeButtonProps> = ({
     setIsLiked(liked);
   };
 
-  const handleAddLike = async () => {
+  // ハートボタンをクリックした時の処理（いいね/いいね解除を切り替え）
+  const handleToggleLike = async () => {
     if (!user) {
       onLoginRequired?.();
       return;
@@ -50,14 +51,28 @@ const LikeButton: React.FC<LikeButtonProps> = ({
     setIsLoading(true);
 
     try {
-      const { success, error } = await LikeService.addLike(postId, user.id);
+      if (isLiked) {
+        // いいねを解除
+        const { success, error } = await LikeService.removeLike(postId, user.id);
 
-      if (success) {
-        setIsLiked(true);
-        // 総いいね数を再取得
-        await loadTotalLikeCount();
+        if (success) {
+          setIsLiked(false);
+          // 総いいね数を再取得
+          await loadTotalLikeCount();
+        } else {
+          alert(error || 'いいねの取り消しに失敗しました');
+        }
       } else {
-        alert(error || 'いいねに失敗しました');
+        // いいねを追加
+        const { success, error } = await LikeService.addLike(postId, user.id);
+
+        if (success) {
+          setIsLiked(true);
+          // 総いいね数を再取得
+          await loadTotalLikeCount();
+        } else {
+          alert(error || 'いいねに失敗しました');
+        }
       }
     } catch (error) {
       console.error('いいね処理エラー:', error);
@@ -67,84 +82,30 @@ const LikeButton: React.FC<LikeButtonProps> = ({
     }
   };
 
-  const handleRemoveLike = async () => {
-    if (!user || !isLiked) {
-      return;
-    }
-
-    if (isLoading) return;
-
-    setIsLoading(true);
-
-    try {
-      const { success, error } = await LikeService.removeLike(postId, user.id);
-
-      if (success) {
-        setIsLiked(false);
-        // 総いいね数を再取得
-        await loadTotalLikeCount();
-      } else {
-        alert(error || 'いいねの取り消しに失敗しました');
-      }
-    } catch (error) {
-      console.error('いいね取り消しエラー:', error);
-      alert('予期しないエラーが発生しました');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const canAddLike = user && !isLiked;
-  const canRemoveLike = user && isLiked;
-
   return (
-    <div className="relative inline-flex items-center space-x-2">
-      {/* いいね情報表示 */}
-      <div className="flex items-center space-x-2 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
-        <Heart className={`h-5 w-5 ${isLiked ? 'fill-current text-red-500' : 'text-gray-400'}`} />
-        <span className="text-sm font-medium text-gray-900">{likeCount}</span>
-      </div>
-
-      {/* いいね追加ボタン */}
-      {user && (
-        <button
-          onClick={handleAddLike}
-          disabled={isLoading || !canAddLike}
-          className={`
-            p-2 rounded-full transition-all
-            ${canAddLike
-              ? 'bg-red-500 text-white hover:bg-red-600 hover:scale-110'
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-            }
-          `}
-          title="いいねを追加"
-        >
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Plus className="h-4 w-4" />
-          )}
-        </button>
-      )}
-
-      {/* いいね削除ボタン */}
-      {user && isLiked && (
-        <button
-          onClick={handleRemoveLike}
-          disabled={isLoading || !canRemoveLike}
-          className={`
-            p-2 rounded-full transition-all
-            ${canRemoveLike
-              ? 'bg-gray-300 text-gray-700 hover:bg-gray-400 hover:scale-110'
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-            }
-          `}
-          title="いいねを取り消す"
-        >
-          <Minus className="h-4 w-4" />
-        </button>
-      )}
-
+    <div className="relative inline-flex items-center">
+      {/* ハートボタン（クリック可能） */}
+      <button
+        onClick={handleToggleLike}
+        disabled={isLoading}
+        className={`
+          flex items-center space-x-2 px-4 py-2 rounded-lg border transition-all
+          ${isLiked
+            ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'
+            : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+          }
+          ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+          ${!user ? 'opacity-50 cursor-not-allowed' : ''}
+        `}
+        title={user ? (isLiked ? 'いいねを解除' : 'いいねする') : 'ログインが必要です'}
+      >
+        {isLoading ? (
+          <Loader2 className="h-5 w-5 animate-spin" />
+        ) : (
+          <Heart className={`h-5 w-5 ${isLiked ? 'fill-current text-red-500' : 'text-gray-400'}`} />
+        )}
+        <span className="text-sm font-medium">{likeCount.toLocaleString()}</span>
+      </button>
     </div>
   );
 };
