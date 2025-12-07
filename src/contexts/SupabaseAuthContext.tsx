@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
+import { ensureUniversityExists } from '../lib/universityService';
 
 // ユーザープロフィールの型定義
 interface UserProfile {
@@ -22,7 +23,7 @@ interface SupabaseAuthContextType {
   profile: UserProfile | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string) => Promise<{ error: AuthError | null; autoLogin?: boolean }>;
+  signUp: (email: string, password: string, profileData?: Partial<UserProfile>) => Promise<{ error: AuthError | null; autoLogin?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null; success?: boolean }>;
   signOut: () => Promise<void>;
   registerProfile: (profileData: Partial<UserProfile>) => Promise<{ error: AuthError | null }>;
@@ -144,21 +145,54 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
 
   // サインアップ
   // 発生したエラーを知らせるのみ
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (
+    email: string, 
+    password: string, 
+    profileData?: Partial<UserProfile>
+  ) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      // プロフィールデータに大学名が含まれている場合、universitiesテーブルに存在することを確認
+      if (profileData?.university) {
+        const { error: universityError } = await ensureUniversityExists(profileData.university);
+        if (universityError) {
+          console.error('大学名確保エラー:', universityError);
+          return { 
+            error: { message: `大学名の登録に失敗しました: ${universityError}` } as AuthError 
+          };
+        }
+      }
+
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/email-confirmation`
+          emailRedirectTo: `${window.location.origin}/email-confirmation`,
+          data: profileData // メタデータとしてプロフィールデータを保存（後で使用可能）
         }
       });
 
       if (error) {
         return { error };
-      } else {
-        return { error: null };
       }
+
+      // プロフィールデータが提供され、ユーザーが作成された場合、プロフィールも作成
+      if (data.user && profileData) {
+        // ユーザーIDを追加
+        const fullProfileData = {
+          ...profileData,
+          id: data.user.id
+        };
+
+        // プロフィールを作成（エラーは無視 - メール確認後に作成される可能性があるため）
+        const { error: profileError } = await registerProfile(fullProfileData);
+        if (profileError) {
+          console.warn('プロフィール作成エラー（メール確認後に再試行されます）:', profileError);
+        }
+      }
+
+      // 自動ログインが有効な場合（メール確認が不要な場合）
+      const autoLogin = !!data.session;
+      return { error: null, autoLogin };
 
     } catch (error) {
       console.error('サインアップ中にエラーが発生:', error);
@@ -205,6 +239,14 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
   // 初期プロフィール設定
   const registerProfile = async (profileData: Partial<UserProfile>) => {
     try {
+      // 大学名が指定されている場合、universitiesテーブルに存在することを確認
+      if (profileData.university) {
+        const { error: universityError } = await ensureUniversityExists(profileData.university);
+        if (universityError) {
+          console.error('大学名確保エラー:', universityError);
+          return { error: { message: `大学名の登録に失敗しました: ${universityError}` } as AuthError };
+        }
+      }
 
       // const { error } = await supabase.from('profiles').insert(profileData);
 
@@ -280,6 +322,15 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
     }
 
     try {
+      // 大学名が更新される場合、universitiesテーブルに存在することを確認
+      if (updates.university) {
+        const { error: universityError } = await ensureUniversityExists(updates.university);
+        if (universityError) {
+          console.error('大学名確保エラー:', universityError);
+          return { error: { message: `大学名の登録に失敗しました: ${universityError}` } as AuthError };
+        }
+      }
+
       // ここに注目
       const { error } = await supabase
         .from('profiles')
