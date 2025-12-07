@@ -20,56 +20,56 @@ interface WorkCardProps {
 const WorkCard: React.FC<WorkCardProps> = ({ work }) => {
   
   return (
-    <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden group">
+    <div className="bg-bg-base rounded-lg shadow-soft hover:shadow-medium transition-all duration-300 overflow-hidden group">
       <Link to={`/works/${work.id}`} className="block">
-        <div className="relative aspect-square overflow-hidden">
+        <div className="relative aspect-square overflow-hidden rounded-t-lg">
           <img
             src={work.thumbnail}
             alt={work.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
-          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200" />
+          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition-all duration-300" />
         </div>
       </Link>
       
-      <div className="p-4">
+      <div className="p-5">
         <Link to={`/works/${work.id}`}>
-          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 transition-colors">
+          <h3 className="font-semibold text-text-primary mb-3 line-clamp-2 hover:text-primary-500 transition-colors text-base leading-snug">
             {work.title}
           </h3>
         </Link>
         
-        <div className="flex items-center text-sm text-gray-600 mb-3">
-          <User className="h-4 w-4 mr-1" />
-          <Link to={`/user/${encodeURIComponent(work.authorUsername)}`} className="hover:text-blue-600 transition-colors">
+        <div className="flex items-center text-sm text-text-secondary mb-4">
+          <User className="h-4 w-4 mr-1.5 text-text-tertiary" />
+          <Link to={`/user/${encodeURIComponent(work.authorUsername)}`} className="hover:text-primary-500 transition-colors font-medium">
             {work.authorDisplayName}
           </Link>
         </div>
         
-        <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
-          <div className="flex items-center space-x-4">
+        <div className="flex items-center justify-between text-sm text-text-tertiary mb-4">
+          <div className="flex items-center space-x-5">
             <div className="flex items-center">
-              <Heart className="h-4 w-4 mr-1" />
-              <span>{work.likes.toLocaleString()}</span>
+              <Heart className="h-4 w-4 mr-1.5" />
+              <span className="font-medium">{work.likes.toLocaleString()}</span>
             </div>
             <div className="flex items-center">
-              <Eye className="h-4 w-4 mr-1" />
-              <span>{work.views.toLocaleString()}</span>
+              <Eye className="h-4 w-4 mr-1.5" />
+              <span className="font-medium">{work.views.toLocaleString()}</span>
             </div>
           </div>
         </div>
         
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-2">
           {work.tags.slice(0, 3).map((tag, index) => (
             <span
               key={index}
-              className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full hover:bg-blue-100 hover:text-blue-600 cursor-pointer transition-colors"
+              className="inline-block px-3 py-1 text-xs bg-bg-secondary text-text-secondary rounded-full hover:bg-primary-50 hover:text-primary-500 cursor-pointer transition-all font-medium"
             >
               #{tag}
             </span>
           ))}
           {work.tags.length > 3 && (
-            <span className="inline-block px-2 py-1 text-xs text-gray-400">
+            <span className="inline-block px-3 py-1 text-xs text-text-tertiary font-medium">
               +{work.tags.length - 3}
             </span>
           )}

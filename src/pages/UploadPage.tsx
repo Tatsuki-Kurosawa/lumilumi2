@@ -442,14 +442,14 @@ const UploadPage: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate('/')}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+              className="px-8 py-3 border border-gray-300 text-text-primary rounded-lg hover:bg-bg-secondary transition-all font-medium"
             >
               キャンセル
             </button>
             <button
               type="submit"
               disabled={isUploading || images.length === 0}
-              className="px-6 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-8 py-3 bg-accent-400 text-text-primary rounded-lg hover:bg-accent-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold shadow-medium"
             >
               {isUploading ? 'アップロード中...' : '投稿する'}
             </button>

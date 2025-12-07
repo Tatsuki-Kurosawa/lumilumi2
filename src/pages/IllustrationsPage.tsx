@@ -424,7 +424,7 @@ const IllustrationsPage: React.FC = () => {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
-            <h1 className="text-3xl font-bold text-gray-900">イラスト</h1>
+            <h1 className="text-4xl font-bold text-text-primary">イラスト</h1>
           </div>
         </div>
         
@@ -434,8 +434,8 @@ const IllustrationsPage: React.FC = () => {
             onClick={() => setActiveCategory('latest')}
             className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
               activeCategory === 'latest'
-                ? 'bg-purple-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100'
+                ? 'bg-primary-500 text-white'
+                : 'bg-bg-base text-text-primary hover:bg-bg-secondary'
             }`}
           >
             新着
@@ -444,8 +444,8 @@ const IllustrationsPage: React.FC = () => {
             onClick={() => setActiveCategory('ranking')}
             className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
               activeCategory === 'ranking'
-                ? 'bg-purple-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100'
+                ? 'bg-primary-500 text-white'
+                : 'bg-bg-base text-text-primary hover:bg-bg-secondary'
             }`}
           >
             ランキング
@@ -458,8 +458,8 @@ const IllustrationsPage: React.FC = () => {
       {popularTags.length > 0 && (
         <div className="mb-6">
           <div className="flex items-center mb-3">
-            <Filter className="h-5 w-5 text-gray-600 mr-2" />
-            <span className="font-medium text-gray-700">人気タグ</span>
+            <Filter className="h-5 w-5 text-text-tertiary mr-2" />
+            <span className="font-semibold text-text-primary">人気タグ</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {popularTags
@@ -482,11 +482,11 @@ const IllustrationsPage: React.FC = () => {
                 className={`px-3 py-1 rounded-full text-sm transition-colors ${
                   activeCategory === 'ranking'
                     ? selectedRankingTag === tag.name
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-primary-500 text-white'
+                      : 'bg-bg-secondary text-text-primary hover:bg-primary-50'
                     : selectedTags.includes(tag.name)
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-primary-500 text-white'
+                      : 'bg-bg-secondary text-text-primary hover:bg-primary-50'
                 }`}
               >
                 #{tag.name} ({tag.count})
@@ -512,7 +512,7 @@ const IllustrationsPage: React.FC = () => {
               ))}
               <button
                 onClick={handleClearAllTags}
-                className="text-sm text-gray-500 hover:text-gray-700"
+                className="text-sm text-text-tertiary hover:text-text-primary"
               >
                 すべてクリア
               </button>
@@ -564,7 +564,7 @@ const IllustrationsPage: React.FC = () => {
                     }`}>
                       {work.rank}
                     </div>
-                    <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden group">
+                    <div className="bg-bg-base rounded-lg shadow-soft hover:shadow-medium transition-all duration-300 overflow-hidden group">
                       <Link to={`/works/${work.id}`} className="block">
                         <div className="relative aspect-square overflow-hidden">
                           <img
@@ -579,7 +579,7 @@ const IllustrationsPage: React.FC = () => {
                       </Link>
                       <div className="p-4">
                         <Link to={`/works/${work.id}`}>
-                          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 transition-colors">
+                          <h3 className="font-semibold text-text-primary mb-2 line-clamp-2 hover:text-primary-500 transition-colors">
                             {work.title || 'タイトルなし'}
                           </h3>
                         </Link>
@@ -624,7 +624,7 @@ const IllustrationsPage: React.FC = () => {
               {getTagRanking().length === 0 && (
                 <div className="text-center py-12">
                   <Star className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">該当する作品がありません</h3>
+                  <h3 className="text-lg font-semibold text-text-primary mb-2">該当する作品がありません</h3>
                   <p className="text-gray-600">選択したタグの作品が見つかりませんでした。</p>
                 </div>
               )}
@@ -638,7 +638,7 @@ const IllustrationsPage: React.FC = () => {
       {loading ? (
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
-            <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
+            <div key={index} className="bg-bg-base rounded-lg shadow-soft p-5 animate-pulse">
               <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
               <div className="h-4 bg-gray-200 rounded mb-2"></div>
               <div className="h-3 bg-gray-200 rounded mb-2"></div>

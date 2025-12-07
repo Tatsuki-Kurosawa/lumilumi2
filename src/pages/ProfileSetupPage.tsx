@@ -190,9 +190,9 @@ const ProfileSetupPage: React.FC = () => {
         <p className="text-gray-600">あなたのプロフィール情報を入力してください</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-8">
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-lg text-sm shadow-soft">
             {error}
           </div>
         )}
@@ -212,7 +212,7 @@ const ProfileSetupPage: React.FC = () => {
               required
               minLength={2}
               maxLength={20}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-400 focus:border-transparent"
               placeholder="2-20文字で入力"
             />
           </div>
@@ -231,7 +231,7 @@ const ProfileSetupPage: React.FC = () => {
               value={formData.displayName}
               onChange={handleInputChange}
               maxLength={30}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-400 focus:border-transparent"
               placeholder="未入力の場合はユーザー名と同じになります"
             />
           </div>
@@ -271,7 +271,7 @@ const ProfileSetupPage: React.FC = () => {
                   required
                   minLength={2}
                   maxLength={100}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-400 focus:border-transparent"
                   placeholder="大学名を入力してください（2-100文字）"
                 />
               </div>
@@ -291,10 +291,10 @@ const ProfileSetupPage: React.FC = () => {
             {(['student', 'ob', 'og'] as const).map(status => (
               <label 
                 key={status} 
-                className={`flex items-center justify-center p-3 border rounded-md cursor-pointer transition-colors ${
+                className={`flex items-center justify-center p-4 border rounded-lg cursor-pointer transition-all ${
                   formData.status === status 
-                    ? 'border-cyan-500 bg-cyan-50 text-cyan-700' 
-                    : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                    ? 'border-accent-400 bg-accent-50 text-accent-700 shadow-soft' 
+                    : 'border-gray-300 bg-bg-base text-text-primary hover:bg-bg-secondary'
                 }`}
               >
                 <input
@@ -326,7 +326,7 @@ const ProfileSetupPage: React.FC = () => {
               onChange={handleInputChange}
               rows={4}
               maxLength={200}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-400 focus:border-transparent resize-none"
               placeholder="自己紹介を入力（任意、200文字以内）"
             />
           </div>
@@ -336,7 +336,7 @@ const ProfileSetupPage: React.FC = () => {
         </div>
 
         {/* クリエイター希望 */}
-        <div className="bg-gray-50 p-4 rounded-md">
+        <div className="bg-bg-secondary p-5 rounded-lg">
           <label className="flex items-start">
             <input
               type="checkbox"
@@ -360,7 +360,7 @@ const ProfileSetupPage: React.FC = () => {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white py-3 px-4 rounded-md hover:from-cyan-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium"
+              className="w-full bg-primary-500 text-white py-4 px-6 rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold shadow-medium"
         >
           {isLoading ? (
             <div className="flex items-center justify-center">
@@ -376,22 +376,22 @@ const ProfileSetupPage: React.FC = () => {
   );
 
   const renderSuccess = () => (
-    <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8 text-center">
-      <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-      <h2 className="text-2xl font-bold text-gray-900 mb-4">プロフィール作成完了！</h2>
-      <p className="text-gray-600 mb-6">
-        ようこそ、LumiLumiへ！<br />
+    <div className="max-w-md mx-auto bg-bg-base rounded-lg shadow-medium p-10 text-center">
+      <CheckCircle className="h-20 w-20 text-accent-400 mx-auto mb-6" />
+      <h2 className="text-3xl font-bold text-text-primary mb-5">プロフィール作成完了！</h2>
+      <p className="text-text-secondary mb-8 text-base leading-relaxed">
+        ようこそ、イラストーク大学へ！<br />
         プロフィールの設定が完了しました。
       </p>
-      <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
-        <p className="text-green-700 text-sm">
+      <div className="bg-accent-50 border border-accent-200 rounded-lg p-5 mb-8">
+        <p className="text-accent-700 text-sm font-medium">
           🎉 登録完了しました！<br />
           まもなくホームページにリダイレクトします...
         </p>
       </div>
       <button
         onClick={() => navigate('/')}
-        className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white py-2 px-6 rounded-md hover:from-cyan-700 hover:to-blue-700 transition-all font-medium"
+        className="bg-primary-500 text-white py-3 px-8 rounded-lg hover:bg-primary-600 transition-all font-semibold shadow-medium"
       >
         ホームページへ
       </button>

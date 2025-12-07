@@ -204,7 +204,7 @@ const SupabaseLoginModal: React.FC<SupabaseLoginModalProps> = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-bg-base rounded-lg shadow-medium max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* ヘッダー */}
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-xl font-semibold text-gray-900">
@@ -239,7 +239,7 @@ const SupabaseLoginModal: React.FC<SupabaseLoginModalProps> = ({ onClose }) => {
                 value={formData.email}
                 onChange={handleInputChange}
                 required
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-400 focus:border-transparent"
                 placeholder="example@email.com"
               />
             </div>
@@ -259,7 +259,7 @@ const SupabaseLoginModal: React.FC<SupabaseLoginModalProps> = ({ onClose }) => {
                 onChange={handleInputChange}
                 required
                 minLength={8}
-                className="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-400 focus:border-transparent"
                 placeholder="英数記号8文字以上で入力"
               />
               <button
@@ -291,7 +291,7 @@ const SupabaseLoginModal: React.FC<SupabaseLoginModalProps> = ({ onClose }) => {
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
                     required
-                    className="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-400 focus:border-transparent"
                     placeholder="パスワードを再入力"
                   />
                   <button
@@ -319,7 +319,7 @@ const SupabaseLoginModal: React.FC<SupabaseLoginModalProps> = ({ onClose }) => {
                     required
                     minLength={2}
                     maxLength={20}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-400 focus:border-transparent"
                     placeholder="2-20文字で入力"
                   />
                 </div>
@@ -337,7 +337,7 @@ const SupabaseLoginModal: React.FC<SupabaseLoginModalProps> = ({ onClose }) => {
                     value={formData.university}
                     onChange={handleInputChange}
                     required
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-400 focus:border-transparent"
                   >
                     <option value="">大学を選択してください</option>
                     {universities.map(uni => (
@@ -359,7 +359,7 @@ const SupabaseLoginModal: React.FC<SupabaseLoginModalProps> = ({ onClose }) => {
                         required
                         minLength={2}
                         maxLength={100}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-400 focus:border-transparent"
                         placeholder="大学名を入力してください（2-100文字）"
                       />
                     </div>
@@ -405,7 +405,7 @@ const SupabaseLoginModal: React.FC<SupabaseLoginModalProps> = ({ onClose }) => {
                   onChange={handleInputChange}
                   rows={3}
                   maxLength={200}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-400 focus:border-transparent"
                   placeholder="自己紹介を入力（任意、200文字以内）"
                 />
                 <p className="text-xs text-gray-500 mt-1 text-right">
@@ -435,7 +435,7 @@ const SupabaseLoginModal: React.FC<SupabaseLoginModalProps> = ({ onClose }) => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-cyan-600 text-white py-2 px-4 rounded-md hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+            className="w-full bg-primary-500 text-white py-3 px-5 rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold shadow-medium"
           >
             {isLoading ? (
               <div className="flex items-center justify-center">
@@ -452,7 +452,7 @@ const SupabaseLoginModal: React.FC<SupabaseLoginModalProps> = ({ onClose }) => {
         <div className="px-6 py-4 border-t bg-gray-50">
           <button
             onClick={toggleMode}
-            className="text-cyan-600 hover:text-cyan-700 text-sm font-medium"
+            className="text-primary-500 hover:text-primary-600 text-sm font-semibold"
           >
             {isLogin ? 'アカウントをお持ちでない方はこちら' : '既にアカウントをお持ちの方はこちら'}
           </button>

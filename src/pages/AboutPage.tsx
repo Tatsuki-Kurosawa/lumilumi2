@@ -4,7 +4,7 @@ import { Palette, Users, Heart, Sparkles, BookOpen, TrendingUp } from 'lucide-re
 
 const AboutPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-50 py-12 relative overflow-hidden">
+    <div className="min-h-screen bg-bg-secondary py-16 relative overflow-hidden">
       {/* 背景アイコン */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <img
@@ -14,19 +14,19 @@ const AboutPage: React.FC = () => {
         />
       </div>
       
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="bg-white rounded-lg shadow-sm p-8">
+      <div className="max-w-4xl mx-auto px-6 sm:px-8 lg:px-10 relative z-10">
+        <div className="bg-bg-base rounded-lg shadow-medium p-10 md:p-12">
           {/* 新しい内容 */}
           <div className="prose max-w-none">
             {/* タイトル */}
-            <h1 className="text-4xl font-bold text-gray-900 text-center mb-12">
+            <h1 className="text-4xl md:text-5xl font-bold text-text-primary text-center mb-16 leading-tight">
               ～若いクリエイターの才能を支え、社会を動かす～
             </h1>
 
             {/* イラストーク大学とは？ */}
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-6">イラストーク大学とは？</h2>
-              <div className="text-gray-700 leading-relaxed space-y-4">
+            <section className="mb-12">
+              <h2 className="text-3xl font-semibold text-text-primary mb-8">イラストーク大学とは？</h2>
+              <div className="text-text-secondary leading-relaxed space-y-6 text-base">
                 <p>
                   イラストーク大学は、学生を中心とした若きクリエイターを応援するコミュニティサイトです。
                 </p>
@@ -39,15 +39,15 @@ const AboutPage: React.FC = () => {
                 <p>
                   現在はWEBでの作品の公開や、イラスト・漫画を中心としたクリエイター同士の交流支援、及び企業との協業も視野に入れた活動を行っております。
                 </p>
-                <p className="mt-6">
+                <p className="mt-8 text-lg font-medium">
                   皆様のご参加・ご支援をお待ちしております。
                 </p>
               </div>
             </section>
 
             {/* 署名 */}
-            <section className="mt-12 pt-8 border-t border-gray-200">
-              <div className="text-gray-700 space-y-2 text-right">
+            <section className="mt-16 pt-10 border-t border-gray-200">
+              <div className="text-text-secondary space-y-3 text-right font-medium">
                 <p>東京大学　けい</p>
                 <p>東京理科大学　ほり</p>
                 <p>早稲田大学　ゆゆ</p>
@@ -191,10 +191,10 @@ const AboutPage: React.FC = () => {
           </div>
           */}
 
-          <div className="mt-8 pt-8 border-t border-gray-200">
+          <div className="mt-12 pt-10 border-t border-gray-200">
             <Link
               to="/"
-              className="text-cyan-600 hover:text-cyan-700 font-medium"
+              className="text-primary-500 hover:text-primary-600 font-semibold transition-colors inline-flex items-center"
             >
               ← ホームに戻る
             </Link>

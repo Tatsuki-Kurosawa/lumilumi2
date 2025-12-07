@@ -32,85 +32,87 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
 
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <header className="fixed top-0 left-0 right-0 bg-primary-500 shadow-soft z-50">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+        <div className="flex items-center justify-between h-20">
           {/* ロゴ */}
-          <Link to="/" className="flex items-center space-x-2">
+          <Link to="/" className="flex items-center space-x-3">
             <img
               src="/mangaumaretaro.jpg"
               alt="イラストーク大学 Logo"
-              className="w-8 h-8 rounded-lg object-cover"
+              className="w-10 h-10 rounded-lg object-cover shadow-soft"
             />
-            <span className="text-xl font-bold text-gray-900 hidden sm:block">イラストーク大学</span>
+            <span className="text-xl font-bold text-white hidden sm:block">イラストーク大学</span>
           </Link>
 
           {/* 検索バー */}
-          <div className="flex-1 max-w-lg mx-4 hidden md:block">
+          <div className="flex-1 max-w-lg mx-6 hidden md:block">
             <form onSubmit={handleSearch} className="relative">
               <input
                 type="text"
                 placeholder="作品やユーザーを検索..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-12 pr-5 py-3 bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-400 shadow-soft text-text-primary placeholder:text-text-tertiary"
               />
-              <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-text-tertiary" />
             </form>
           </div>
 
           {/* ナビゲーション */}
-          <nav className="hidden lg:flex items-center space-x-6">
+          <nav className="hidden lg:flex items-center space-x-3">
             <Link
               to="/manga"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 isActive('/manga')
-                  ? 'text-primary-600 bg-primary-50'
-                  : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
+                  ? 'text-white bg-white/20 shadow-soft'
+                  : 'text-white/90 hover:text-white hover:bg-white/10'
               }`}
             >
               マンガ
             </Link>
             <Link
               to="/illustrations"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 isActive('/illustrations')
-                  ? 'text-primary-600 bg-primary-50'
-                  : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
+                  ? 'text-white bg-white/20 shadow-soft'
+                  : 'text-white/90 hover:text-white hover:bg-white/10'
               }`}
             >
               イラスト
             </Link>
             <Link
               to="/works"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 isActive('/works')
-                  ? 'text-primary-600 bg-primary-50'
-                  : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
+                  ? 'text-white bg-white/20 shadow-soft'
+                  : 'text-white/90 hover:text-white hover:bg-white/10'
               }`}
             >
               作品一覧
             </Link>
             <span
-              className="px-3 py-2 rounded-md text-sm font-medium text-gray-400 cursor-not-allowed"
+              className="px-4 py-2.5 rounded-lg text-sm font-medium text-white/50 cursor-not-allowed"
               title="近日公開予定"
             >
               コンテスト
             </span>
             <Link
               to="/r18"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors bg-red-50 text-red-600 hover:bg-red-100 ${
-                isActive('/r18') ? 'bg-red-100' : ''
+              className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                isActive('/r18')
+                  ? 'text-white bg-white/20 shadow-soft'
+                  : 'text-white/90 hover:text-white hover:bg-white/10'
               }`}
             >
               R-18
             </Link>
             <Link
               to="/about"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 isActive('/about')
-                  ? 'text-primary-600 bg-primary-50'
-                  : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
+                  ? 'text-white bg-white/20 shadow-soft'
+                  : 'text-white/90 hover:text-white hover:bg-white/10'
               }`}
             >
               About
@@ -118,27 +120,27 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
           </nav>
 
           {/* 右側のボタン群 */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
             {/* ハンバーガーメニューボタン */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden p-2 text-gray-700 hover:text-primary-600 transition-colors"
+              className="lg:hidden p-2.5 text-white hover:bg-white/10 rounded-lg transition-colors"
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
 
             {/* ユーザーメニュー */}
             {loading ? (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 {/* ローディング中のスケルトン */}
-                <div className="w-24 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
-                <div className="w-24 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+                <div className="w-28 h-11 bg-white/20 rounded-lg animate-pulse"></div>
+                <div className="w-24 h-11 bg-white/20 rounded-lg animate-pulse"></div>
               </div>
             ) : user && profile ? (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <Link
                   to="/upload"
-                  className="flex items-center space-x-1 px-4 py-2 bg-accent-400 text-gray-900 rounded-lg hover:bg-accent-500 transition-colors font-medium"
+                  className="flex items-center space-x-2 px-5 py-2.5 bg-accent-400 text-text-primary rounded-lg hover:bg-accent-500 transition-all font-semibold shadow-medium hover:shadow-card"
                 >
                   <PenSquare className="h-5 w-5" />
                   <span className="hidden sm:inline">投稿する</span>
@@ -146,37 +148,37 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
                 <NotificationDropdown />
                 <Link
                   to="/my-page"
-                  className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-primary-600 transition-colors"
+                  className="flex items-center space-x-2 px-4 py-2.5 text-white hover:bg-white/10 rounded-lg transition-all"
                 >
                   <User className="h-5 w-5" />
-                  <span className="hidden sm:block">{profile.display_name}</span>
+                  <span className="hidden sm:block font-medium">{profile.display_name}</span>
                 </Link>
                 <button
                   onClick={handleSignOut}
-                  className="px-3 py-2 text-gray-700 hover:text-red-600 transition-colors"
+                  className="px-4 py-2.5 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-all text-sm font-medium"
                 >
                   ログアウト
                 </button>
               </div>
             ) : (
-              <div className="flex space-x-2">
+              <div className="flex space-x-3">
                 <button
                   onClick={onLoginClick}
-                  className="flex items-center space-x-1 px-4 py-2 bg-accent-400 text-gray-900 rounded-lg hover:bg-accent-500 transition-colors font-medium"
+                  className="flex items-center space-x-2 px-5 py-2.5 bg-accent-400 text-text-primary rounded-lg hover:bg-accent-500 transition-all font-semibold shadow-medium hover:shadow-card"
                 >
                   <PenSquare className="h-5 w-5" />
                   <span className="hidden sm:inline">投稿する</span>
                 </button>
                 <button
                   onClick={onLoginClick}
-                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-5 py-2.5 text-white border border-white/30 rounded-lg hover:bg-white/10 transition-all font-medium"
                 >
                   ログイン
                 </button>
                 {onSignUpClick && (
                   <button
                     onClick={onSignUpClick}
-                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                    className="px-5 py-2.5 bg-white text-primary-500 rounded-lg hover:bg-white/90 transition-all font-semibold shadow-soft"
                   >
                     新規登録
                   </button>
@@ -188,12 +190,12 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
 
         {/* モバイルメニュー */}
         {isMenuOpen && (
-          <div className="lg:hidden border-t border-gray-200 py-4">
+          <div className="lg:hidden border-t border-white/20 py-6">
             <div className="flex flex-col space-y-2">
               {user && profile ? (
                 <Link
                   to="/upload"
-                  className="flex items-center justify-center space-x-2 mx-3 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  className="flex items-center justify-center space-x-2 mx-3 px-5 py-3.5 bg-accent-400 text-text-primary rounded-lg hover:bg-accent-500 transition-all font-semibold shadow-medium"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <PenSquare className="h-5 w-5" />
@@ -205,7 +207,7 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
                     setIsMenuOpen(false);
                     onLoginClick();
                   }}
-                  className="flex items-center justify-center space-x-2 mx-3 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  className="flex items-center justify-center space-x-2 mx-3 px-5 py-3.5 bg-accent-400 text-text-primary rounded-lg hover:bg-accent-500 transition-all font-semibold shadow-medium"
                 >
                   <PenSquare className="h-5 w-5" />
                   <span>投稿する</span>
@@ -213,41 +215,41 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
               )}
               <Link
                 to="/manga"
-                className="px-3 py-2 text-gray-700 hover:text-cyan-600 hover:bg-gray-50 rounded-md"
+                className="px-4 py-3 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-all font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
                 マンガ
               </Link>
               <Link
                 to="/illustrations"
-                className="px-3 py-2 text-gray-700 hover:text-cyan-600 hover:bg-gray-50 rounded-md"
+                className="px-4 py-3 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-all font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
                 イラスト
               </Link>
               <Link
                 to="/works"
-                className="px-3 py-2 text-gray-700 hover:text-cyan-600 hover:bg-gray-50 rounded-md"
+                className="px-4 py-3 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-all font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
                 作品一覧
               </Link>
               <span
-                className="px-3 py-2 text-gray-400 cursor-not-allowed rounded-md"
+                className="px-4 py-3 text-white/50 cursor-not-allowed rounded-lg"
                 title="近日公開予定"
               >
                 コンテスト
               </span>
               <Link
                 to="/r18"
-                className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-md"
+                className="px-4 py-3 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-all font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
                 R-18
               </Link>
               <Link
                 to="/about"
-                className="px-3 py-2 text-gray-700 hover:text-cyan-600 hover:bg-gray-50 rounded-md"
+                className="px-4 py-3 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-all font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
                 About
@@ -255,16 +257,16 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
 
             </div>
             {/* モバイル検索 */}
-            <div className="mt-4">
+            <div className="mt-6 px-3">
               <form onSubmit={handleSearch} className="relative">
                 <input
                   type="text"
                   placeholder="作品やユーザーを検索..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                  className="w-full pl-12 pr-5 py-3 bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-400 shadow-soft text-text-primary placeholder:text-text-tertiary"
                 />
-                <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-text-tertiary" />
               </form>
             </div>
           </div>

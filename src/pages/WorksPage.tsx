@@ -607,11 +607,11 @@ const WorksPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-bg-secondary">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-10">
         {/* ヘッダー */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">{getCategoryTitle()}</h1>
+          <h1 className="text-4xl font-bold text-text-primary mb-6">{getCategoryTitle()}</h1>
 
           {/* 作品タイプタブ（マンガ/イラスト） */}
           <div className="mb-4 flex space-x-2 overflow-x-auto border-b border-gray-200">
@@ -619,8 +619,8 @@ const WorksPage: React.FC = () => {
               onClick={() => handleWorkTypeChange('all')}
               className={`px-6 py-3 font-medium whitespace-nowrap transition-colors border-b-2 ${
                 activeWorkType === 'all'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-primary-500 text-primary-500'
+                  : 'border-transparent text-text-secondary hover:text-text-primary'
               }`}
             >
               すべて
@@ -629,8 +629,8 @@ const WorksPage: React.FC = () => {
               onClick={() => handleWorkTypeChange('manga')}
               className={`px-6 py-3 font-medium whitespace-nowrap transition-colors border-b-2 ${
                 activeWorkType === 'manga'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-primary-500 text-primary-500'
+                  : 'border-transparent text-text-secondary hover:text-text-primary'
               }`}
             >
               マンガ
@@ -639,8 +639,8 @@ const WorksPage: React.FC = () => {
               onClick={() => handleWorkTypeChange('illustration')}
               className={`px-6 py-3 font-medium whitespace-nowrap transition-colors border-b-2 ${
                 activeWorkType === 'illustration'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-primary-500 text-primary-500'
+                  : 'border-transparent text-text-secondary hover:text-text-primary'
               }`}
             >
               イラスト
@@ -653,8 +653,8 @@ const WorksPage: React.FC = () => {
               onClick={() => handleCategoryChange('latest')}
               className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
                 activeCategory === 'latest'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                  ? 'bg-primary-500 text-white'
+                  : 'bg-bg-base text-text-primary hover:bg-bg-secondary'
               }`}
             >
               新着
@@ -663,8 +663,8 @@ const WorksPage: React.FC = () => {
               onClick={() => handleCategoryChange('ranking')}
               className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
                 activeCategory === 'ranking'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                  ? 'bg-primary-500 text-white'
+                  : 'bg-bg-base text-text-primary hover:bg-bg-secondary'
               }`}
             >
               ランキング
@@ -701,11 +701,11 @@ const WorksPage: React.FC = () => {
                   className={`px-3 py-1 rounded-full text-sm transition-colors ${
                     activeCategory === 'ranking'
                       ? selectedRankingTag === tag.name
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-primary-500 text-white'
+                        : 'bg-bg-secondary text-text-primary hover:bg-primary-50'
                       : selectedTags.includes(tag.name)
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-primary-500 text-white'
+                        : 'bg-bg-secondary text-text-primary hover:bg-primary-50'
                   }`}
                 >
                   #{tag.name} ({tag.count})
@@ -718,12 +718,12 @@ const WorksPage: React.FC = () => {
                 {selectedTags.map((tag) => (
                   <span
                     key={tag}
-                    className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
+                    className="inline-flex items-center px-3 py-1.5 bg-primary-50 text-primary-600 text-sm rounded-full font-medium"
                   >
                     #{tag}
                     <button
                       onClick={() => handleTagClick(tag)}
-                      className="ml-1 text-blue-600 hover:text-blue-800"
+                      className="ml-1 text-primary-500 hover:text-primary-600"
                     >
                       ×
                     </button>
@@ -751,7 +751,7 @@ const WorksPage: React.FC = () => {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-400 focus:border-transparent"
             />
             <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
           </div>
@@ -798,12 +798,12 @@ const WorksPage: React.FC = () => {
                         </Link>
                         <div className="p-4">
                           <Link to={`/works/${work.id}`}>
-                            <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 transition-colors">
+                            <h3 className="font-semibold text-text-primary mb-2 line-clamp-2 hover:text-primary-500 transition-colors">
                               {work.title}
                             </h3>
                           </Link>
                           <Link to={`/user/${work.author.username}`}>
-                            <p className="text-sm text-gray-600 mb-3 hover:text-blue-600 transition-colors">
+                            <p className="text-sm text-text-secondary mb-3 hover:text-primary-500 transition-colors">
                               {work.author.display_name}@{work.author.university}
                             </p>
                           </Link>
@@ -854,7 +854,7 @@ const WorksPage: React.FC = () => {
             {loading ? (
               <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
-                  <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
+                  <div key={index} className="bg-bg-base rounded-lg shadow-soft p-5 animate-pulse">
                     <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
                     <div className="h-4 bg-gray-200 rounded mb-2"></div>
                     <div className="h-3 bg-gray-200 rounded mb-2"></div>
@@ -895,8 +895,8 @@ const WorksPage: React.FC = () => {
                           onClick={() => handlePageChange(page)}
                           className={`px-3 py-2 rounded-md transition-colors ${
                             page === currentPage
-                              ? 'bg-blue-600 text-white'
-                              : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+                              ? 'bg-primary-500 text-white'
+                              : 'text-text-primary hover:text-primary-500 hover:bg-bg-secondary'
                           }`}
                         >
                           {page}

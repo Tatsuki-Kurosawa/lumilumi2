@@ -6,35 +6,35 @@ const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gray-900 text-gray-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
+    <footer className="bg-primary-500 text-white">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-16">
           {/* サービス */}
           <div className="text-center sm:text-left">
-            <h3 className="text-white font-semibold text-lg mb-4">サービス</h3>
-            <ul className="space-y-2 text-sm">
+            <h3 className="text-white font-semibold text-lg mb-6">サービス</h3>
+            <ul className="space-y-3 text-sm">
               <li>
-                <Link to="/about" className="hover:text-accent-400 transition-colors">
+                <Link to="/about" className="text-white/90 hover:text-accent-400 transition-colors font-medium">
                   イラストーク大学について
                 </Link>
               </li>
               <li>
-                <Link to="/manga" className="hover:text-accent-400 transition-colors">
+                <Link to="/manga" className="text-white/90 hover:text-accent-400 transition-colors font-medium">
                   マンガ
                 </Link>
               </li>
               <li>
-                <Link to="/illustrations" className="hover:text-accent-400 transition-colors">
+                <Link to="/illustrations" className="text-white/90 hover:text-accent-400 transition-colors font-medium">
                   イラスト
                 </Link>
               </li>
               <li>
-                <Link to="/works" className="hover:text-accent-400 transition-colors">
+                <Link to="/works" className="text-white/90 hover:text-accent-400 transition-colors font-medium">
                   作品一覧
                 </Link>
               </li>
               <li>
-                <span className="text-gray-500 cursor-not-allowed">
+                <span className="text-white/50 cursor-not-allowed font-medium">
                   コンテスト（近日公開）
                 </span>
               </li>
@@ -43,22 +43,22 @@ const Footer: React.FC = () => {
 
           {/* サポート */}
           <div className="text-center sm:text-left">
-            <h3 className="text-white font-semibold text-lg mb-4">サポート</h3>
-            <ul className="space-y-2 text-sm">
+            <h3 className="text-white font-semibold text-lg mb-6">サポート</h3>
+            <ul className="space-y-3 text-sm">
               <li>
-                <Link to="/help" className="inline-flex items-center hover:text-accent-400 transition-colors">
+                <Link to="/help" className="inline-flex items-center text-white/90 hover:text-accent-400 transition-colors font-medium">
                   <HelpCircle className="h-4 w-4 mr-2" />
                   ヘルプ・よくある質問
                 </Link>
               </li>
               <li>
-                <Link to="/guidelines" className="inline-flex items-center hover:text-accent-400 transition-colors">
+                <Link to="/guidelines" className="inline-flex items-center text-white/90 hover:text-accent-400 transition-colors font-medium">
                   <BookOpen className="h-4 w-4 mr-2" />
                   投稿ガイドライン
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="inline-flex items-center hover:text-accent-400 transition-colors">
+                <Link to="/contact" className="inline-flex items-center text-white/90 hover:text-accent-400 transition-colors font-medium">
                   <Mail className="h-4 w-4 mr-2" />
                   お問い合わせ
                 </Link>
@@ -68,21 +68,21 @@ const Footer: React.FC = () => {
 
           {/* SNS */}
           <div className="text-center sm:text-left sm:col-span-2 lg:col-span-1">
-            <h3 className="text-white font-semibold text-lg mb-4">SNS</h3>
-            <p className="text-sm text-gray-400 mb-4">
+            <h3 className="text-white font-semibold text-lg mb-6">SNS</h3>
+            <p className="text-sm text-white/80 mb-6">
               公式SNSで最新情報をチェック
             </p>
-            <div className="flex space-x-4 justify-center sm:justify-start">
+            <div className="flex space-x-5 justify-center sm:justify-start">
               <a
                 href="https://x.com/illustalk_univ?s=21"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-accent-400 transition-colors"
+                className="text-white/80 hover:text-accent-400 transition-colors"
                 aria-label="X (Twitter)"
                 title="X (Twitter)"
               >
                 <svg
-                  className="h-6 w-6"
+                  className="h-7 w-7"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
@@ -94,12 +94,12 @@ const Footer: React.FC = () => {
                 href="https://discord.gg/S2xhpHyqv"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-accent-400 transition-colors"
+                className="text-white/80 hover:text-accent-400 transition-colors"
                 aria-label="Discord"
                 title="Discord"
               >
                 <svg
-                  className="h-6 w-6"
+                  className="h-7 w-7"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
@@ -144,12 +144,12 @@ const Footer: React.FC = () => {
         </div>
 
         {/* 下部 - コピーライト */}
-        <div className="mt-8 pt-8 border-t border-gray-800">
+        <div className="mt-12 pt-8 border-t border-white/20">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-white/80 font-medium">
               © {currentYear} イラストーク大学. All rights reserved.
             </p>
-            <p className="text-xs text-gray-600 mt-2 md:mt-0">
+            <p className="text-xs text-white/60 mt-2 md:mt-0">
               学生クリエイターの創作活動を支援するプラットフォーム
             </p>
           </div>

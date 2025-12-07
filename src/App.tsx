@@ -109,9 +109,9 @@ function AppContent() {
   return (
     <Router>
       <ScrollToTop />
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="min-h-screen bg-bg-secondary flex flex-col">
         <Header onLoginClick={handleLoginClick} onSignUpClick={handleSignUpClick} />
-        <main className="pt-16 flex-grow">
+        <main className="pt-20 flex-grow">
           <Routes>
             <Route path="/" element={<HomePage onLoginClick={handleLoginClick} onSignUpClick={handleSignUpClick} />} />
             <Route path="/search" element={<SearchResultsPage />} />

@@ -106,17 +106,17 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-bg-secondary">
       {/* ヒーローセクション */}
-      <section className="bg-primary-600 text-white py-20 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="bg-primary-500 text-white py-24 relative pt-32">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
           {/* ソーシャルメディアリンク */}
-          <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center space-x-3">
+          <div className="absolute top-6 right-6 sm:top-8 sm:right-8 flex items-center space-x-3">
             <a
               href="https://x.com/illustalk_univ?s=21"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center space-x-2 px-3 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+              className="flex items-center space-x-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 rounded-lg transition-all backdrop-blur-sm"
               title="X (旧Twitter)でフォロー"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -128,7 +128,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
               href="https://discord.gg/S2xhpHyqv"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center space-x-2 px-3 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+              className="flex items-center space-x-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 rounded-lg transition-all backdrop-blur-sm"
               title="Discordサーバーに参加"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -137,29 +137,30 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
               <span className="hidden sm:inline text-sm font-medium">参加</span>
             </a>
           </div>
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+          <div className="text-center max-w-4xl mx-auto">
+            <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight">
               学生クリエイターの
               <br />
               <span className="text-accent-400">
                 創作プラットフォーム
               </span>
             </h1>
-            <p className="text-xl md:text-2xl mb-8 text-primary-100 max-w-3xl mx-auto">
+            <p className="text-xl md:text-2xl mb-10 text-white/90 max-w-3xl mx-auto leading-relaxed">
               あなたの描いた漫画・イラストを世界に発信しよう。
+              <br />
               学生同士で繋がり、創作活動を支援し合うコミュニティ。
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/manga"
-                className="inline-flex items-center px-8 py-3 bg-accent-400 text-gray-900 rounded-lg font-semibold hover:bg-accent-500 transition-colors shadow-md"
+                className="inline-flex items-center justify-center px-8 py-4 bg-accent-400 text-text-primary rounded-lg font-semibold hover:bg-accent-500 transition-all shadow-medium hover:shadow-card text-base"
               >
                 作品を見る
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
               <button
                 onClick={handleUploadClick}
-                className="inline-flex items-center px-8 py-3 bg-white text-primary-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors shadow-md"
+                className="inline-flex items-center justify-center px-8 py-4 bg-white text-primary-500 rounded-lg font-semibold hover:bg-white/90 transition-all shadow-medium hover:shadow-card text-base"
               >
                 作品を投稿
               </button>
@@ -169,16 +170,16 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
       </section>
 
       {/* 統計セクション */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <section className="py-20 bg-bg-base">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
             {statsData.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mb-4">
-                  <stat.icon className="h-6 w-6 text-blue-600" />
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-50 rounded-lg mb-5 shadow-soft">
+                  <stat.icon className="h-7 w-7 text-primary-500" />
                 </div>
-                <div className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</div>
-                <div className="text-gray-600">{stat.label}</div>
+                <div className="text-3xl font-bold text-text-primary mb-2">{stat.value}</div>
+                <div className="text-text-secondary font-medium">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -186,29 +187,29 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
       </section>
 
       {/* 注目作品セクション */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">注目の作品</h2>
+      <section className="py-20 bg-bg-secondary">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+          <div className="flex items-center justify-between mb-12">
+            <h2 className="text-4xl font-bold text-text-primary">注目の作品</h2>
             <Link
               to="/works"
-              className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
+              className="inline-flex items-center text-primary-500 hover:text-primary-600 font-semibold transition-colors"
             >
               すべて見る
-              <ArrowRight className="ml-1 h-4 w-4" />
+              <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
             {loading ? (
               // ローディング表示
               Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
-                  <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
-                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                  <div className="h-3 bg-gray-200 rounded mb-2"></div>
+                <div key={index} className="bg-bg-base rounded-lg shadow-soft p-5 animate-pulse">
+                  <div className="w-full aspect-square bg-bg-secondary rounded-lg mb-5"></div>
+                  <div className="h-5 bg-bg-secondary rounded mb-3"></div>
+                  <div className="h-4 bg-bg-secondary rounded mb-4"></div>
                   <div className="flex space-x-2">
-                    <div className="h-3 w-12 bg-gray-200 rounded"></div>
-                    <div className="h-3 w-16 bg-gray-200 rounded"></div>
+                    <div className="h-6 w-16 bg-bg-secondary rounded-full"></div>
+                    <div className="h-6 w-20 bg-bg-secondary rounded-full"></div>
                   </div>
                 </div>
               ))
@@ -218,13 +219,13 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
               ))
             ) : (
               // データがない場合の表示
-              <div className="col-span-full text-center py-12">
-                <Palette className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">投稿作品がありません</h3>
-                <p className="text-gray-600 mb-4">まだ作品が投稿されていません。最初の作品を投稿してみませんか？</p>
+              <div className="col-span-full text-center py-16">
+                <Palette className="h-20 w-20 text-text-tertiary mx-auto mb-6" />
+                <h3 className="text-xl font-semibold text-text-primary mb-3">投稿作品がありません</h3>
+                <p className="text-text-secondary mb-6 max-w-md mx-auto">まだ作品が投稿されていません。最初の作品を投稿してみませんか？</p>
                 <button
                   onClick={handleUploadClick}
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="inline-flex items-center px-6 py-3 bg-accent-400 text-text-primary rounded-lg hover:bg-accent-500 transition-all font-semibold shadow-medium"
                 >
                   作品を投稿する
                 </button>
@@ -235,39 +236,39 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
       </section>
 
       {/* 機能紹介セクション */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">プラットフォームの特徴</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+      <section className="py-20 bg-bg-base">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-text-primary mb-5">プラットフォームの特徴</h2>
+            <p className="text-xl text-text-secondary max-w-3xl mx-auto leading-relaxed">
               学生クリエイターのための充実した機能で、あなたの創作活動をサポートします
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Palette className="h-8 w-8 text-blue-600" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            <div className="text-center p-8 bg-bg-secondary rounded-lg shadow-soft hover:shadow-medium transition-all">
+              <div className="w-20 h-20 bg-primary-50 rounded-lg flex items-center justify-center mx-auto mb-6 shadow-soft">
+                <Palette className="h-10 w-10 text-primary-500" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">簡単投稿</h3>
-              <p className="text-gray-600">
+              <h3 className="text-xl font-semibold text-text-primary mb-3">簡単投稿</h3>
+              <p className="text-text-secondary leading-relaxed">
                 ドラッグ&ドロップで簡単に作品を投稿。タグ付けで作品を整理し、多くの人に見てもらえます。
               </p>
             </div>
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="h-8 w-8 text-green-600" />
+            <div className="text-center p-8 bg-bg-secondary rounded-lg shadow-soft hover:shadow-medium transition-all">
+              <div className="w-20 h-20 bg-primary-50 rounded-lg flex items-center justify-center mx-auto mb-6 shadow-soft">
+                <Users className="h-10 w-10 text-primary-500" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">学生コミュニティ</h3>
-              <p className="text-gray-600">
+              <h3 className="text-xl font-semibold text-text-primary mb-3">学生コミュニティ</h3>
+              <p className="text-text-secondary leading-relaxed">
                 同じ大学や他大学の学生クリエイターと繋がり、お互いの作品にフィードバックを送り合えます。
               </p>
             </div>
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Star className="h-8 w-8 text-purple-600" />
+            <div className="text-center p-8 bg-bg-secondary rounded-lg shadow-soft hover:shadow-medium transition-all">
+              <div className="w-20 h-20 bg-primary-50 rounded-lg flex items-center justify-center mx-auto mb-6 shadow-soft">
+                <Star className="h-10 w-10 text-primary-500" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">依頼システム</h3>
-              <p className="text-gray-600">
+              <h3 className="text-xl font-semibold text-text-primary mb-3">依頼システム</h3>
+              <p className="text-text-secondary leading-relaxed">
                 作品の添削依頼や新規制作依頼を通じて、スキルアップと収益化の両方を実現できます。
               </p>
             </div>
@@ -276,14 +277,14 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
       </section>
 
       {/* CTAセクション */}
-      <section className="py-16 bg-accent-400">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold mb-6 text-gray-900">
+      <section className="py-20 bg-accent-400">
+        <div className="max-w-4xl mx-auto text-center px-6 sm:px-8 lg:px-10">
+          <h2 className="text-4xl md:text-5xl font-bold mb-8 text-text-primary leading-tight">
             {stats.userCount > 0 ? `${stats.userCount.toLocaleString()}人の学生と共に発信していこう` : '何人の学生と共に発信していこう'}
           </h2>
           <button
             onClick={onSignUpClick}
-            className="inline-flex items-center px-8 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors text-lg shadow-md"
+            className="inline-flex items-center px-10 py-4 bg-primary-500 text-white rounded-lg font-semibold hover:bg-primary-600 transition-all text-lg shadow-medium hover:shadow-card"
           >
             無料で始める
             <ArrowRight className="ml-2 h-5 w-5" />
