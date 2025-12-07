@@ -78,6 +78,7 @@ export class PostsService {
             )
           )
         `)
+        .eq('is_r18', false)
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
@@ -158,6 +159,7 @@ export class PostsService {
           )
         `)
         .eq('type', category)
+        .eq('is_r18', false)
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
@@ -245,6 +247,92 @@ export class PostsService {
   ): Promise<{ posts: PostWithDetails[]; error?: string }> {
     // 新着は最新の投稿から取得
     return this.getPostsByCategory(category, limit, offset);
+  }
+
+  // R18作品を取得（タイプ別）
+  static async getR18PostsByType(
+    type: 'manga' | 'illustration' | 'all',
+    limit = 20,
+    offset = 0
+  ): Promise<{ posts: PostWithDetails[]; error?: string }> {
+    try {
+      let query = supabase
+        .from('posts')
+        .select(`
+          *,
+          author:profiles!posts_author_id_fkey(
+            id,
+            username,
+            display_name,
+            university,
+            status,
+            avatar_url,
+            bio,
+            is_creator,
+            created_at
+          ),
+          images:post_images(
+            id,
+            post_id,
+            image_url,
+            display_order
+          ),
+          tags:post_tags(
+            tag:tags(
+              id,
+              name
+            )
+          )
+        `)
+        .eq('is_r18', true)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (type !== 'all') {
+        query = query.eq('type', type);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('R18投稿データ取得エラー:', error);
+        return { posts: [], error: error.message };
+      }
+
+      // 投稿IDリストを取得
+      const postIds = (data || []).map((post: any) => post.id);
+      
+      // いいね数とPV数を一括取得
+      const [likeCountsMap, viewCountsMap] = await Promise.all([
+        this.getLikeCountsForPosts(postIds),
+        PageViewService.getViewCountsForPosts(postIds)
+      ]);
+
+      // データを整形
+      const formattedPosts: PostWithDetails[] = (data || []).map((post: any) => ({
+        id: post.id,
+        author_id: post.author_id,
+        type: post.type,
+        title: post.title,
+        description: post.description,
+        thumbnail_url: post.thumbnail_url,
+        is_r18: post.is_r18,
+        created_at: post.created_at,
+        author: post.author,
+        images: (post.images || []).sort((a: any, b: any) => a.display_order - b.display_order),
+        tags: (post.tags || []).map((tag: any) => tag.tag).filter(Boolean),
+        like_count: likeCountsMap.get(post.id) || 0,
+        view_count: viewCountsMap.get(post.id) || 0
+      }));
+
+      return { posts: formattedPosts };
+    } catch (error) {
+      console.error('R18投稿データ取得中にエラーが発生:', error);
+      return {
+        posts: [],
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
   }
 
   // 特定の投稿を取得

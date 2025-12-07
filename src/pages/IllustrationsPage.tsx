@@ -141,7 +141,8 @@ const IllustrationsPage: React.FC = () => {
               )
             )
           `)
-          .eq('type', 'illustration');
+          .eq('type', 'illustration')
+          .eq('is_r18', false);
         
         // 複数のパターンで検索（OR条件）
         if (queryPatterns.length > 1) {
@@ -209,7 +210,7 @@ const IllustrationsPage: React.FC = () => {
           if (!postTagError && postTagData) {
             postsByTag = postTagData
               .map((item: any) => item.posts)
-              .filter((post: any) => post !== null && post.type === 'illustration');
+              .filter((post: any) => post !== null && post.type === 'illustration' && !post.is_r18);
           }
         }
 
@@ -264,7 +265,8 @@ const IllustrationsPage: React.FC = () => {
               )
             `)
             .in('author_id', userIds)
-            .eq('type', 'illustration');
+            .eq('type', 'illustration')
+            .eq('is_r18', false);
           
           if (!userPostError && userPostData) {
             postsByUser = userPostData;
@@ -279,7 +281,7 @@ const IllustrationsPage: React.FC = () => {
         ];
         const uniquePosts = Array.from(
           new Map(allPosts.map((post: any) => [post.id, post])).values()
-        );
+        ).filter((post: any) => !post.is_r18);
 
         // いいね数と閲覧数を取得して追加
         const worksWithStats = await Promise.all(

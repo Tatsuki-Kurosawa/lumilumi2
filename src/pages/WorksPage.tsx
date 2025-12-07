@@ -192,7 +192,8 @@ const WorksPage: React.FC = () => {
                 name
               )
             )
-          `);
+          `)
+          .eq('is_r18', false);
         
         // 複数のパターンで検索（OR条件）
         if (queryPatterns.length > 1) {
@@ -264,7 +265,7 @@ const WorksPage: React.FC = () => {
           if (!postTagError && postTagData) {
             postsByTag = postTagData
               .map((item: any) => item.posts)
-              .filter((post: any) => post !== null);
+              .filter((post: any) => post !== null && !post.is_r18);
             
             // 作品タイプでフィルタリング
             if (activeWorkType !== 'all') {
@@ -320,7 +321,8 @@ const WorksPage: React.FC = () => {
                 )
               )
             `)
-            .in('author_id', userIds);
+            .in('author_id', userIds)
+            .eq('is_r18', false);
 
           if (activeWorkType !== 'all') {
             userPostQuery = userPostQuery.eq('type', activeWorkType);
@@ -341,7 +343,7 @@ const WorksPage: React.FC = () => {
         ];
         const uniquePosts = Array.from(
           new Map(allPosts.map((post: any) => [post.id, post])).values()
-        );
+        ).filter((post: any) => !post.is_r18);
 
         // いいね数と閲覧数を取得して追加
         const worksWithStats = await Promise.all(
@@ -451,7 +453,8 @@ const WorksPage: React.FC = () => {
           // 総投稿数を取得してページ数を計算（作品タイプでフィルタリング）
           let countQuery = supabase
             .from('posts')
-            .select('*', { count: 'exact', head: true });
+            .select('*', { count: 'exact', head: true })
+            .eq('is_r18', false);
 
           if (activeWorkType !== 'all') {
             countQuery = countQuery.eq('type', activeWorkType);

@@ -1,32 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import WorkCard from '../components/WorkCard';
+import { PostsService } from '../lib/postsService';
 
 const R18Page: React.FC = () => {
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(true);
-
-  // ダミーデータ（R-18作品）
-  const r18Works = [
-    {
-      id: 'r18-1',
-      title: 'アート作品 1',
-      thumbnail: 'https://images.pexels.com/photos/1266810/pexels-photo-1266810.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: 'アーティスト@東京大学',
-      likes: 89,
-      views: 456,
-      tags: ['アート', '成人向け'],
-    },
-    {
-      id: 'r18-2',
-      title: 'アート作品 2',
-      thumbnail: 'https://images.pexels.com/photos/1266808/pexels-photo-1266808.jpeg?auto=compress&cs=tinysrgb&w=400',
-      author: 'クリエイター@京都大学og',
-      likes: 67,
-      views: 234,
-      tags: ['イラスト', '成人向け'],
-    },
-  ];
+  const [r18MangaWorks, setR18MangaWorks] = useState<any[]>([]);
+  const [r18IllustrationWorks, setR18IllustrationWorks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const handleAgeConfirmation = (confirmed: boolean) => {
     if (confirmed) {
@@ -35,6 +17,50 @@ const R18Page: React.FC = () => {
     } else {
       // 18歳未満の場合は前のページに戻る
       window.history.back();
+    }
+  };
+
+  // R18作品を取得
+  useEffect(() => {
+    if (ageConfirmed && !showConfirmation) {
+      fetchR18Works();
+    }
+  }, [ageConfirmed, showConfirmation]);
+
+  const fetchR18Works = async () => {
+    setLoading(true);
+    try {
+      // 漫画とイラストを並列で取得
+      const [mangaResult, illustrationResult] = await Promise.all([
+        PostsService.getR18PostsByType('manga', 100, 0),
+        PostsService.getR18PostsByType('illustration', 100, 0)
+      ]);
+
+      if (mangaResult.error) {
+        console.error('R18マンガ取得エラー:', mangaResult.error);
+        setR18MangaWorks([]);
+      } else {
+        const formattedMangaWorks = (mangaResult.posts || []).map((post: any) => 
+          PostsService.formatPostForWorkCard(post)
+        );
+        setR18MangaWorks(formattedMangaWorks);
+      }
+
+      if (illustrationResult.error) {
+        console.error('R18イラスト取得エラー:', illustrationResult.error);
+        setR18IllustrationWorks([]);
+      } else {
+        const formattedIllustrationWorks = (illustrationResult.posts || []).map((post: any) => 
+          PostsService.formatPostForWorkCard(post)
+        );
+        setR18IllustrationWorks(formattedIllustrationWorks);
+      }
+    } catch (error) {
+      console.error('R18作品取得中にエラーが発生:', error);
+      setR18MangaWorks([]);
+      setR18IllustrationWorks([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -111,51 +137,76 @@ const R18Page: React.FC = () => {
         </p>
       </div>
 
-      {/* フィルター */}
-      <div className="flex flex-col lg:flex-row gap-4 mb-6">
-        <div className="flex-1 relative">
-          <input
-            type="text"
-            placeholder="R-18作品を検索..."
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-          />
-          <Eye className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          <select className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
-            <option value="latest">新着順</option>
-            <option value="popular">人気順</option>
-            <option value="likes">いいね順</option>
-          </select>
-        </div>
-      </div>
-
       {/* 作品一覧 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {r18Works.map((work) => (
-          <div key={work.id} className="relative">
-            {/* ぼかしオーバーレイ */}
-            <div className="absolute inset-0 bg-black bg-opacity-20 backdrop-blur-sm rounded-lg z-10 flex items-center justify-center group hover:bg-opacity-10 hover:backdrop-blur-none transition-all duration-200">
-              <div className="text-white text-center group-hover:opacity-0 transition-opacity">
-                <Eye className="h-8 w-8 mx-auto mb-2" />
-                <p className="text-sm font-medium">クリックして表示</p>
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
+              <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
+              <div className="h-4 bg-gray-200 rounded mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded mb-2"></div>
+              <div className="flex space-x-2">
+                <div className="h-3 w-12 bg-gray-200 rounded"></div>
+                <div className="h-3 w-16 bg-gray-200 rounded"></div>
               </div>
             </div>
-            <WorkCard work={work} />
-          </div>
-        ))}
-      </div>
-
-      {/* 空の状態 */}
-      {r18Works.length === 0 && (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Eye className="h-8 w-8 text-gray-400" />
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">R-18作品がありません</h3>
-          <p className="text-gray-600">現在、R-18作品は投稿されていません。</p>
+          ))}
         </div>
+      ) : (
+        <>
+          {/* マンガセクション */}
+          {r18MangaWorks.length > 0 && (
+            <div className="mb-12">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">マンガ</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {r18MangaWorks.map((work) => (
+                  <div key={work.id} className="relative">
+                    {/* ぼかしオーバーレイ */}
+                    <div className="absolute inset-0 bg-black bg-opacity-20 backdrop-blur-sm rounded-lg z-10 flex items-center justify-center group hover:bg-opacity-10 hover:backdrop-blur-none transition-all duration-200 cursor-pointer">
+                      <div className="text-white text-center group-hover:opacity-0 transition-opacity">
+                        <Eye className="h-8 w-8 mx-auto mb-2" />
+                        <p className="text-sm font-medium">クリックして表示</p>
+                      </div>
+                    </div>
+                    <WorkCard work={work} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* イラストセクション */}
+          {r18IllustrationWorks.length > 0 && (
+            <div className="mb-12">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">イラスト</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {r18IllustrationWorks.map((work) => (
+                  <div key={work.id} className="relative">
+                    {/* ぼかしオーバーレイ */}
+                    <div className="absolute inset-0 bg-black bg-opacity-20 backdrop-blur-sm rounded-lg z-10 flex items-center justify-center group hover:bg-opacity-10 hover:backdrop-blur-none transition-all duration-200 cursor-pointer">
+                      <div className="text-white text-center group-hover:opacity-0 transition-opacity">
+                        <Eye className="h-8 w-8 mx-auto mb-2" />
+                        <p className="text-sm font-medium">クリックして表示</p>
+                      </div>
+                    </div>
+                    <WorkCard work={work} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 空の状態 */}
+          {!loading && r18MangaWorks.length === 0 && r18IllustrationWorks.length === 0 && (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Eye className="h-8 w-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">R-18作品がありません</h3>
+              <p className="text-gray-600">現在、R-18作品は投稿されていません。</p>
+            </div>
+          )}
+        </>
       )}
 
       {/* フッター注意書き */}

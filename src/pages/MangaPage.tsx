@@ -134,7 +134,8 @@ const MangaPage: React.FC = () => {
               )
             )
           `)
-          .eq('type', 'manga');
+          .eq('type', 'manga')
+          .eq('is_r18', false);
         
         // 複数のパターンで検索（OR条件）
         if (queryPatterns.length > 1) {
@@ -202,7 +203,7 @@ const MangaPage: React.FC = () => {
           if (!postTagError && postTagData) {
             postsByTag = postTagData
               .map((item: any) => item.posts)
-              .filter((post: any) => post !== null && post.type === 'manga');
+              .filter((post: any) => post !== null && post.type === 'manga' && !post.is_r18);
           }
         }
 
@@ -254,7 +255,8 @@ const MangaPage: React.FC = () => {
               )
             `)
             .in('author_id', userIds)
-            .eq('type', 'manga');
+            .eq('type', 'manga')
+            .eq('is_r18', false);
 
           const { data: userPostData, error: userPostError } = await userPostQuery;
           
@@ -271,7 +273,7 @@ const MangaPage: React.FC = () => {
         ];
         const uniquePosts = Array.from(
           new Map(allPosts.map((post: any) => [post.id, post])).values()
-        );
+        ).filter((post: any) => !post.is_r18);
 
         // いいね数と閲覧数を取得して追加
         const worksWithStats = await Promise.all(
