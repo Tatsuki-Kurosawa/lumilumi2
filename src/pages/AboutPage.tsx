@@ -4,8 +4,17 @@ import { Palette, Users, Heart, Sparkles, BookOpen, TrendingUp } from 'lucide-re
 
 const AboutPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-12 relative overflow-hidden">
+      {/* 背景アイコン */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <img
+          src="/mangaumaretaro.jpg"
+          alt="イラストーク大学"
+          className="w-96 h-96 opacity-5 object-contain"
+        />
+      </div>
+      
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="bg-white rounded-lg shadow-sm p-8">
           {/* 新しい内容 */}
           <div className="prose max-w-none">
