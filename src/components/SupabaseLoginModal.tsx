@@ -116,6 +116,25 @@ const SupabaseLoginModal: React.FC<SupabaseLoginModalProps> = ({ onClose }) => {
           return;
         }
 
+        // カスタム大学名のバリデーション
+        if (formData.university === 'その他') {
+          if (!formData.customUniversity.trim()) {
+            setError('「その他」を選択した場合は、大学名を入力してください');
+            setIsLoading(false);
+            return;
+          }
+          if (formData.customUniversity.trim().length < 2) {
+            setError('大学名は2文字以上で入力してください');
+            setIsLoading(false);
+            return;
+          }
+          if (formData.customUniversity.trim().length > 100) {
+            setError('大学名は100文字以内で入力してください');
+            setIsLoading(false);
+            return;
+          }
+        }
+
         const profileData = {
           username: formData.username.trim(),
           display_name: formData.username.trim(),
@@ -338,10 +357,15 @@ const SupabaseLoginModal: React.FC<SupabaseLoginModalProps> = ({ onClose }) => {
                         value={formData.customUniversity}
                         onChange={handleInputChange}
                         required
+                        minLength={2}
+                        maxLength={100}
                         className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-                        placeholder="大学名を入力してください"
+                        placeholder="大学名を入力してください（2-100文字）"
                       />
                     </div>
+                    <p className="mt-1 text-xs text-gray-500">
+                      入力した大学名はデータベースに追加され、他のユーザーも選択できるようになります。
+                    </p>
                   </div>
                 )}
               </div>
