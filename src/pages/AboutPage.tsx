@@ -7,6 +7,47 @@ const AboutPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-lg shadow-sm p-8">
+          {/* 新しい内容 */}
+          <div className="prose max-w-none">
+            {/* タイトル */}
+            <h1 className="text-4xl font-bold text-gray-900 text-center mb-12">
+              ～若いクリエイターの才能を支え、社会を動かす～
+            </h1>
+
+            {/* イラストーク大学とは？ */}
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-6">イラストーク大学とは？</h2>
+              <div className="text-gray-700 leading-relaxed space-y-4">
+                <p>
+                  イラストーク大学は、学生を中心とした若きクリエイターを応援するコミュニティサイトです。
+                </p>
+                <p>
+                  技術の進歩によって、AIが瞬時に"創作物"を生み出せる時代となり、均一化された、人の意志を持たない作品がインターネット上に溢れています。
+                </p>
+                <p>
+                  そんな現代だからこそ、若きクリエイターの想像力にあふれた作品が埋もれることなく、社会に届く環境を作りたいとの思いから活動を開始しました。
+                </p>
+                <p>
+                  現在はWEBでの作品の公開や、イラスト・漫画を中心としたクリエイター同士の交流支援、及び企業との協業も視野に入れた活動を行っております。
+                </p>
+                <p className="mt-6">
+                  皆様のご参加・ご支援をお待ちしております。
+                </p>
+              </div>
+            </section>
+
+            {/* 署名 */}
+            <section className="mt-12 pt-8 border-t border-gray-200">
+              <div className="text-gray-700 space-y-2 text-right">
+                <p>東京大学　けい</p>
+                <p>東京理科大学　ほり</p>
+                <p>早稲田大学　ゆゆ</p>
+              </div>
+            </section>
+          </div>
+
+          {/* 元の内容（コメントアウト） */}
+          {/*
           <div className="flex items-center mb-6">
             <Sparkles className="h-8 w-8 text-cyan-600 mr-3" />
             <h1 className="text-3xl font-bold text-gray-900">イラストーク大学について</h1>
@@ -139,6 +180,7 @@ const AboutPage: React.FC = () => {
               </p>
             </section>
           </div>
+          */}
 
           <div className="mt-8 pt-8 border-t border-gray-200">
             <Link
