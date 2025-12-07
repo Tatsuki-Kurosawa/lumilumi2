@@ -64,9 +64,9 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
     fetchUniversities();
   }, []);
 
-  // プロフィールデータをフォームに設定
+  // プロフィールデータをフォームに設定（universitiesが読み込まれた後）
   useEffect(() => {
-    if (profile) {
+    if (profile && universities.length > 0) {
       const currentUniversity = profile.university || '';
       const isCustomUniversity = !universities.includes(currentUniversity) && currentUniversity !== '';
       
@@ -86,7 +86,7 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
       setAvatarFile(null);
       setCoverFile(null);
     }
-  }, [profile]);
+  }, [profile, universities]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -96,8 +96,16 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
       updateCoverPreview(profile?.cover_image_url || '');
       setError(null);
       setSuccess(false);
+      setShowCustomUniversity(false);
+    } else {
+      // モーダルが開かれたときに、プロフィールデータを再設定
+      if (profile && universities.length > 0) {
+        const currentUniversity = profile.university || '';
+        const isCustomUniversity = !universities.includes(currentUniversity) && currentUniversity !== '';
+        setShowCustomUniversity(isCustomUniversity);
+      }
     }
-  }, [isOpen, profile?.avatar_url, profile?.cover_image_url]);
+  }, [isOpen, profile, universities, profile?.avatar_url, profile?.cover_image_url]);
 
   useEffect(() => {
     return () => {
