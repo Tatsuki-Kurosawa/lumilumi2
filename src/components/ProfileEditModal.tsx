@@ -315,7 +315,14 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
       const { error } = await updateProfile(updates);
       
       if (error) {
-        setError(error.message);
+        // エラーメッセージを詳細化
+        let errorMessage = error.message;
+        if (error.message.includes('university') || error.message.includes('大学名')) {
+          errorMessage = `大学名の登録に失敗しました: ${error.message}\n\nもし「その他」から大学名を入力した場合、データベースの設定が必要な可能性があります。`;
+        } else if (error.message.includes('RLS') || error.message.includes('policy')) {
+          errorMessage = `データベースの権限設定に問題があります。管理者にお問い合わせください。\n\nエラー: ${error.message}`;
+        }
+        setError(errorMessage);
       } else {
         if (uploadedAvatarUrl) {
           setFormData(prev => ({ ...prev, avatar_url: uploadedAvatarUrl }));

@@ -57,8 +57,15 @@ export const ensureUniversityExists = async (
         console.log('大学名は既に存在します（競合状態）:', universityName);
         return { error: null };
       }
+      // RLSポリシーエラーの場合
+      if (insertError.code === '42501' || insertError.message.includes('policy') || insertError.message.includes('RLS')) {
+        console.error('大学名追加エラー（RLSポリシー）:', insertError);
+        return { 
+          error: '大学名の追加に失敗しました。データベースの設定を確認してください。エラーコード: ' + insertError.code 
+        };
+      }
       console.error('大学名追加エラー:', insertError);
-      return { error: insertError.message };
+      return { error: insertError.message || '大学名の追加に失敗しました' };
     }
 
     console.log('✅ 大学名を追加しました:', universityName);
