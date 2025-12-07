@@ -160,10 +160,10 @@ const R18Page: React.FC = () => {
               <h2 className="text-2xl font-bold text-gray-900 mb-6">マンガ</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {r18MangaWorks.map((work) => (
-                  <div key={work.id} className="relative">
-                    {/* ぼかしオーバーレイ */}
-                    <div className="absolute inset-0 bg-black bg-opacity-20 backdrop-blur-sm rounded-lg z-10 flex items-center justify-center group hover:bg-opacity-10 hover:backdrop-blur-none transition-all duration-200 cursor-pointer">
-                      <div className="text-white text-center group-hover:opacity-0 transition-opacity">
+                  <div key={work.id} className="relative group">
+                    {/* ぼかしオーバーレイ（クリックは透過） */}
+                    <div className="absolute inset-0 bg-black bg-opacity-20 backdrop-blur-sm rounded-lg z-10 flex items-center justify-center group-hover:bg-opacity-10 group-hover:backdrop-blur-none transition-all duration-200 pointer-events-none">
+                      <div className="text-white text-center group-hover:opacity-0 transition-opacity pointer-events-none">
                         <Eye className="h-8 w-8 mx-auto mb-2" />
                         <p className="text-sm font-medium">クリックして表示</p>
                       </div>
@@ -181,10 +181,10 @@ const R18Page: React.FC = () => {
               <h2 className="text-2xl font-bold text-gray-900 mb-6">イラスト</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {r18IllustrationWorks.map((work) => (
-                  <div key={work.id} className="relative">
-                    {/* ぼかしオーバーレイ */}
-                    <div className="absolute inset-0 bg-black bg-opacity-20 backdrop-blur-sm rounded-lg z-10 flex items-center justify-center group hover:bg-opacity-10 hover:backdrop-blur-none transition-all duration-200 cursor-pointer">
-                      <div className="text-white text-center group-hover:opacity-0 transition-opacity">
+                  <div key={work.id} className="relative group">
+                    {/* ぼかしオーバーレイ（クリックは透過） */}
+                    <div className="absolute inset-0 bg-black bg-opacity-20 backdrop-blur-sm rounded-lg z-10 flex items-center justify-center group-hover:bg-opacity-10 group-hover:backdrop-blur-none transition-all duration-200 pointer-events-none">
+                      <div className="text-white text-center group-hover:opacity-0 transition-opacity pointer-events-none">
                         <Eye className="h-8 w-8 mx-auto mb-2" />
                         <p className="text-sm font-medium">クリックして表示</p>
                       </div>
