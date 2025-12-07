@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
+import { getUniversities } from '../lib/universityService';
 import { User, GraduationCap, Edit3, FileText, CheckCircle } from 'lucide-react';
 
 // 状態変数profileを設定するために、setProfileをもってくる必要がある
@@ -12,6 +13,7 @@ const ProfileSetupPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showCustomUniversity, setShowCustomUniversity] = useState(false);
   const [step, setStep] = useState<'form' | 'success'>('form');
+  const [universities, setUniversities] = useState<string[]>([]);
 
   const [formData, setFormData] = useState({
     username: '',
@@ -50,33 +52,14 @@ const ProfileSetupPage: React.FC = () => {
     }
   }, [user, profile, navigate]);
 
-  // 大幅に拡充した大学リスト
-  const universities = [
-    // 関東地方
-    '東京大学', '東京工業大学', '一橋大学', '東京医科歯科大学', '東京外国語大学',
-    '東京芸術大学', '東京農工大学', '東京海洋大学', 'お茶の水女子大学', '電気通信大学',
-    '東京学芸大学', '東京理科大学', '横浜国立大学', '千葉大学', '埼玉大学',
-    '茨城大学', '群馬大学', '山梨大学', '慶應義塾大学', '早稲田大学',
-    '上智大学', '明治大学', '青山学院大学', '立教大学', '中央大学',
-    '法政大学', '学習院大学', '日本大学', '東洋大学', '駒澤大学',
-    '専修大学', '國學院大學', '成蹊大学', '成城大学', '明治学院大学',
-    '国際基督教大学', '津田塾大学', '東京女子大学', '日本女子大学',
-    
-    // 関西地方
-    '京都大学', '京都工芸繊維大学', '京都教育大学', '大阪大学', '神戸大学',
-    '立命館大学', '関西大学', '関西学院大学', '同志社大学', '近畿大学',
-    '武庫川女子大学', '京都女子大学', '同志社女子大学',
-    
-    // 中部地方
-    '名古屋大学', '名古屋工業大学', '信州大学', '静岡大学', '金沢大学',
-    '新潟大学', '富山大学', '福井大学',
-    
-    // その他地方
-    '東北大学', '北海道大学', '九州大学', '広島大学', '岡山大学',
-    '熊本大学', '鹿児島大学', '琉球大学',
-    
-    'その他'
-  ];
+  // 大学リストをuniversitiesテーブルから取得
+  useEffect(() => {
+    const fetchUniversities = async () => {
+      const universityList = await getUniversities();
+      setUniversities(universityList);
+    };
+    fetchUniversities();
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;

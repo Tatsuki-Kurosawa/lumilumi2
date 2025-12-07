@@ -1,8 +1,9 @@
 // 今は使われていない. 不要説.
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Mail, Lock, User, GraduationCap, Eye, EyeOff, Plus, Edit3 } from 'lucide-react';
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
+import { getUniversities } from '../lib/universityService';
 
 interface SupabaseLoginModalProps {
   onClose: () => void;
@@ -16,6 +17,7 @@ const SupabaseLoginModal: React.FC<SupabaseLoginModalProps> = ({ onClose }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showCustomUniversity, setShowCustomUniversity] = useState(false);
+  const [universities, setUniversities] = useState<string[]>([]);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -29,52 +31,14 @@ const SupabaseLoginModal: React.FC<SupabaseLoginModalProps> = ({ onClose }) => {
     isCreator: false
   });
 
-  // 大幅に拡充した大学リスト（地域別）
-  const universities = [
-    // 関東地方
-    '東京大学', '東京工業大学', '一橋大学', '東京医科歯科大学', '東京外国語大学',
-    '東京芸術大学', '東京農工大学', '東京海洋大学', 'お茶の水女子大学', '電気通信大学',
-    '東京学芸大学', '東京理科大学', '横浜国立大学', '千葉大学', '埼玉大学',
-    '茨城大学', '群馬大学', '山梨大学', '慶應義塾大学', '早稲田大学',
-    '上智大学', '明治大学', '青山学院大学', '立教大学', '中央大学',
-    '法政大学', '学習院大学', '日本大学', '東洋大学', '駒澤大学',
-    '専修大学', '國學院大學', '成蹊大学', '成城大学', '明治学院大学',
-    '国際基督教大学', '津田塾大学', '東京女子大学', '日本女子大学', '聖心女子大学',
-    '白百合女子大学', '清泉女子大学', '東洋英和女学院大学',
-    
-    // 中部地方
-    '新潟大学', '富山大学', '金沢大学', '福井大学', '信州大学',
-    '静岡大学', '浜松医科大学', '名古屋大学', '名古屋工業大学', '三重大学',
-    '滋賀大学', '愛知県立大学', '名古屋市立大学',
-    
-    // 関西地方
-    '京都大学', '京都工芸繊維大学', '京都教育大学', '京都府立医科大学', '大阪大学',
-    '大阪市立大学', '大阪府立大学', '神戸大学', '兵庫県立大学', '奈良県立医科大学',
-    '和歌山大学', '立命館大学', '関西大学', '関西学院大学', '同志社大学',
-    '京都産業大学', '近畿大学', '甲南大学', '龍谷大学', '神戸学院大学',
-    '武庫川女子大学', '京都女子大学', '同志社女子大学', '京都橘大学', '大阪経済大学',
-    '大阪商業大学', '大阪産業大学', '桃山学院大学', '摂南大学', '帝塚山大学',
-    '奈良大学', '天理大学', '佛教大学', '京都文教大学', '京都外国語大学',
-    '京都精華大学', '京都造形芸術大学', '京都嵯峨芸術大学', '京都美術工芸大学',
-    '京都薬科大学', '大阪薬科大学', '神戸薬科大学',
-    
-    // 中国・四国地方
-    '鳥取大学', '島根大学', '岡山大学', '広島大学', '山口大学',
-    '徳島大学', '香川大学', '愛媛大学', '高知大学', '岡山県立大学',
-    '広島市立大学', '広島県立大学',
-    
-    // 九州・沖縄地方
-    '九州大学', '佐賀大学', '長崎大学', '熊本大学', '大分大学',
-    '宮崎大学', '鹿児島大学', '琉球大学', '福岡県立大学', '北九州市立大学',
-    
-    // 東北・北海道地方
-    '東北大学', '北海道大学', '岩手大学', '宮城教育大学', '秋田大学',
-    '山形大学', '福島大学', '弘前大学', '岩手県立大学', '宮城大学',
-    '秋田県立大学', '山形県立米沢女子短期大学',
-    
-    // その他の大学
-    'その他'
-  ];
+  // 大学リストをuniversitiesテーブルから取得
+  useEffect(() => {
+    const fetchUniversities = async () => {
+      const universityList = await getUniversities();
+      setUniversities(universityList);
+    };
+    fetchUniversities();
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -357,41 +321,9 @@ const SupabaseLoginModal: React.FC<SupabaseLoginModalProps> = ({ onClose }) => {
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                   >
                     <option value="">大学を選択してください</option>
-                    <optgroup label="関東地方">
-                      {universities.slice(0, 33).map(uni => (
-                        <option key={uni} value={uni}>{uni}</option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="中部地方">
-                      {universities.slice(33, 46).map(uni => (
-                        <option key={uni} value={uni}>{uni}</option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="関西地方">
-                      {universities.slice(46, 79).map(uni => (
-                        <option key={uni} value={uni}>{uni}</option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="中国・四国地方">
-                      {universities.slice(79, 91).map(uni => (
-                        <option key={uni} value={uni}>{uni}</option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="九州・沖縄地方">
-                      {universities.slice(91, 100).map(uni => (
-                        <option key={uni} value={uni}>{uni}</option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="東北・北海道地方">
-                      {universities.slice(100, 112).map(uni => (
-                        <option key={uni} value={uni}>{uni}</option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="その他">
-                      {universities.slice(112).map(uni => (
-                        <option key={uni} value={uni}>{uni}</option>
-                      ))}
-                    </optgroup>
+                    {universities.map(uni => (
+                      <option key={uni} value={uni}>{uni}</option>
+                    ))}
                   </select>
                 </div>
                 

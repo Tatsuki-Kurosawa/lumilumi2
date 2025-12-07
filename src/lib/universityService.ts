@@ -1,6 +1,41 @@
 import { supabase } from './supabaseClient';
 
 /**
+ * 大学名リストを取得（50音順、「その他」は最後）
+ * @returns 大学名の配列
+ */
+export const getUniversities = async (): Promise<string[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('universities')
+      .select('name')
+      .order('display_order', { ascending: true });
+
+    if (error) {
+      console.error('大学名取得エラー:', error);
+      return [];
+    }
+
+    if (!data) {
+      return [];
+    }
+
+    // 大学名の配列を取得
+    const universityNames = data.map(uni => uni.name);
+
+    // 50音順でソート（「その他」は常に最後）
+    return universityNames.sort((a, b) => {
+      if (a === 'その他') return 1;
+      if (b === 'その他') return -1;
+      return a.localeCompare(b, 'ja');
+    });
+  } catch (error) {
+    console.error('大学名取得中にエラーが発生:', error);
+    return [];
+  }
+};
+
+/**
  * 大学名をuniversitiesテーブルに追加（存在しない場合のみ）
  * @param universityName 大学名
  * @returns エラー情報
