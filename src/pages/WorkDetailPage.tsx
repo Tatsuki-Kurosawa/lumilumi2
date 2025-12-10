@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Eye, Share2, Flag, User, Calendar, Tag, ArrowLeft } from 'lucide-react';
+import { Eye, Share2, User, Calendar, Tag, ArrowLeft, X, Copy, Check } from 'lucide-react';
 
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 import { PostsService } from '../lib/postsService';
@@ -19,6 +19,8 @@ const WorkDetailPage: React.FC = () => {
 
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // 投稿データを取得
   useEffect(() => {
@@ -104,20 +106,27 @@ const WorkDetailPage: React.FC = () => {
     }
   };
 
+  // 共有リンクとテキスト
+  const shareUrl = work ? window.location.href : '';
+  const shareText = work 
+    ? `${work.author.display_name}の作品「${work.title}」をチェック！\n${shareUrl}`
+    : '';
+
+  // テキストをクリップボードにコピー
+  const handleCopy = async () => {
+    if (!shareText) return;
+    try {
+      await navigator.clipboard.writeText(shareText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error('コピーエラー:', error);
+    }
+  };
+
   const handleShare = () => {
     if (!work) return;
-
-    if (navigator.share) {
-      navigator.share({
-        title: work.title,
-        text: `${work.author.display_name}の作品「${work.title}」をチェック！`,
-        url: window.location.href,
-      });
-    } else {
-      // フォールバック: URLをクリップボードにコピー
-      navigator.clipboard.writeText(window.location.href);
-      alert('URLをクリップボードにコピーしました');
-    }
+    setShowShareModal(true);
   };
 
   if (loading) {
@@ -213,10 +222,6 @@ const WorkDetailPage: React.FC = () => {
                 <Share2 className="h-5 w-5" />
                 <span>共有</span>
               </button>
-              
-              <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                <Flag className="h-5 w-5" />
-              </button>
             </div>
 
             {/* フォローボタン */}
@@ -271,6 +276,62 @@ const WorkDetailPage: React.FC = () => {
           {/* 関連作品 - 今後実装予定 */}
         </div>
       </div>
+
+      {/* 共有モーダル */}
+      {showShareModal && work && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-medium max-w-md w-full p-6 sm:p-8 relative">
+            {/* 閉じるボタン */}
+            <button
+              onClick={() => setShowShareModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="閉じる"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            {/* タイトル */}
+            <h2 className="text-2xl font-bold text-text-primary mb-6">作品を共有</h2>
+
+            {/* 共有テキスト */}
+            <div className="mb-6">
+              <p className="text-text-secondary text-base leading-relaxed mb-4">
+                {work.author.display_name}の作品「{work.title}」をチェック！
+              </p>
+              <div className="bg-bg-secondary rounded-lg p-4 border border-gray-200">
+                <p className="text-sm text-text-tertiary break-all font-mono">
+                  {shareUrl}
+                </p>
+              </div>
+            </div>
+
+            {/* コピーボタン */}
+            <div className="flex gap-3">
+              <button
+                onClick={handleCopy}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium"
+              >
+                {copied ? (
+                  <>
+                    <Check className="h-5 w-5" />
+                    <span>コピーしました</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-5 w-5" />
+                    <span>リンクとテキストをコピー</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* 説明 */}
+            <p className="text-xs text-text-tertiary mt-4 text-center">
+              上記のテキストとリンクがクリップボードにコピーされます
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
