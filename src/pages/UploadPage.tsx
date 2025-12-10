@@ -21,6 +21,8 @@ const UploadPage: React.FC = () => {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [showAgeVerification, setShowAgeVerification] = useState(false);
+  const [imageNameError, setImageNameError] = useState<string | null>(null);
 
   const categories = [
     { value: 'illustration', label: 'イラスト' },
@@ -51,12 +53,49 @@ const UploadPage: React.FC = () => {
     );
   }
 
+  // ファイル名を安全な名前に変換（アルファベットと数字のみ）
+  const sanitizeFileName = (fileName: string): string => {
+    // 拡張子を取得
+    const lastDotIndex = fileName.lastIndexOf('.');
+    const extension = lastDotIndex > 0 ? fileName.substring(lastDotIndex) : '';
+    const nameWithoutExt = lastDotIndex > 0 ? fileName.substring(0, lastDotIndex) : fileName;
+    
+    // アルファベット、数字、ハイフン、アンダースコア以外を削除
+    const sanitized = nameWithoutExt.replace(/[^a-zA-Z0-9_-]/g, '_');
+    
+    // 空の場合はデフォルト名を使用
+    return sanitized || 'image' + extension;
+  };
+
+  // ファイル名に日本語が含まれているかチェック
+  const hasJapaneseInFileName = (fileName: string): boolean => {
+    return /[^\x00-\x7F]/.test(fileName);
+  };
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const MAX_FILE_SIZE = 10 * 1000 * 1000; // 10MB (基数10)
     const MAX_TOTAL_SIZE = 200 * 1000 * 1000; // 200MB (基数10)
 
-    const validFiles = files.filter(file => {
+    setImageNameError(null);
+
+    // 日本語が含まれているファイルをチェックし、自動的にリネーム
+    const renamedFiles = files.map(file => {
+      if (hasJapaneseInFileName(file.name)) {
+        const sanitizedName = sanitizeFileName(file.name);
+        return new File([file], sanitizedName, { type: file.type });
+      }
+      return file;
+    });
+
+    // 日本語が含まれていたファイルがある場合、エラーメッセージを表示
+    const filesWithJapanese = files.filter(file => hasJapaneseInFileName(file.name));
+    if (filesWithJapanese.length > 0) {
+      const japaneseFileNames = filesWithJapanese.map(f => f.name).join(', ');
+      setImageNameError(`以下のファイル名に日本語が含まれていました。アルファベットと数字のみ使用してください: ${japaneseFileNames}`);
+    }
+
+    const validFiles = renamedFiles.filter(file => {
       if (!file.type.startsWith('image/')) {
         return false;
       }
@@ -127,9 +166,29 @@ const UploadPage: React.FC = () => {
       return;
     }
 
-    // console.log('supabase', supabase);
-    // console.log('session', session);
+    // R18作品の場合、年齢確認を表示
+    if (formData.isR18) {
+      setShowAgeVerification(true);
+      return;
+    }
 
+    // 年齢確認が完了したら投稿処理を続行
+    await proceedWithUpload();
+  };
+
+  const handleAgeVerification = (isAdult: boolean) => {
+    setShowAgeVerification(false);
+    if (!isAdult) {
+      // 18歳未満の場合、R18チェックを外す
+      setFormData(prev => ({ ...prev, isR18: false }));
+      alert('18歳未満の方はR-18作品を投稿できません。');
+      return;
+    }
+    // 18歳以上の場合、投稿処理を続行
+    proceedWithUpload();
+  };
+
+  const proceedWithUpload = async () => {
     setIsUploading(true);
     try {
       // 1. ユーザー情報を取得（既に認証チェック済みなので、profileから取得）
@@ -148,8 +207,10 @@ const UploadPage: React.FC = () => {
       // console.log("upload result:", result);
 
       // 2. 全ての画像を並行してSupabase Storageにアップロード
-      const imageUploadPromises = images.map(file => {
-        const filePath = `${user.id}/${Date.now()}_${file.name}`;
+      const imageUploadPromises = images.map((file, index) => {
+        // ファイル名をさらに安全な名前に変換（念のため）
+        const safeFileName = sanitizeFileName(file.name);
+        const filePath = `${user.id}/${Date.now()}_${index}_${safeFileName}`;
         return supabase.storage.from('posts').upload(filePath, file); // 'posts'はあなたのバケット名
       });
 
@@ -394,8 +455,11 @@ const UploadPage: React.FC = () => {
                   <p className="text-gray-600 mb-2">
                     画像をドラッグ&ドロップするか、クリックして選択
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 mb-2">
                     JPEG, PNG形式、最大10MB/枚、最大50枚、総量200MBまで
+                  </p>
+                  <p className="text-xs text-red-600 font-medium">
+                    ⚠️ 画像ファイル名はアルファベットと数字のみ使用してください（日本語不可）
                   </p>
                   <button
                     type="button"
@@ -435,7 +499,45 @@ const UploadPage: React.FC = () => {
                 </div>
               )}
             </div>
+            
+            {/* ファイル名エラーメッセージ */}
+            {imageNameError && (
+              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-700">{imageNameError}</p>
+                <p className="text-xs text-red-600 mt-1">ファイル名は自動的に変更されました。アルファベットと数字のみ使用してください。</p>
+              </div>
+            )}
           </div>
+
+          {/* 年齢確認モーダル */}
+          {showAgeVerification && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-bg-base rounded-lg shadow-medium max-w-md w-full p-8">
+                <h2 className="text-2xl font-bold text-text-primary mb-4">年齢確認</h2>
+                <p className="text-text-secondary mb-8 leading-relaxed">
+                  R-18作品を投稿するには、18歳以上である必要があります。
+                  <br />
+                  あなたは18歳以上ですか？
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleAgeVerification(true)}
+                    className="flex-1 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-all font-semibold shadow-medium"
+                  >
+                    はい（18歳以上）
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAgeVerification(false)}
+                    className="flex-1 px-6 py-3 bg-bg-secondary text-text-primary border border-gray-300 rounded-lg hover:bg-gray-100 transition-all font-semibold"
+                  >
+                    いいえ
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* 送信ボタン */}
           <div className="flex justify-end space-x-4">
