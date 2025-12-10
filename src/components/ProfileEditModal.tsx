@@ -58,8 +58,19 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
   // 大学リストをuniversitiesテーブルから取得
   useEffect(() => {
     const fetchUniversities = async () => {
-      const universityList = await getUniversities();
-      setUniversities(universityList);
+      try {
+        const universityList = await getUniversities();
+        // 「その他」が含まれていることを確認（念のため）
+        if (!universityList.includes('その他')) {
+          universityList.push('その他');
+        }
+        setUniversities(universityList);
+        console.log('✅ 大学リストを取得しました:', universityList.length, '件（その他を含む）');
+      } catch (error) {
+        console.error('❌ 大学リスト取得エラー:', error);
+        // エラーが発生した場合でも「その他」だけは表示する
+        setUniversities(['その他']);
+      }
     };
     fetchUniversities();
   }, []);
@@ -471,12 +482,16 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
                 value={formData.university}
                 onChange={handleInputChange}
                 required
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-400 focus:border-transparent appearance-none"
               >
                 <option value="">大学を選択してください</option>
-                {universities.map(uni => (
-                  <option key={uni} value={uni}>{uni}</option>
-                ))}
+                {universities.length > 0 ? (
+                  universities.map(uni => (
+                    <option key={uni} value={uni}>{uni}</option>
+                  ))
+                ) : (
+                  <option value="その他">その他</option>
+                )}
               </select>
             </div>
             
@@ -493,7 +508,7 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
                     required
                     minLength={2}
                     maxLength={100}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-400 focus:border-transparent"
                     placeholder="大学名を入力してください（2-100文字）"
                   />
                 </div>

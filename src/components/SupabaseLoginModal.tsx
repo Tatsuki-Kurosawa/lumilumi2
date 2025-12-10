@@ -35,6 +35,10 @@ const SupabaseLoginModal: React.FC<SupabaseLoginModalProps> = ({ onClose }) => {
   useEffect(() => {
     const fetchUniversities = async () => {
       const universityList = await getUniversities();
+      // 「その他」が含まれていることを確認（念のため）
+      if (!universityList.includes('その他')) {
+        universityList.push('その他');
+      }
       setUniversities(universityList);
     };
     fetchUniversities();
@@ -340,9 +344,13 @@ const SupabaseLoginModal: React.FC<SupabaseLoginModalProps> = ({ onClose }) => {
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-400 focus:border-transparent"
                   >
                     <option value="">大学を選択してください</option>
-                    {universities.map(uni => (
-                      <option key={uni} value={uni}>{uni}</option>
-                    ))}
+                    {universities.length > 0 ? (
+                      universities.map(uni => (
+                        <option key={uni} value={uni}>{uni}</option>
+                      ))
+                    ) : (
+                      <option value="その他">その他</option>
+                    )}
                   </select>
                 </div>
                 

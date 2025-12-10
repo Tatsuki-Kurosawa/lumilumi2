@@ -21,14 +21,21 @@ export const getUniversities = async (): Promise<string[]> => {
     }
 
     // 大学名の配列を取得
-    const universityNames = data.map(uni => uni.name);
+    let universityNames = data.map(uni => uni.name);
 
-    // 50音順でソート（「その他」は常に最後）
-    return universityNames.sort((a, b) => {
-      if (a === 'その他') return 1;
-      if (b === 'その他') return -1;
-      return a.localeCompare(b, 'ja');
-    });
+    // 「その他」をリストから除外
+    const otherIndex = universityNames.indexOf('その他');
+    if (otherIndex > -1) {
+      universityNames.splice(otherIndex, 1);
+    }
+
+    // 50音順でソート
+    universityNames.sort((a, b) => a.localeCompare(b, 'ja'));
+
+    // 「その他」を最後に追加（常に存在するようにする）
+    universityNames.push('その他');
+
+    return universityNames;
   } catch (error) {
     console.error('大学名取得中にエラーが発生:', error);
     return [];
