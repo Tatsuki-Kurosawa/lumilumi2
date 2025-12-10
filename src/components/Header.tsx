@@ -60,10 +60,10 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
           </div>
 
           {/* ナビゲーション */}
-          <nav className="hidden lg:flex items-center space-x-3">
+          <nav className="hidden lg:flex items-center space-x-2 xl:space-x-3">
             <Link
               to="/manga"
-              className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              className={`px-3 xl:px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
                 isActive('/manga')
                   ? 'text-white bg-white/20 shadow-soft'
                   : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -73,7 +73,7 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
             </Link>
             <Link
               to="/illustrations"
-              className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              className={`px-3 xl:px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
                 isActive('/illustrations')
                   ? 'text-white bg-white/20 shadow-soft'
                   : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -83,23 +83,24 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
             </Link>
             <Link
               to="/works"
-              className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              className={`px-3 xl:px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 isActive('/works')
                   ? 'text-white bg-white/20 shadow-soft'
                   : 'text-white/90 hover:text-white hover:bg-white/10'
               }`}
             >
-              作品一覧
+              <span className="hidden xl:inline whitespace-nowrap">作品一覧</span>
+              <span className="xl:hidden whitespace-nowrap">作品</span>
             </Link>
             <span
-              className="px-4 py-2.5 rounded-lg text-sm font-medium text-white/50 cursor-not-allowed"
+              className="px-3 xl:px-4 py-2.5 rounded-lg text-sm font-medium text-white/50 cursor-not-allowed whitespace-nowrap"
               title="近日公開予定"
             >
               コンテスト
             </span>
             <Link
               to="/r18"
-              className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              className={`px-3 xl:px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
                 isActive('/r18')
                   ? 'text-white bg-white/20 shadow-soft'
                   : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -109,7 +110,7 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
             </Link>
             <Link
               to="/about"
-              className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              className={`px-3 xl:px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
                 isActive('/about')
                   ? 'text-white bg-white/20 shadow-soft'
                   : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -120,67 +121,78 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick }) => {
           </nav>
 
           {/* 右側のボタン群 */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 lg:space-x-3">
             {/* ハンバーガーメニューボタン */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden p-2.5 text-white hover:bg-white/10 rounded-lg transition-colors"
+              className="lg:hidden p-2.5 text-white hover:bg-white/10 rounded-lg transition-colors flex-shrink-0"
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
 
             {/* ユーザーメニュー */}
             {loading ? (
-              <div className="flex items-center space-x-3">
+              <div className="hidden lg:flex items-center space-x-2 xl:space-x-3">
                 {/* ローディング中のスケルトン */}
-                <div className="w-28 h-11 bg-white/20 rounded-lg animate-pulse"></div>
-                <div className="w-24 h-11 bg-white/20 rounded-lg animate-pulse"></div>
+                <div className="w-24 xl:w-28 h-11 bg-white/20 rounded-lg animate-pulse"></div>
+                <div className="w-20 xl:w-24 h-11 bg-white/20 rounded-lg animate-pulse"></div>
               </div>
             ) : user && profile ? (
-              <div className="flex items-center space-x-3">
+              <div className="hidden lg:flex items-center space-x-2 xl:space-x-3">
                 <Link
                   to="/upload"
-                  className="flex items-center space-x-2 px-5 py-2.5 bg-accent-400 text-text-primary rounded-lg hover:bg-accent-500 transition-all font-semibold shadow-medium hover:shadow-card"
+                  className="flex items-center space-x-1.5 xl:space-x-2 px-3 xl:px-5 py-2.5 bg-accent-400 text-text-primary rounded-lg hover:bg-accent-500 transition-all font-semibold shadow-medium hover:shadow-card whitespace-nowrap flex-shrink-0"
                 >
-                  <PenSquare className="h-5 w-5" />
-                  <span className="hidden sm:inline">投稿する</span>
+                  <PenSquare className="h-5 w-5 flex-shrink-0" />
+                  <span className="hidden xl:inline">投稿する</span>
+                  <span className="xl:hidden">投稿</span>
                 </Link>
                 <NotificationDropdown />
                 <Link
                   to="/my-page"
-                  className="flex items-center space-x-2 px-4 py-2.5 text-white hover:bg-white/10 rounded-lg transition-all"
+                  className="flex items-center space-x-1.5 xl:space-x-2 px-3 xl:px-4 py-2.5 text-white hover:bg-white/10 rounded-lg transition-all whitespace-nowrap flex-shrink-0 min-w-0"
                 >
-                  <User className="h-5 w-5" />
-                  <span className="hidden sm:block font-medium">{profile.display_name}</span>
+                  <User className="h-5 w-5 flex-shrink-0" />
+                  <span className="hidden xl:block font-medium truncate max-w-[120px]">{profile.display_name}</span>
+                  <span className="xl:hidden font-medium truncate max-w-[80px]">{profile.display_name}</span>
                 </Link>
                 <button
                   onClick={handleSignOut}
-                  className="px-4 py-2.5 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-all text-sm font-medium"
+                  className="px-3 xl:px-4 py-2.5 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-all text-sm font-medium flex-shrink-0 leading-tight min-w-[60px]"
                 >
-                  ログアウト
+                  <span className="hidden xl:inline whitespace-nowrap">ログアウト</span>
+                  <span className="xl:hidden inline-block text-center">
+                    <span className="block">ログ</span>
+                    <span className="block">アウト</span>
+                  </span>
                 </button>
               </div>
             ) : (
-              <div className="flex space-x-3">
+              <div className="hidden lg:flex items-center space-x-2 xl:space-x-3">
                 <button
                   onClick={onLoginClick}
-                  className="flex items-center space-x-2 px-5 py-2.5 bg-accent-400 text-text-primary rounded-lg hover:bg-accent-500 transition-all font-semibold shadow-medium hover:shadow-card"
+                  className="flex items-center space-x-1.5 xl:space-x-2 px-3 xl:px-5 py-2.5 bg-accent-400 text-text-primary rounded-lg hover:bg-accent-500 transition-all font-semibold shadow-medium hover:shadow-card whitespace-nowrap flex-shrink-0"
                 >
-                  <PenSquare className="h-5 w-5" />
-                  <span className="hidden sm:inline">投稿する</span>
+                  <PenSquare className="h-5 w-5 flex-shrink-0" />
+                  <span className="hidden xl:inline">投稿する</span>
+                  <span className="xl:hidden">投稿</span>
                 </button>
                 <button
                   onClick={onLoginClick}
-                  className="px-5 py-2.5 text-white border border-white/30 rounded-lg hover:bg-white/10 transition-all font-medium"
+                  className="px-3 xl:px-5 py-2.5 text-white border border-white/30 rounded-lg hover:bg-white/10 transition-all font-medium whitespace-nowrap flex-shrink-0"
                 >
                   ログイン
                 </button>
                 {onSignUpClick && (
                   <button
                     onClick={onSignUpClick}
-                    className="px-5 py-2.5 bg-white text-primary-500 rounded-lg hover:bg-white/90 transition-all font-semibold shadow-soft"
+                    className="px-3 xl:px-5 py-2.5 bg-white text-primary-500 rounded-lg hover:bg-white/90 transition-all font-semibold shadow-soft flex-shrink-0 leading-tight min-w-[60px]"
                   >
-                    新規登録
+                    <span className="hidden xl:inline whitespace-nowrap">新規登録</span>
+                    <span className="xl:hidden inline-block text-center">
+                      <span className="block">新規</span>
+                      <span className="block">登録</span>
+                    </span>
                   </button>
                 )}
               </div>
