@@ -280,7 +280,7 @@ const IllustrationRankingPage: React.FC = () => {
             </div>
           ) : (
             <>
-              <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid gap-6 grid-cols-3">
                 {getTagRanking().map((work, index) => (
                   <div key={work.id} className="relative">
                     <div className={`absolute -top-2 -left-2 z-10 bg-yellow-400 text-white rounded-full flex items-center justify-center font-bold ${

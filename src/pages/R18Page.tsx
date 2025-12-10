@@ -139,7 +139,7 @@ const R18Page: React.FC = () => {
 
       {/* 作品一覧 */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-3 gap-6">
           {Array.from({ length: 8 }).map((_, index) => (
             <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
               <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
@@ -158,7 +158,7 @@ const R18Page: React.FC = () => {
           {r18MangaWorks.length > 0 && (
             <div className="mb-12">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">マンガ</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-3 gap-6">
                 {r18MangaWorks.map((work) => (
                   <div key={work.id} className="relative group">
                     {/* ぼかしオーバーレイ（クリックは透過） */}
@@ -179,7 +179,7 @@ const R18Page: React.FC = () => {
           {r18IllustrationWorks.length > 0 && (
             <div className="mb-12">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">イラスト</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-3 gap-6">
                 {r18IllustrationWorks.map((work) => (
                   <div key={work.id} className="relative group">
                     {/* ぼかしオーバーレイ（クリックは透過） */}
