@@ -561,7 +561,7 @@ const MyPage: React.FC = () => {
                   <Pin className="h-5 w-5 text-blue-600" />
                   <h2 className="text-xl font-bold text-gray-900">固定作品</h2>
                 </div>
-                <div className="grid gap-6 grid-cols-3">
+                <div className="grid gap-2 sm:gap-4 lg:gap-6 grid-cols-3">
                   {pinnedWorks.map((work) => (
                     <div key={work.id} className="relative group">
                       <WorkCard work={PostsService.formatPostForWorkCard(work)} />
@@ -592,7 +592,7 @@ const MyPage: React.FC = () => {
                   <Star className="h-5 w-5 text-yellow-600" />
                   <h2 className="text-xl font-bold text-gray-900">人気の作品</h2>
                 </div>
-                <div className="grid gap-6 grid-cols-3">
+                <div className="grid gap-2 sm:gap-4 lg:gap-6 grid-cols-3">
                   {popularWorks.map((work) => (
                     <div key={work.id} className="relative group">
                       <WorkCard work={PostsService.formatPostForWorkCard(work)} />
@@ -638,7 +638,7 @@ const MyPage: React.FC = () => {
               </div>
             ) : (
               <>
-                <div className="grid gap-6 grid-cols-3">
+                <div className="grid gap-2 sm:gap-4 lg:gap-6 grid-cols-3">
                   {myWorks.map((work) => (
                     <div key={work.id} className="relative group">
                       <WorkCard work={PostsService.formatPostForWorkCard(work)} />

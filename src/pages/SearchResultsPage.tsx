@@ -304,7 +304,7 @@ const SearchResultsPage: React.FC = () => {
                   <FileText className="h-5 w-5 mr-2" />
                   作品 ({posts.length})
                 </h2>
-                <div className="grid gap-6 grid-cols-3">
+                <div className="grid gap-2 sm:gap-4 lg:gap-6 grid-cols-3">
                   {results.posts.map((work) => (
                     <WorkCard key={work.id} work={work} />
                   ))}

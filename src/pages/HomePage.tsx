@@ -199,7 +199,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </div>
-          <div className="grid grid-cols-3 gap-6 md:gap-8">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6 md:gap-8">
             {loading ? (
               // ローディング表示
               Array.from({ length: 4 }).map((_, index) => (

@@ -108,15 +108,15 @@ const WorkCard: React.FC<WorkCardProps> = ({ work, onLoginRequired }) => {
         </div>
       </Link>
       
-      <div className="p-5">
+      <div className="p-3 sm:p-5">
         <Link to={`/works/${work.id}`}>
-          <h3 className="font-semibold text-text-primary mb-3 line-clamp-2 hover:text-primary-500 transition-colors text-base leading-snug">
+          <h3 className="font-semibold text-text-primary mb-2 sm:mb-3 line-clamp-2 hover:text-primary-500 transition-colors text-sm sm:text-base leading-snug">
             {work.title}
           </h3>
         </Link>
         
-        <div className="flex items-center text-sm text-text-secondary mb-4">
-          <User className="h-4 w-4 mr-1.5 text-text-tertiary" />
+        <div className="flex items-center text-xs sm:text-sm text-text-secondary mb-3 sm:mb-4">
+          <User className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5 text-text-tertiary" />
           <Link to={`/user/${encodeURIComponent(work.authorUsername)}`} className="hover:text-primary-500 transition-colors font-medium">
             {work.authorDisplayName}
           </Link>
@@ -127,36 +127,37 @@ const WorkCard: React.FC<WorkCardProps> = ({ work, onLoginRequired }) => {
             <button
               onClick={handleToggleLike}
               disabled={isLoading || isNaN(postId)}
-              className={`flex items-center transition-all ${
-                isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-80'
+              className={`flex items-center transition-all touch-manipulation ${
+                isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-80 active:opacity-60'
               } ${!user ? 'opacity-50' : ''}`}
               title={user ? (isLiked ? 'いいねを解除' : 'いいねする') : 'ログインが必要です'}
+              style={{ minWidth: '44px', minHeight: '44px', padding: '4px 8px' }}
             >
               {isLoading ? (
-                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 animate-spin" />
               ) : (
-                <Heart className={`h-4 w-4 mr-1.5 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+                <Heart className={`h-4 w-4 sm:h-5 sm:w-5 mr-1.5 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
               )}
-              <span className="font-medium">{likeCount.toLocaleString()}</span>
+              <span className="font-medium text-xs sm:text-sm">{likeCount.toLocaleString()}</span>
             </button>
             <div className="flex items-center">
-              <Eye className="h-4 w-4 mr-1.5" />
-              <span className="font-medium">{work.views.toLocaleString()}</span>
+              <Eye className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5" />
+              <span className="font-medium text-xs sm:text-sm">{work.views.toLocaleString()}</span>
             </div>
           </div>
         </div>
         
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2">
           {work.tags.slice(0, 3).map((tag, index) => (
             <span
               key={index}
-              className="inline-block px-3 py-1 text-xs bg-bg-secondary text-text-secondary rounded-full hover:bg-primary-50 hover:text-primary-500 cursor-pointer transition-all font-medium"
+              className="inline-block px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs bg-bg-secondary text-text-secondary rounded-full hover:bg-primary-50 hover:text-primary-500 cursor-pointer transition-all font-medium"
             >
               #{tag}
             </span>
           ))}
           {work.tags.length > 3 && (
-            <span className="inline-block px-3 py-1 text-xs text-text-tertiary font-medium">
+            <span className="inline-block px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs text-text-tertiary font-medium">
               +{work.tags.length - 3}
             </span>
           )}

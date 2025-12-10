@@ -778,7 +778,7 @@ const WorksPage: React.FC = () => {
               </div>
             ) : (
               <>
-                <div className="grid gap-6 grid-cols-3">
+                <div className="grid gap-2 sm:gap-4 lg:gap-6 grid-cols-3">
                   {getTagRanking().map((work) => (
                     <div key={work.id} className="relative">
                       <div className={`absolute -top-2 -left-2 z-10 bg-yellow-400 text-white rounded-full flex items-center justify-center font-bold ${
@@ -867,7 +867,7 @@ const WorksPage: React.FC = () => {
               </div>
             ) : filteredWorks.length > 0 ? (
               <>
-                <div className="grid gap-6 grid-cols-3">
+                <div className="grid gap-2 sm:gap-4 lg:gap-6 grid-cols-3">
                   {filteredWorks.map((work) => (
                     <WorkCard key={work.id} work={work} />
                   ))}

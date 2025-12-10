@@ -556,7 +556,7 @@ const IllustrationsPage: React.FC = () => {
             </div>
           ) : (
             <>
-              <div className="grid gap-6 grid-cols-3">
+              <div className="grid gap-2 sm:gap-4 lg:gap-6 grid-cols-3">
                 {getTagRanking().map((work) => (
                   <div key={work.id} className="relative">
                     <div className={`absolute -top-2 -left-2 z-10 bg-yellow-400 text-white rounded-full flex items-center justify-center font-bold ${
@@ -636,7 +636,7 @@ const IllustrationsPage: React.FC = () => {
         <>
       {/* 作品一覧 */}
       {loading ? (
-        <div className="grid gap-6 grid-cols-3">
+        <div className="grid gap-2 sm:gap-4 lg:gap-6 grid-cols-3">
           {Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
             <div key={index} className="bg-bg-base rounded-lg shadow-soft p-5 animate-pulse">
               <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
@@ -650,7 +650,7 @@ const IllustrationsPage: React.FC = () => {
           ))}
         </div>
       ) : works.length > 0 ? (
-        <div className="grid gap-6 grid-cols-3">
+        <div className="grid gap-2 sm:gap-4 lg:gap-6 grid-cols-3">
           {works.map((work) => (
             <WorkCard key={work.id} work={work} />
           ))}

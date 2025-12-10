@@ -378,7 +378,7 @@ const UserProfilePage: React.FC = () => {
               <Pin className="h-5 w-5 text-blue-600" />
               <h2 className="text-xl font-bold text-gray-900">固定作品</h2>
             </div>
-            <div className="grid gap-6 grid-cols-3">
+            <div className="grid gap-2 sm:gap-4 lg:gap-6 grid-cols-3">
               {pinnedWorks.map((work) => (
                 <WorkCard key={work.id} work={PostsService.formatPostForWorkCard(work)} />
               ))}
@@ -393,7 +393,7 @@ const UserProfilePage: React.FC = () => {
               <Star className="h-5 w-5 text-yellow-600" />
               <h2 className="text-xl font-bold text-gray-900">人気の作品</h2>
             </div>
-            <div className="grid gap-6 grid-cols-3">
+            <div className="grid gap-2 sm:gap-4 lg:gap-6 grid-cols-3">
               {popularWorks.map((work) => (
                 <WorkCard key={work.id} work={PostsService.formatPostForWorkCard(work)} />
               ))}
