@@ -215,7 +215,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLoginClick, onSignUpClick }) => {
               ))
             ) : featuredWorks.length > 0 ? (
               featuredWorks.map((work) => (
-                <WorkCard key={work.id} work={work} />
+                <WorkCard key={work.id} work={work} onLoginRequired={onLoginClick} />
               ))
             ) : (
               // データがない場合の表示

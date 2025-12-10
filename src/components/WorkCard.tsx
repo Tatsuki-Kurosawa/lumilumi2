@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, Eye, User } from 'lucide-react';
+import { Heart, Eye, User, Loader2 } from 'lucide-react';
+import { LikeService } from '../lib/likeService';
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 
 interface Work {
   id: string;
@@ -15,9 +17,83 @@ interface Work {
 
 interface WorkCardProps {
   work: Work;
+  onLoginRequired?: () => void;
 }
 
-const WorkCard: React.FC<WorkCardProps> = ({ work }) => {
+const WorkCard: React.FC<WorkCardProps> = ({ work, onLoginRequired }) => {
+  const { user } = useSupabaseAuth();
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(work.likes);
+  const [isLoading, setIsLoading] = useState(false);
+  const postId = parseInt(work.id, 10);
+
+  const loadTotalLikeCount = async () => {
+    if (isNaN(postId)) return;
+    const { count } = await LikeService.getLikeCount(postId);
+    setLikeCount(count);
+  };
+
+  const loadLikeState = async () => {
+    if (!user || isNaN(postId)) return;
+    const { isLiked: liked } = await LikeService.checkUserLike(postId, user.id);
+    setIsLiked(liked);
+  };
+
+  // 初期状態の読み込み
+  useEffect(() => {
+    if (!isNaN(postId)) {
+      loadTotalLikeCount();
+      if (user) {
+        loadLikeState();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, postId]);
+
+  // ハートボタンをクリックした時の処理（いいね/いいね解除を切り替え）
+  const handleToggleLike = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!user) {
+      onLoginRequired?.();
+      return;
+    }
+
+    if (isLoading || isNaN(postId)) return;
+
+    setIsLoading(true);
+
+    try {
+      if (isLiked) {
+        // いいねを解除
+        const { success, error } = await LikeService.removeLike(postId, user.id);
+
+        if (success) {
+          setIsLiked(false);
+          // 総いいね数を再取得
+          await loadTotalLikeCount();
+        } else {
+          console.error('いいねの取り消しに失敗:', error);
+        }
+      } else {
+        // いいねを追加
+        const { success, error } = await LikeService.addLike(postId, user.id);
+
+        if (success) {
+          setIsLiked(true);
+          // 総いいね数を再取得
+          await loadTotalLikeCount();
+        } else {
+          console.error('いいねに失敗:', error);
+        }
+      }
+    } catch (error) {
+      console.error('いいね処理エラー:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   return (
     <div className="bg-bg-base rounded-lg shadow-soft hover:shadow-medium transition-all duration-300 overflow-hidden group">
@@ -48,10 +124,21 @@ const WorkCard: React.FC<WorkCardProps> = ({ work }) => {
         
         <div className="flex items-center justify-between text-sm text-text-tertiary mb-4">
           <div className="flex items-center space-x-5">
-            <div className="flex items-center">
-              <Heart className="h-4 w-4 mr-1.5" />
-              <span className="font-medium">{work.likes.toLocaleString()}</span>
-            </div>
+            <button
+              onClick={handleToggleLike}
+              disabled={isLoading || isNaN(postId)}
+              className={`flex items-center transition-all ${
+                isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-80'
+              } ${!user ? 'opacity-50' : ''}`}
+              title={user ? (isLiked ? 'いいねを解除' : 'いいねする') : 'ログインが必要です'}
+            >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+              ) : (
+                <Heart className={`h-4 w-4 mr-1.5 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+              )}
+              <span className="font-medium">{likeCount.toLocaleString()}</span>
+            </button>
             <div className="flex items-center">
               <Eye className="h-4 w-4 mr-1.5" />
               <span className="font-medium">{work.views.toLocaleString()}</span>
