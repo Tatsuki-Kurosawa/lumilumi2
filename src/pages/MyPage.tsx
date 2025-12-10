@@ -425,25 +425,25 @@ const MyPage: React.FC = () => {
           </div>
 
           {/* 編集・投稿ボタン */}
-          <div className="flex flex-col sm:flex-row justify-center sm:justify-end pt-4 space-y-2 sm:space-y-0 sm:space-x-3">
+          <div className="flex flex-row justify-center sm:justify-end pt-20 sm:pt-4 gap-2 sm:gap-3">
             <button 
               onClick={() => setIsProfileEditOpen(true)}
-              className="flex items-center justify-center px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center justify-center px-2.5 sm:px-4 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap"
             >
-              <Edit className="h-4 w-4 mr-2" />
-              編集
+              <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="text-[10px] sm:text-sm">編集</span>
             </button>
             <Link
               to="/upload"
-              className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center justify-center px-2.5 sm:px-4 py-2 text-xs sm:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
             >
-              <Upload className="h-4 w-4 mr-2" />
-              作品を投稿
+              <Upload className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="text-[10px] sm:text-sm">投稿</span>
             </Link>
           </div>
 
           {/* ユーザー情報 */}
-          <div className="mt-20 sm:mt-4 sm:ml-40">
+          <div className="mt-4 sm:mt-4 sm:ml-40">
             <h1 className="text-xl sm:text-3xl font-bold text-gray-900 mb-2">
               {profile?.display_name}
               <span className="ml-2 sm:ml-4 px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium rounded-full bg-gray-100 text-gray-600">
